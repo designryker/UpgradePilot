@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RigPilot - PC Performance &amp; Upgrade Advisor</title>
+    <meta name="description" content="RigPilot diagnoses PC bottlenecks, free performance fixes, upgrade value, and budget fit before you spend on new hardware." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body>
-<div class="container">
+<div class="container app-shell">
 
 <header>
   <div class="hero-copy">
@@ -27,14 +28,23 @@
   </div>
   <div class="pc-visual" id="pc-visual" data-active-part="system" aria-hidden="true">
     <div class="pc-visual-top">
-      <span data-i18n="pcVisualTitle">Virtual PC</span>
-      <strong id="pc-visual-label" data-i18n="pcVisualSystem">Current rig</strong>
+      <div>
+        <span data-i18n="pcVisualTitle">Virtual PC</span>
+        <strong id="pc-visual-label" data-i18n="pcVisualSystem">Current rig</strong>
+      </div>
+      <small>Live input map</small>
+    </div>
+    <div class="pc-status-strip">
+      <span>CPU</span>
+      <span>GPU</span>
+      <span>RAM</span>
+      <span>PSU</span>
     </div>
     <div class="pc-case">
       <div class="pc-board">
         <div class="pc-part pc-cpu" data-part="cpu"><span>CPU</span></div>
-        <div class="pc-part pc-ram pc-ram-a" data-part="ram"></div>
-        <div class="pc-part pc-ram pc-ram-b" data-part="ram"></div>
+        <div class="pc-part pc-ram pc-ram-a" data-part="ram"><span></span></div>
+        <div class="pc-part pc-ram pc-ram-b" data-part="ram"><span></span></div>
         <div class="pc-part pc-gpu" data-part="gpu"><span>GPU</span></div>
         <div class="pc-part pc-psu" data-part="psu"><span>PSU</span></div>
         <div class="pc-fan pc-fan-a"></div>
@@ -51,7 +61,7 @@
 </header>
 
 
-<div class="wizard" id="wizard" data-current-step="0">
+<div class="wizard" id="wizard" data-current-step="0" data-layout="one-screen">
   <div class="wizard-progress" id="wizard-progress" aria-label="Wizard progress"></div>
 
   <section class="wizard-step" data-step="goal">
@@ -105,6 +115,22 @@
   </div>
 </div>
 
+<div class="sec-label" data-i18n="secondaryGoal">Current Problem</div>
+<div class="g1">
+  <div class="field">
+    <label data-i18n="secondaryGoal">Current Problem</label>
+    <select id="goal">
+      <option value="none" data-i18n="goalNone">No specific problem</option>
+      <option value="fps" data-i18n="goalFps">I cannot hold 60 FPS at 4K/1440p</option>
+      <option value="visuals" selected data-i18n="goalVisuals">I want higher graphics without big FPS drops</option>
+      <option value="smooth" data-i18n="goalSmooth">Stutter / FPS drops / 1% lows</option>
+      <option value="latency" data-i18n="goalLatency">Input delay feels high</option>
+      <option value="stream" data-i18n="goalStream">Streaming or recording hurts performance</option>
+      <option value="future" data-i18n="goalFuture">I want the system to last longer</option>
+      <option value="cheap" data-i18n="goalCheap">Find the cheapest meaningful fix</option>
+    </select>
+  </div>
+</div>
 
     <!-- Display & Gaming -->
 <div class="sec-label" data-i18n="secDisplay">Display &amp; Gaming Profile</div>
@@ -144,53 +170,20 @@
     </select>
   </div>
 </div>
-<div class="g2b">
-  <div class="field">
-    <label data-i18n="popularGame">Popular Game</label>
-    <select id="popular-game" data-action="apply-popular-game">
-      <option value="custom" selected data-i18n="gameCustom">Manual / mixed</option>
-      <option value="cs2" data-game-type="compfps">Counter-Strike 2</option>
-      <option value="valorant" data-game-type="compfps">Valorant</option>
-      <option value="lol" data-game-type="compfps">League of Legends</option>
-      <option value="fortnite" data-game-type="battle">Fortnite</option>
-      <option value="warzone" data-game-type="battle">Call of Duty: Warzone</option>
-      <option value="pubg" data-game-type="battle">PUBG: Battlegrounds</option>
-      <option value="wow" data-game-type="mmorpg">World of Warcraft</option>
-      <option value="ffxiv" data-game-type="mmorpg">Final Fantasy XIV</option>
-      <option value="lostark" data-game-type="mmorpg">Lost Ark</option>
-      <option value="bdo" data-game-type="mmorpg">Black Desert Online</option>
-      <option value="gta" data-game-type="aaa">GTA V / GTA Online</option>
-      <option value="cyberpunk" data-game-type="aaa">Cyberpunk 2077</option>
-      <option value="rdr2" data-game-type="aaa">Red Dead Redemption 2</option>
-      <option value="elden" data-game-type="aaa">Elden Ring</option>
-      <option value="minecraft" data-game-type="modded">Minecraft / modded</option>
-      <option value="msfs" data-game-type="racing">Microsoft Flight Simulator</option>
-    </select>
-    <div class="field-hint" data-i18n="popularGameHint">Pick one to auto-tune game type and problem focus.</div>
-  </div>
-  <div class="field">
-    <label data-i18n="secondaryGoal">Secondary Goal</label>
-    <select id="goal">
-      <option value="none" data-i18n="goalNone">No specific secondary goal</option>
-      <option value="fps" data-i18n="goalFps">Higher FPS</option>
-      <option value="visuals" selected data-i18n="goalVisuals">Better visual quality</option>
-      <option value="smooth" data-i18n="goalSmooth">Less stutter / smoother gameplay</option>
-      <option value="latency" data-i18n="goalLatency">Low latency / fast response</option>
-      <option value="stream" data-i18n="goalStream">Streaming quality</option>
-      <option value="future" data-i18n="goalFuture">Future-proofing</option>
-      <option value="cheap" data-i18n="goalCheap">Cheapest meaningful improvement</option>
-    </select>
-  </div>
-</div>
-
-
   </section>
 
   <section class="wizard-step" data-step="specs">
-    <div class="step-copy">
-      <div class="step-kicker" data-i18n="specsStepKicker">02 / Current PC</div>
-      <h2 data-i18n="specsStepTitle">Tell us the parts that matter most.</h2>
-      <p data-i18n="specsStepCopy">Start with CPU, GPU, and memory. Exact model names help the recommendation stay grounded.</p>
+    <div class="step-copy specs-intro">
+      <div class="step-copy-main">
+        <div class="step-kicker" data-i18n="specsStepKicker">02 / Current PC</div>
+        <h2 data-i18n="specsStepTitle">Identify the current rig.</h2>
+        <p data-i18n="specsStepCopy">Start with CPU, GPU, and memory so RigPilot can avoid bad-fit upgrade advice.</p>
+      </div>
+      <div class="step-proof-row" aria-label="Recommendation inputs">
+        <span data-i18n="specsProofCpu">CPU platform</span>
+        <span data-i18n="specsProofGpu">GPU tier</span>
+        <span data-i18n="specsProofMemory">Memory fit</span>
+      </div>
     </div>
     <!-- CPU & GPU -->
 <div class="sec-label" data-i18n="secCpuGpu">CPU &amp; GPU</div>
@@ -529,30 +522,18 @@
     </div>
     <div class="r-body">
 
-      <!-- 01 Performance Diagnosis -->
-      <div class="r-sec" id="psu-result-section">
-        <div class="r-sec-label"><span class="r-num">01</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></div>
-        <div class="diag-block">
-          <div class="diag-pill" id="diag-pill"></div>
-          <div class="diag-text" id="diag-text"></div>
+      <!-- 01 Final Decision -->
+      <div class="r-sec final-decision-section">
+        <div class="r-sec-label"><span class="r-num">01</span>&nbsp;<span data-i18n="resFinal">Final Decision</span></div>
+        <div class="final-box" id="final-box">
+          <span class="fi" id="fi"></span>
+          <span class="ft" id="ft"></span>
         </div>
       </div>
 
-      <!-- 02 Free Performance Fixes -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">02</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></div>
-        <div class="checklist" id="checklist"></div>
-      </div>
-
-      <!-- 03 Before You Buy: Validate the Bottleneck -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">03</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></div>
-        <div class="bench-list" id="bench-list"></div>
-      </div>
-
-      <!-- 04 Best Next Upgrade -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">04</span>&nbsp;<span data-i18n="resBest">Best Next Upgrade</span></div>
+      <!-- 02 Best Next Upgrade -->
+      <div class="r-sec result-upgrade-section">
+        <div class="r-sec-label"><span class="r-num">02</span>&nbsp;<span data-i18n="resBest">Best Next Upgrade</span></div>
         <div class="upgrade-hero">
           <div class="uicon" id="uicon"></div>
           <div class="utext">
@@ -561,34 +542,47 @@
           </div>
         </div>
         <div class="why-box" id="why-box"></div>
+        <div id="buying-action"></div>
         <div class="path-label">Upgrade Path</div>
         <div class="upgrade-path" id="upgrade-path"></div>
       </div>
 
-      <!-- 05 Recommended PSU for Next GPU -->
+      <!-- 03 Do Not Buy First -->
       <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">03</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></div>
+        <div class="dnu-row" id="dnu-row"></div>
+      </div>
+
+      <!-- 04 Budget Fit & Estimated Price Range -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">04</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></div>
+        <div id="budget-content"></div>
+      </div>
+
+      <!-- 05 Recommended PSU for Next GPU -->
+      <div class="r-sec" id="psu-result-section">
         <div class="r-sec-label"><span class="r-num">05</span>&nbsp;<span data-i18n="resPsu">Recommended PSU for Next GPU Tier</span></div>
         <div id="psu-rec-content"></div>
       </div>
 
-      <!-- 06 Budget Fit & Estimated Price Range -->
+      <!-- 06 Before You Buy: Validate the Bottleneck -->
       <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">06</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></div>
-        <div id="budget-content"></div>
+        <div class="r-sec-label"><span class="r-num">06</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></div>
+        <div class="bench-list" id="bench-list"></div>
       </div>
 
-      <!-- 07 Do Not Buy First -->
+      <!-- 07 Free Performance Fixes -->
       <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">07</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></div>
-        <div class="dnu-row" id="dnu-row"></div>
+        <div class="r-sec-label"><span class="r-num">07</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></div>
+        <div class="checklist" id="checklist"></div>
       </div>
 
-      <!-- 08 Final Decision -->
+      <!-- 08 Performance Diagnosis -->
       <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">08</span>&nbsp;<span data-i18n="resFinal">Final Decision</span></div>
-        <div class="final-box" id="final-box">
-          <span class="fi" id="fi"></span>
-          <span class="ft" id="ft"></span>
+        <div class="r-sec-label"><span class="r-num">08</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></div>
+        <div class="diag-block">
+          <div class="diag-pill" id="diag-pill"></div>
+          <div class="diag-text" id="diag-text"></div>
         </div>
       </div>
 
@@ -596,6 +590,7 @@
   </div>
 </div>
     <div class="result-actions">
+      <button type="button" class="wizard-btn wizard-btn-secondary" id="result-copy" data-i18n="copyResultBtn">Copy Result</button>
       <button type="button" class="wizard-btn wizard-btn-secondary" id="result-adjust" data-i18n="changeInputsBtn">Change Inputs</button>
       <button type="button" class="wizard-btn wizard-btn-primary" id="result-rerun" data-i18n="runAgainBtn">Run Again</button>
     </div>

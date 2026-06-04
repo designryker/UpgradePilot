@@ -15,6 +15,7 @@ function toggleCheck(id){
 // ── Simple EN/TR language layer for MVP testing ──
 let currentLang = 'en';
 let hasTouchedSpecs = false;
+let latestResultSummary = '';
 function setLanguage(lang){
   currentLang = lang === 'tr' ? 'tr' : 'en';
   document.documentElement.lang = currentLang;
@@ -43,6 +44,37 @@ function setLanguage(lang){
 }
 
 function inTr(en, tr){ return currentLang === 'tr' ? tr : en; }
+function setCopyButtonState(copied) {
+  const button = el('result-copy');
+  if (!button) return;
+  button.textContent = copied
+    ? inTr('Copied', 'Kopyalandi')
+    : (I18N[currentLang].copyResultBtn || inTr('Copy Result', 'Sonucu Kopyala'));
+  button.classList.toggle('is-copied', copied);
+}
+async function copyResultSummary() {
+  if (!latestResultSummary) return;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(latestResultSummary);
+    } else {
+      const area = document.createElement('textarea');
+      area.value = latestResultSummary;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+    setCopyButtonState(true);
+    window.setTimeout(() => setCopyButtonState(false), 1600);
+  } catch (error) {
+    setCopyButtonState(false);
+    console.warn('Could not copy result summary', error);
+  }
+}
 function groupLabel(g){
   if (currentLang !== 'tr') return g;
   return {
@@ -314,40 +346,6 @@ function suggestResolution() {
   setSelectValue('res', suggested);
 }
 
-function updatePopularGameOptions() {
-  const gameType = el('game')?.value || 'mixed';
-  const gameSelect = el('popular-game');
-  if (!gameSelect) return;
-
-  let firstVisible = null;
-  gameSelect.querySelectorAll('option').forEach(option => {
-    const type = option.dataset.gameType;
-    const visible = !type || type === gameType || gameType === 'mixed';
-    option.hidden = !visible;
-    option.disabled = !visible;
-    if (visible && !firstVisible) firstVisible = option;
-  });
-
-  const selected = gameSelect.selectedOptions[0];
-  if (selected && selected.disabled && firstVisible) {
-    gameSelect.value = firstVisible.value;
-  }
-}
-
-function applyPopularGame() {
-  const preset = el('popular-game').value;
-  const map = {
-    cs2:['compfps','latency'], valorant:['compfps','latency'],
-    fortnite:['battle','fps'], warzone:['battle','fps'], pubg:['battle','fps'],
-    wow:['mmorpg','smooth'], ffxiv:['mmorpg','smooth'], lostark:['mmorpg','fps'], bdo:['mmorpg','fps'],
-    gta:['aaa','smooth'], cyberpunk:['aaa','visuals'], rdr2:['aaa','visuals'], elden:['aaa','smooth'],
-    lol:['compfps','fps'], minecraft:['modded','smooth'], msfs:['racing','smooth'],
-  };
-  if (!map[preset]) return;
-  setSelectValue('game', map[preset][0]);
-  setSelectValue('goal', map[preset][1]);
-}
-
 function setBudgetPreset(amount) {
   const budget = el('budget');
   if (budget) budget.value = amount;
@@ -377,8 +375,8 @@ function updateBudgetPresets() {
 }
 
 const WIZARD_STEPS = [
-  {id:'goal', labelKey:'stepGoal'},
   {id:'specs', labelKey:'stepSpecs'},
+  {id:'goal', labelKey:'stepGoal'},
   {id:'budget', labelKey:'stepBudget'},
   {id:'result', labelKey:'stepResult'},
 ];
@@ -399,8 +397,9 @@ function renderWizardProgress() {
 
 function goToWizardStep(index, scroll = true) {
   currentWizardStep = clamp(index, 0, WIZARD_STEPS.length - 1);
-  document.querySelectorAll('.wizard-step').forEach((step, stepIndex) => {
-    step.classList.toggle('active', stepIndex === currentWizardStep);
+  const activeStepId = WIZARD_STEPS[currentWizardStep].id;
+  document.querySelectorAll('.wizard-step').forEach(step => {
+    step.classList.toggle('active', step.dataset.step === activeStepId);
   });
   const back = el('wizard-back');
   const next = el('wizard-next');
@@ -432,8 +431,9 @@ function initWizard() {
     if (!pill || pill.disabled) return;
     goToWizardStep(Number(pill.dataset.wizardStep));
   });
-  el('result-adjust')?.addEventListener('click', () => goToWizardStep(1));
+  el('result-adjust')?.addEventListener('click', () => goToWizardStep(0));
   el('result-rerun')?.addEventListener('click', () => analyze(true));
+  el('result-copy')?.addEventListener('click', copyResultSummary);
 }
 
 
@@ -443,8 +443,6 @@ function bindEvents() {
   el('system-type')?.addEventListener('change', updateSystemTypeFields);
   el('ram-type')?.addEventListener('change', updateRamSpeeds);
   el('psu-watts')?.addEventListener('input', updatePsuReadout);
-  el('popular-game')?.addEventListener('change', applyPopularGame);
-  el('game')?.addEventListener('change', updatePopularGameOptions);
   el('currency')?.addEventListener('change', updateBudgetPresets);
 
   [
@@ -501,7 +499,6 @@ window.addEventListener('DOMContentLoaded', () => {
   updateMemoryCompatibility();
   updatePsuReadout();
   updateSystemTypeFields();
-  updatePopularGameOptions();
   updateQuickChips();
   updateBudgetPresets();
   updateVirtualPcRamMode();
@@ -1397,6 +1394,79 @@ function analyze(skipLoading) {
     finalIco  = FINAL_ICO[best.key] || '&#126;';
   }
 
+  const bandDesc = priceKey ? PRICE_USD[priceKey] : null;
+
+  function marketplaceUrl(query) {
+    const host = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
+    return host + encodeURIComponent(query);
+  }
+
+  function actionLabelFor(kind) {
+    return {
+      gpu: inTr('Compare best-value GPUs', 'En mantikli GPUlari karsilastir'),
+      cpu: inTr('Check CPU upgrade options', 'CPU yukseltme seceneklerine bak'),
+      ram: inTr('Find matched RAM kits', 'Uyumlu RAM kitleri bul'),
+      ramcap: inTr('Find matched RAM kits', 'Uyumlu RAM kitleri bul'),
+      psu: inTr('Check safe PSU options', 'Guvenli PSU seceneklerine bak'),
+      laptop: inTr('Compare laptop options', 'Laptop seceneklerini karsilastir'),
+      build: inTr('Compare full build parts', 'Komple kasa parcalarini karsilastir'),
+      none: inTr('Do the free checks first', 'Once ucretsiz kontrolleri yap')
+    }[kind] || inTr('Compare recommended options', 'Onerilen secenekleri karsilastir');
+  }
+
+  function buildBuyingAction() {
+    const isNoBuy = best.score <= 1 || best.key === 'ramspd';
+    const isBuyLaptop = isLaptop && budgetN > 0;
+    const kind = isBuyLaptop ? 'laptop' : isNoBuy ? 'none' : best.key;
+    const title = isNoBuy
+      ? inTr('Best move: verify before buying', 'En iyi adim: almadan once dogrula')
+      : inTr('Recommended next action', 'Onerilen sonraki adim');
+    const focus = isBuyLaptop
+      ? inTr('Laptop class for your budget', 'Butcene uygun laptop sinifi')
+      : meta.name;
+    const copy = isNoBuy
+      ? inTr('RigPilot does not see a strong paid upgrade yet. Run the validation checks, apply the free fixes, then rerun this result with fresh observations.',
+             'RigPilot su an guclu bir ucretli yukseltme gormuyor. Dogrulama kontrollerini yap, ucretsiz duzeltmeleri uygula, sonra yeni gozlemlerle tekrar calistir.')
+      : inTr('Start with this comparison lane. It keeps the recommendation tied to your diagnosis instead of sending you into random product listings.',
+             'Bu karsilastirma araligindan basla. Boylece rastgele urun listelerine girmek yerine tavsiye analiz sonucuna bagli kalir.');
+    const queryByKind = {
+      gpu: best.key === 'gpu' && (res === '1080' || gpuSc <= 3)
+        ? 'RX 6600 RTX 2060 RTX 3060 graphics card'
+        : 'RX 6700 XT RTX 3060 Ti RTX 4060 Ti graphics card',
+      cpu: cpuKey.startsWith('r') ? 'Ryzen 5 5600 Ryzen 7 5700X3D processor' : 'i5 12400F Ryzen 5 5600 CPU motherboard',
+      ramcap: '2x16GB DDR4 DDR5 RAM kit',
+      psu: psuRecWatts + ' 80+ Gold power supply',
+      laptop: 'gaming laptop RTX 4060 16GB SSD',
+      build: 'Ryzen 5 5600 RX 6600 gaming pc build'
+    };
+    const query = queryByKind[kind] || queryByKind[best.key] || '';
+    const price = bandDesc
+      ? (currency === 'try' ? inTr('TRY range below', 'TL araligi asagida') : formatRangeForCurrency(bandDesc[0], bandDesc[1], 'value'))
+      : inTr('Price varies', 'Fiyat degisir');
+    const link = !isNoBuy && query
+      ? '<a class="buying-action-btn" href="' + marketplaceUrl(query) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor(kind) + '</a>'
+      : '<button type="button" class="buying-action-btn buying-action-btn-muted" disabled>' + actionLabelFor('none') + '</button>';
+
+    return '<div class="buying-action-card">' +
+      '<div class="buying-action-main">' +
+        '<div class="buying-kicker">' + title + '</div>' +
+        '<div class="buying-title">' + focus + '</div>' +
+        '<div class="buying-copy">' + copy + '</div>' +
+        '<div class="buying-trust-row">' +
+          '<span>' + inTr('Free fixes first', 'Once ucretsiz cozumler') + '</span>' +
+          '<span>' + inTr('PSU considered', 'PSU hesaba katildi') + '</span>' +
+          '<span>' + inTr('Waste risk checked', 'Israf riski kontrol edildi') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="buying-action-side">' +
+        '<div class="buying-price">' + price + '</div>' +
+        link +
+        '<div class="affiliate-note">' + inTr('RigPilot may earn a commission from qualifying purchases. Recommendations stay based on your diagnosis.',
+          'RigPilot uygun satin alimlardan komisyon kazanabilir. Tavsiyeler analiz sonucuna bagli kalir.') + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   /* ============================================================
      RENDER TO DOM
      ============================================================ */
@@ -1444,6 +1514,8 @@ function analyze(skipLoading) {
   el('uname').textContent  = meta.name;
   el('usub').textContent   = meta.sub;
   el('why-box').textContent = whyText;
+  const buyingActionEl = el('buying-action');
+  if (buyingActionEl) buyingActionEl.innerHTML = buildBuyingAction();
   el('upgrade-path').innerHTML = buildUpgradePath().map(card =>
     '<div class="path-card">' +
       '<div class="path-kicker">' + card.k + '</div>' +
@@ -1470,7 +1542,6 @@ function analyze(skipLoading) {
   }
 
   // 06 Budget & Price
-  const bandDesc = priceKey ? PRICE_USD[priceKey] : null;
   const fmtTry = value => Math.round(value / 100) * 100;
   const tryValueMin = bandDesc ? fmtTry(bandDesc[0] * USD_TRY_ROUGH_RATE * TRY_VALUE_BUFFER * TRY_USED_FACTOR) : 0;
   const tryValueMax = bandDesc ? fmtTry(bandDesc[1] * USD_TRY_ROUGH_RATE * TRY_VALUE_BUFFER) : 0;
@@ -1644,7 +1715,7 @@ function analyze(skipLoading) {
           '<div class="example-title">' + card.t + '</div>' +
           '<div class="example-price">' + card.p + '</div>' +
           '<div class="path-copy">' + card.c + '</div>' +
-          (card.q ? '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('Search this tier','Bu seviyeyi ara') + '</a>' : '<span class="link-slot link-slot-disabled">' + inTr('No purchase needed','Satin alma gerekmez') + '</span>') +
+          (card.q ? '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor(focusPart) + '</a>' : '<span class="link-slot link-slot-disabled">' + inTr('No purchase needed','Satin alma gerekmez') + '</span>') +
         '</div>'
       ).join('') + '</div>' +
     '</div>';
@@ -1715,7 +1786,7 @@ function analyze(skipLoading) {
           '<div class="example-price">' + formatRangeForCurrency(Math.max(350, card.min || 450), card.max === Infinity ? budgetUSD * 1.2 : card.max, 'retail') + '</div>' +
           '<div class="laptop-specs">' + card.specs.map(spec => '<span>' + spec + '</span>').join('') + '</div>' +
           '<div class="path-copy">' + card.c + '</div>' +
-          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('Search this tier','Bu seviyeyi ara') + '</a>' +
+          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor('laptop') + '</a>' +
         '</div>'
       ).join('') + '</div>' +
       '<div class="info-note">' +
@@ -1794,7 +1865,7 @@ function analyze(skipLoading) {
           '<div class="example-price">' + card.p + '</div>' +
           '<div class="laptop-specs">' + card.specs.map(spec => '<span>' + spec + '</span>').join('') + '</div>' +
           '<div class="path-copy">' + card.c + '</div>' +
-          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('Search this tier','Bu seviyeyi ara') + '</a>' +
+          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor('build') + '</a>' +
         '</div>'
       ).join('') + '</div>' +
       '<div class="info-note">' +
@@ -1854,6 +1925,21 @@ function analyze(skipLoading) {
   el('final-box').className = 'final-box ' + finalCls;
   el('fi').innerHTML        = finalIco;
   el('ft').textContent      = finalSent;
+  latestResultSummary = [
+    'RigPilot Result',
+    'Decision: ' + finalSent,
+    'Best next move: ' + meta.name + ' - ' + meta.sub,
+    'Why: ' + whyText,
+    'Budget match: ' + budgetFitLabel + ' - ' + budgetFitNote,
+    'Waste risk: ' + wasteLevel + ' - ' + wasteSub,
+    dnuSet.size ? 'Do not buy first: ' + [...dnuSet].map(k => PART_LABEL[k] || k).join(', ') : 'Do not buy first: no clearly unnecessary category found',
+    'CPU: ' + cpuName,
+    'GPU: ' + gpuName,
+    'RAM: ' + ramGB + 'GB ' + ramType.toUpperCase(),
+    'Target: ' + resLabel + ' / ' + hz + 'Hz / ' + gameLabel,
+    'Use RigPilot to validate before spending.'
+  ].join('\n');
+  setCopyButtonState(false);
 
   // Show result
   const r = el('result');
