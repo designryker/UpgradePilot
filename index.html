@@ -1,0 +1,604 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RigPilot - PC Performance &amp; Upgrade Advisor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+<div class="container">
+
+<header>
+  <div class="lang-switch">
+    <label for="lang" data-i18n="languageLabel">Language</label>
+    <select id="lang" data-action="set-language">
+      <option value="en" selected>English</option>
+      <option value="tr">Türkçe</option>
+    </select>
+  </div>
+  <div class="eyebrow" data-i18n="eyebrow">// v0.3.2 — PC Performance &amp; Upgrade Advisor</div>
+  <h1>Rig<span class="accent">Pilot</span><span class="dim">.</span></h1>
+  <div class="tagline" data-i18n="tagline">Optimize first. Upgrade smart.</div>
+  <p class="subtitle" data-i18n-html="subtitle">Fill in your current specs. RigPilot helps you decide whether to keep the PC, upgrade one or two parts, or move toward a budget full build without wasting money.</p>
+  <div class="pc-visual" id="pc-visual" data-active-part="system" aria-hidden="true">
+    <div class="pc-visual-top">
+      <span data-i18n="pcVisualTitle">Virtual PC</span>
+      <strong id="pc-visual-label" data-i18n="pcVisualSystem">System scan</strong>
+    </div>
+    <div class="pc-case">
+      <div class="pc-board">
+        <div class="pc-part pc-cpu" data-part="cpu"><span>CPU</span></div>
+        <div class="pc-part pc-ram pc-ram-a" data-part="ram"></div>
+        <div class="pc-part pc-ram pc-ram-b" data-part="ram"></div>
+        <div class="pc-part pc-gpu" data-part="gpu"><span>GPU</span></div>
+        <div class="pc-part pc-psu" data-part="psu"><span>PSU</span></div>
+        <div class="pc-fan pc-fan-a"></div>
+        <div class="pc-fan pc-fan-b"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<div class="wizard" id="wizard" data-current-step="0">
+  <div class="wizard-progress" id="wizard-progress" aria-label="Wizard progress"></div>
+
+  <section class="wizard-step" data-step="goal">
+    <div class="step-copy">
+      <div class="step-kicker" data-i18n="goalStepKicker">01 / Goal</div>
+      <h2 data-i18n="goalStepTitle">Start with what you want to fix.</h2>
+      <p data-i18n="goalStepCopy">RigPilot will ask only what it needs, then decide whether to keep, upgrade, or rebuild.</p>
+    </div>
+    <!-- System, Cooling & Storage -->
+<div class="sec-label" data-i18n="secSystemCooling">System, Cooling &amp; Storage</div>
+<div class="g3">
+  <div class="field">
+    <label data-i18n="systemType">System Type</label>
+    <select id="system-type">
+      <option value="desktop" selected data-i18n="desktopPc">Desktop PC</option>
+      <option value="laptop" data-i18n="gamingLaptop">Gaming Laptop</option>
+    </select>
+  </div>
+  <div class="field advanced-field">
+    <label data-i18n="cpuCooling">CPU Cooling</label>
+    <select id="cpu-cooler">
+      <option value="unknown" data-i18n="dontKnow">I don't know</option>
+      <option value="stock" data-i18n="stockCooler">Stock / boxed cooler</option>
+      <option value="basic_air" data-i18n="basicAir">Basic air cooler</option>
+      <option value="tower_air" selected data-i18n="towerAir">Tower air cooler</option>
+      <option value="aio_120" data-i18n="aio120">120mm liquid cooler</option>
+      <option value="aio_240" data-i18n="aio240">240mm liquid cooler</option>
+      <option value="aio_360" data-i18n="aio360">360mm liquid cooler</option>
+    </select>
+    <div class="field-hint" data-i18n="coolingHint">Strong CPUs need enough cooling to hold boost clocks.</div>
+  </div>
+  <div class="field">
+    <label data-i18n="gameDrive">Game Drive</label>
+    <select id="game-drive">
+      <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
+      <option value="hdd">HDD</option>
+      <option value="sata_ssd">SATA SSD</option>
+      <option value="nvme">NVMe SSD</option>
+    </select>
+  </div>
+</div>
+<div class="g2b">
+  <div class="field advanced-field">
+    <label data-i18n="windowsVersion">Windows Version</label>
+    <select id="os-version">
+      <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
+      <option value="win10">Windows 10</option>
+      <option value="win11">Windows 11</option>
+      <option value="other" data-i18n="otherOs">Other / Linux</option>
+    </select>
+  </div>
+</div>
+
+
+    <!-- Display & Gaming -->
+<div class="sec-label" data-i18n="secDisplay">Display &amp; Gaming Profile</div>
+<div class="g3">
+  <div class="field">
+    <label data-i18n="gameFocus">Primary Game Focus</label>
+    <select id="game">
+      <option value="compfps" data-i18n="gameCompfps">Competitive FPS (CS2, Valorant)</option>
+      <option value="mmorpg" data-i18n="gameMmorpg">MMORPG</option>
+      <option value="aaa" selected data-i18n="gameAaa">AAA / Open World</option>
+      <option value="battle" data-i18n="gameBattle">Battle Royale (Warzone, Fortnite)</option>
+      <option value="sim" data-i18n="gameSim">Simulation / Strategy</option>
+      <option value="racing" data-i18n="gameRacing">Racing / Flight Sim</option>
+      <option value="modded" data-i18n="gameModded">Modded Games</option>
+      <option value="stream" data-i18n="gameStream">Streaming / Recording</option>
+      <option value="mixed" data-i18n="gameMixed">General Mixed Gaming</option>
+    </select>
+  </div>
+  <div class="field">
+    <label data-i18n="resolution">Resolution</label>
+    <select id="res">
+      <option value="1080" selected>1080p</option>
+      <option value="1440">1440p</option>
+      <option value="4k">4K</option>
+    </select>
+    <div class="inline-tools">
+      <button type="button" class="mini-btn" data-action="detect-display" data-i18n="detectDisplay">Apply Browser Resolution</button>
+    </div>
+  </div>
+  <div class="field">
+    <label data-i18n="refreshRate">Refresh Rate</label>
+    <select id="hz">
+      <option value="60">60 Hz</option>
+      <option value="144" selected>144 Hz</option>
+      <option value="165">165 – 240 Hz</option>
+      <option value="360">240 Hz+</option>
+    </select>
+  </div>
+</div>
+<div class="g2b">
+  <div class="field">
+    <label data-i18n="popularGame">Popular Game</label>
+    <select id="popular-game" data-action="apply-popular-game">
+      <option value="custom" selected data-i18n="gameCustom">Manual / mixed</option>
+      <option value="cs2" data-game-type="compfps">Counter-Strike 2</option>
+      <option value="valorant" data-game-type="compfps">Valorant</option>
+      <option value="lol" data-game-type="compfps">League of Legends</option>
+      <option value="fortnite" data-game-type="battle">Fortnite</option>
+      <option value="warzone" data-game-type="battle">Call of Duty: Warzone</option>
+      <option value="pubg" data-game-type="battle">PUBG: Battlegrounds</option>
+      <option value="wow" data-game-type="mmorpg">World of Warcraft</option>
+      <option value="ffxiv" data-game-type="mmorpg">Final Fantasy XIV</option>
+      <option value="lostark" data-game-type="mmorpg">Lost Ark</option>
+      <option value="bdo" data-game-type="mmorpg">Black Desert Online</option>
+      <option value="gta" data-game-type="aaa">GTA V / GTA Online</option>
+      <option value="cyberpunk" data-game-type="aaa">Cyberpunk 2077</option>
+      <option value="rdr2" data-game-type="aaa">Red Dead Redemption 2</option>
+      <option value="elden" data-game-type="aaa">Elden Ring</option>
+      <option value="minecraft" data-game-type="modded">Minecraft / modded</option>
+      <option value="msfs" data-game-type="racing">Microsoft Flight Simulator</option>
+    </select>
+    <div class="field-hint" data-i18n="popularGameHint">Pick one to auto-tune game type and problem focus.</div>
+  </div>
+  <div class="field">
+    <label data-i18n="secondaryGoal">Secondary Goal</label>
+    <select id="goal">
+      <option value="none" data-i18n="goalNone">No specific secondary goal</option>
+      <option value="fps" data-i18n="goalFps">Higher FPS</option>
+      <option value="visuals" selected data-i18n="goalVisuals">Better visual quality</option>
+      <option value="smooth" data-i18n="goalSmooth">Less stutter / smoother gameplay</option>
+      <option value="latency" data-i18n="goalLatency">Low latency / fast response</option>
+      <option value="stream" data-i18n="goalStream">Streaming quality</option>
+      <option value="future" data-i18n="goalFuture">Future-proofing</option>
+      <option value="cheap" data-i18n="goalCheap">Cheapest meaningful improvement</option>
+    </select>
+  </div>
+</div>
+
+
+  </section>
+
+  <section class="wizard-step" data-step="specs">
+    <div class="step-copy">
+      <div class="step-kicker" data-i18n="specsStepKicker">02 / Current PC</div>
+      <h2 data-i18n="specsStepTitle">Tell us the parts that matter most.</h2>
+      <p data-i18n="specsStepCopy">Start with CPU, GPU, and memory. Exact model names help the recommendation stay grounded.</p>
+    </div>
+    <!-- CPU & GPU -->
+<div class="sec-label" data-i18n="secCpuGpu">CPU &amp; GPU</div>
+<div class="g2">
+  <div class="field">
+    <label data-i18n="currentCpu">Current CPU</label>
+    <input class="search-box" id="cpu-search" type="search" data-i18n-placeholder="cpuSearchPlaceholder" data-filter-select="cpu" placeholder="Search CPU, e.g. 5600X">
+    <div class="quick-grid" id="cpu-popular">
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="r5_2600">Ryzen 5 2600</button>
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="r5_3600">Ryzen 5 3600</button>
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="r5_5600">Ryzen 5 5600</button>
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i5_9400f">i5-9400F</button>
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i7_7700k">i7-7700K</button>
+      <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i5_10400f">i5-10400F</button>
+    </div>
+    <select id="cpu" data-action="update-memory-compatibility">
+      <optgroup label="AMD Ryzen 3000 / 5000 (AM4)">
+        <option value="r5_1600">Ryzen 5 1600</option>
+        <option value="r5_2600">Ryzen 5 2600</option>
+        <option value="r7_2700x">Ryzen 7 2700X</option>
+        <option value="r3_3100">Ryzen 3 3100</option>
+        <option value="r3_3300x">Ryzen 3 3300X</option>
+        <option value="r5_3400g">Ryzen 5 3400G</option>
+        <option value="r5_3500x">Ryzen 5 3500X</option>
+        <option value="r5_3600">Ryzen 5 3600</option>
+        <option value="r5_3600x">Ryzen 5 3600X</option>
+        <option value="r7_3700x">Ryzen 7 3700X</option>
+        <option value="r5_5500">Ryzen 5 5500</option>
+        <option value="r5_5600">Ryzen 5 5600</option>
+        <option value="r5_5600x">Ryzen 5 5600X</option>
+        <option value="r7_5700x">Ryzen 7 5700X</option>
+        <option value="r7_5700x3d">Ryzen 7 5700X3D</option>
+        <option value="r7_5800x">Ryzen 7 5800X</option>
+        <option value="r7_5800x3d">Ryzen 7 5800X3D</option>
+        <option value="r9_5900x">Ryzen 9 5900X</option>
+        <option value="r9_5950x">Ryzen 9 5950X</option>
+      </optgroup>
+      <optgroup label="AMD Ryzen 7000 / 9000 (AM5)">
+        <option value="r5_7500f">Ryzen 5 7500F</option>
+        <option value="r5_7600">Ryzen 5 7600</option>
+        <option value="r5_7600x">Ryzen 5 7600X</option>
+        <option value="r7_7700">Ryzen 7 7700</option>
+        <option value="r7_7700x">Ryzen 7 7700X</option>
+        <option value="r7_7800x3d">Ryzen 7 7800X3D</option>
+        <option value="r9_7900x">Ryzen 9 7900X</option>
+        <option value="r9_7950x">Ryzen 9 7950X</option>
+        <option value="r9_7950x3d">Ryzen 9 7950X3D</option>
+        <option value="r5_9600x">Ryzen 5 9600X</option>
+        <option value="r7_9700x">Ryzen 7 9700X</option>
+        <option value="r7_9800x3d">Ryzen 7 9800X3D</option>
+        <option value="r9_9900x">Ryzen 9 9900X</option>
+        <option value="r9_9950x">Ryzen 9 9950X</option>
+        <option value="r9_9900x3d">Ryzen 9 9900X3D</option>
+        <option value="r9_9950x3d">Ryzen 9 9950X3D</option>
+      </optgroup>
+      <optgroup label="Intel Core 6th–9th Gen">
+        <option value="i5_6500">Intel i5-6500</option>
+        <option value="i5_6600k">Intel i5-6600K</option>
+        <option value="i7_6700">Intel i7-6700</option>
+        <option value="i7_6700k">Intel i7-6700K</option>
+        <option value="i5_7400">Intel i5-7400</option>
+        <option value="i5_7600k">Intel i5-7600K</option>
+        <option value="i7_7700">Intel i7-7700</option>
+        <option value="i7_7700k">Intel i7-7700K</option>
+        <option value="i5_8400">Intel i5-8400</option>
+        <option value="i5_8600k">Intel i5-8600K</option>
+        <option value="i7_8700">Intel i7-8700</option>
+        <option value="i7_8700k">Intel i7-8700K</option>
+        <option value="i5_9400f" selected>Intel i5-9400F</option>
+        <option value="i5_9600k">Intel i5-9600K</option>
+        <option value="i7_9700k">Intel i7-9700K</option>
+        <option value="i9_9900k">Intel i9-9900K</option>
+      </optgroup>
+      <optgroup label="Intel Core 10th–14th Gen">
+        <option value="i5_10400">Intel i5-10400</option>
+        <option value="i5_10400f">Intel i5-10400F</option>
+        <option value="i5_10600k">Intel i5-10600K</option>
+        <option value="i5_11400">Intel i5-11400</option>
+        <option value="i5_11400f">Intel i5-11400F</option>
+        <option value="i5_11600k">Intel i5-11600K</option>
+        <option value="i3_12100f">Intel i3-12100F</option>
+        <option value="i5_12400">Intel i5-12400</option>
+        <option value="i5_12400f">Intel i5-12400F</option>
+        <option value="i5_12600k">Intel i5-12600K</option>
+        <option value="i5_13400">Intel i5-13400</option>
+        <option value="i5_13400f">Intel i5-13400F</option>
+        <option value="i5_13500">Intel i5-13500</option>
+        <option value="i5_13600k">Intel i5-13600K</option>
+        <option value="i5_13600kf">Intel i5-13600KF</option>
+        <option value="i5_14400f">Intel i5-14400F</option>
+        <option value="i5_14600k">Intel i5-14600K</option>
+        <option value="i7_10700">Intel i7-10700</option>
+        <option value="i7_10700k">Intel i7-10700K</option>
+        <option value="i7_11700k">Intel i7-11700K</option>
+        <option value="i7_12700k">Intel i7-12700K</option>
+        <option value="i7_13700k">Intel i7-13700K</option>
+        <option value="i7_14700k">Intel i7-14700K</option>
+        <option value="i9_10900k">Intel i9-10900K</option>
+        <option value="i9_12900k">Intel i9-12900K</option>
+        <option value="i9_13900k">Intel i9-13900K</option>
+        <option value="i9_14900k">Intel i9-14900K</option>
+        <option value="i9_14900ks">Intel i9-14900KS</option>
+      </optgroup>
+      <optgroup label="Intel Core Ultra 200S">
+        <option value="ultra5_245k">Intel Core Ultra 5 245K</option>
+        <option value="ultra7_265k">Intel Core Ultra 7 265K</option>
+        <option value="ultra9_285k">Intel Core Ultra 9 285K</option>
+      </optgroup>
+    </select>
+  </div>
+  <div class="field">
+    <label data-i18n="currentGpu">Current GPU</label>
+    <input class="search-box" id="gpu-search" type="search" data-i18n-placeholder="gpuSearchPlaceholder" data-filter-select="gpu" placeholder="Search GPU, e.g. RTX 3060">
+    <div class="quick-grid" id="gpu-popular">
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1050ti">GTX 1050 Ti</button>
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1060_6gb">GTX 1060</button>
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1650">GTX 1650</button>
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1660s">GTX 1660S</button>
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="rx580">RX 580</button>
+      <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="rtx2060">RTX 2060</button>
+    </div>
+    <select id="gpu">
+      <optgroup label="NVIDIA GeForce GTX / RTX 20">
+        <option value="gtx970">GTX 970</option>
+        <option value="gtx980ti">GTX 980 Ti</option>
+        <option value="gtx1050ti">GTX 1050 Ti</option>
+        <option value="gtx1060_3gb">GTX 1060 3GB</option>
+        <option value="gtx1060_6gb">GTX 1060 6GB</option>
+        <option value="gtx1070">GTX 1070</option>
+        <option value="gtx1070ti">GTX 1070 Ti</option>
+        <option value="gtx1080">GTX 1080</option>
+        <option value="gtx1080ti">GTX 1080 Ti</option>
+        <option value="gtx1650">GTX 1650</option>
+        <option value="gtx1650s">GTX 1650 Super</option>
+        <option value="gtx1660">GTX 1660</option>
+        <option value="gtx1660s" selected>GTX 1660 Super</option>
+        <option value="gtx1660ti">GTX 1660 Ti</option>
+        <option value="rtx2060">RTX 2060</option>
+        <option value="rtx2060s">RTX 2060 Super</option>
+        <option value="rtx2070">RTX 2070</option>
+        <option value="rtx2070s">RTX 2070 Super</option>
+        <option value="rtx2080">RTX 2080</option>
+        <option value="rtx2080ti">RTX 2080 Ti</option>
+      </optgroup>
+      <optgroup label="NVIDIA GeForce RTX 30">
+        <option value="rtx3050">RTX 3050</option>
+        <option value="rtx3060">RTX 3060</option>
+        <option value="rtx3060ti">RTX 3060 Ti</option>
+        <option value="rtx3070">RTX 3070</option>
+        <option value="rtx3070ti">RTX 3070 Ti</option>
+        <option value="rtx3080">RTX 3080</option>
+        <option value="rtx3080ti">RTX 3080 Ti</option>
+        <option value="rtx3090">RTX 3090</option>
+      </optgroup>
+      <optgroup label="NVIDIA GeForce RTX 40 / 50">
+        <option value="rtx4060">RTX 4060</option>
+        <option value="rtx4060ti">RTX 4060 Ti</option>
+        <option value="rtx4070">RTX 4070</option>
+        <option value="rtx4070s">RTX 4070 Super</option>
+        <option value="rtx4070ti">RTX 4070 Ti</option>
+        <option value="rtx4070tis">RTX 4070 Ti Super</option>
+        <option value="rtx4080">RTX 4080</option>
+        <option value="rtx4080s">RTX 4080 Super</option>
+        <option value="rtx4090">RTX 4090</option>
+        <option value="rtx5050">RTX 5050</option>
+        <option value="rtx5060">RTX 5060</option>
+        <option value="rtx5060ti">RTX 5060 Ti</option>
+        <option value="rtx5070">RTX 5070</option>
+        <option value="rtx5070ti">RTX 5070 Ti</option>
+        <option value="rtx5080">RTX 5080</option>
+        <option value="rtx5090">RTX 5090</option>
+      </optgroup>
+      <optgroup label="AMD Radeon RX 500 / 5000 / 6000">
+        <option value="rx570">RX 570</option>
+        <option value="rx580">RX 580</option>
+        <option value="rx590">RX 590</option>
+        <option value="rx5500xt">RX 5500 XT</option>
+        <option value="rx5600xt">RX 5600 XT</option>
+        <option value="rx5700">RX 5700</option>
+        <option value="rx5700xt">RX 5700 XT</option>
+        <option value="rx6400">RX 6400</option>
+        <option value="rx6500xt">RX 6500 XT</option>
+        <option value="rx6600">RX 6600</option>
+        <option value="rx6650xt">RX 6650 XT</option>
+        <option value="rx6700xt">RX 6700 XT</option>
+        <option value="rx6750xt">RX 6750 XT</option>
+        <option value="rx6800">RX 6800</option>
+        <option value="rx6800xt">RX 6800 XT</option>
+        <option value="rx6900xt">RX 6900 XT</option>
+        <option value="rx6950xt">RX 6950 XT</option>
+      </optgroup>
+      <optgroup label="AMD Radeon RX 7000 / 9000">
+        <option value="rx7600">RX 7600</option>
+        <option value="rx7600xt">RX 7600 XT</option>
+        <option value="rx7700xt">RX 7700 XT</option>
+        <option value="rx7800xt">RX 7800 XT</option>
+        <option value="rx7900gre">RX 7900 GRE</option>
+        <option value="rx7900xt">RX 7900 XT</option>
+        <option value="rx7900xtx">RX 7900 XTX</option>
+        <option value="rx9060xt">RX 9060 XT</option>
+        <option value="rx9070gre">RX 9070 GRE</option>
+        <option value="rx9070">RX 9070</option>
+        <option value="rx9070xt">RX 9070 XT</option>
+      </optgroup>
+      <optgroup label="Intel Arc">
+        <option value="arc_a380">Intel Arc A380</option>
+        <option value="arc_a580">Intel Arc A580</option>
+        <option value="arc_a750">Intel Arc A750</option>
+        <option value="arc_a770">Intel Arc A770</option>
+        <option value="arc_b570">Intel Arc B570</option>
+        <option value="arc_b580">Intel Arc B580</option>
+      </optgroup>
+    </select>
+  </div>
+</div>
+
+
+    <!-- Memory -->
+<div class="sec-label" data-i18n="secMemory">Memory</div>
+<div class="g2">
+  <div class="field">
+    <label data-i18n="ramCapacity">RAM Capacity</label>
+    <select id="ram">
+      <option value="8">8 GB</option>
+      <option value="16" selected>16 GB</option>
+      <option value="32">32 GB</option>
+      <option value="64">64 GB+</option>
+    </select>
+  </div>
+  <div class="field">
+    <label data-i18n="memoryType">Memory Type</label>
+    <select id="ram-type" data-action="update-ram-speeds">
+      <option value="ddr4" selected>DDR4</option>
+      <option value="ddr5">DDR5</option>
+    </select>
+    <div class="compat-note" id="memory-compat-note"></div>
+  </div>
+</div>
+<div class="g2b">
+  <div class="field advanced-field">
+    <label data-i18n="memorySpeed">Memory Speed</label>
+    <select id="ram-speed">
+      <option value="ddr4_2400">DDR4 2400</option>
+      <option value="ddr4_2666">DDR4 2666</option>
+      <option value="ddr4_3000">DDR4 3000</option>
+      <option value="ddr4_3200" selected>DDR4 3200</option>
+      <option value="ddr4_3600">DDR4 3600</option>
+      <option value="ddr4_4000">DDR4 4000+</option>
+    </select>
+  </div>
+  <div class="field advanced-field">
+    <label data-i18n="channelMode">Memory Channel Mode</label>
+    <select id="channel">
+      <option value="dual" selected data-i18n="dualChannel">Dual Channel</option>
+      <option value="single" data-i18n="singleChannel">Single Channel</option>
+    </select>
+  </div>
+</div>
+
+
+  </section>
+
+  <section class="wizard-step" data-step="budget">
+    <div class="step-copy">
+      <div class="step-kicker" id="budget-step-kicker" data-i18n="budgetStepKicker">03 / Budget & Power</div>
+      <h2 id="budget-step-title" data-i18n="budgetStepTitle">Set the money and safety limits.</h2>
+      <p id="budget-step-copy" data-i18n="budgetStepCopy">Budget is optional, but it helps RigPilot decide between one part, a bundle, or a full build path.</p>
+    </div>
+    <!-- Power Supply -->
+<div id="desktop-power-fields" class="desktop-only">
+<div class="sec-label" data-i18n="secPower">Power Supply</div>
+<div class="g1">
+  <div class="field">
+    <label data-i18n="psuWattage">PSU Wattage</label>
+    <div class="psu-readout">
+      <span class="field-hint" data-i18n="psuBarHint">Pick the watt value written on your PSU label.</span>
+      <span class="psu-value"><span id="psu-readout">650</span>W</span>
+    </div>
+    <input class="psu-bar" type="range" id="psu-watts" min="300" max="1200" step="50" value="650" data-action="update-psu-readout">
+  </div>
+</div>
+</div>
+
+
+
+    <!-- Budget -->
+<div class="sec-label" data-i18n="secBudget">Upgrade Budget</div>
+<div class="g2">
+  <div class="field">
+    <label data-i18n="budgetAmount">Budget Amount</label>
+    <input type="number" id="budget" data-i18n-placeholder="budgetPlaceholder" placeholder="e.g. 500" min="0">
+  </div>
+  <div class="field">
+    <label data-i18n="currency">Currency</label>
+    <select id="currency">
+      <option value="usd" selected data-i18n="currencyUsd">USD (US Dollar)</option>
+      <option value="eur" data-i18n="currencyEur">EUR (Euro)</option>
+      <option value="try" data-i18n="currencyTry">TRY (Turkish Lira)</option>
+    </select>
+  </div>
+</div>
+<div class="money-tools">
+  <button type="button" class="money-chip" data-budget-preset="250">250</button>
+  <button type="button" class="money-chip" data-budget-preset="500">500</button>
+  <button type="button" class="money-chip" data-budget-preset="750">750</button>
+  <button type="button" class="money-chip" data-budget-preset="1000">1000</button>
+</div>
+
+
+    <div class="btn-wrap">
+  <button class="btn" data-action="analyze">&#9658;&nbsp;&nbsp;<span data-i18n="analyzeBtn">Diagnose My PC &amp; Find Free Fixes First</span></button>
+</div>
+
+    <div class="loading-card" id="loading-card">
+  <div class="load-title" data-i18n="loadingTitle">Finding Best Value Parts</div>
+  <div class="load-line"><span></span></div>
+  <div class="load-copy" data-i18n="loadingCopy">Checking the cheapest meaningful upgrades, free fixes, and parts that are not worth buying for this setup.</div>
+</div>
+
+
+  </section>
+
+  <section class="wizard-step" data-step="result">
+    <div class="step-copy result-ready-copy">
+      <div class="step-kicker" data-i18n="resultStepKicker">04 / Result</div>
+      <h2 data-i18n="resultStepTitle">Analysis ready.</h2>
+      <p data-i18n="resultStepCopy">Here is what to fix before spending money.</p>
+    </div>
+    <!-- =================== RESULT =================== -->
+<div id="result">
+  <div class="r-card">
+    <div class="r-topbar">
+      <span class="r-product" data-i18n="resultProduct">RigPilot &middot; Analysis</span>
+      <span class="vbadge" id="vbadge"></span>
+    </div>
+    <div class="r-body">
+
+      <!-- 01 Performance Diagnosis -->
+      <div class="r-sec" id="psu-result-section">
+        <div class="r-sec-label"><span class="r-num">01</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></div>
+        <div class="diag-block">
+          <div class="diag-pill" id="diag-pill"></div>
+          <div class="diag-text" id="diag-text"></div>
+        </div>
+      </div>
+
+      <!-- 02 Free Performance Fixes -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">02</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></div>
+        <div class="checklist" id="checklist"></div>
+      </div>
+
+      <!-- 03 Before You Buy: Validate the Bottleneck -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">03</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></div>
+        <div class="bench-list" id="bench-list"></div>
+      </div>
+
+      <!-- 04 Best Next Upgrade -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">04</span>&nbsp;<span data-i18n="resBest">Best Next Upgrade</span></div>
+        <div class="upgrade-hero">
+          <div class="uicon" id="uicon"></div>
+          <div class="utext">
+            <div class="uname" id="uname"></div>
+            <div class="usub"  id="usub"></div>
+          </div>
+        </div>
+        <div class="why-box" id="why-box"></div>
+        <div class="path-label">Upgrade Path</div>
+        <div class="upgrade-path" id="upgrade-path"></div>
+      </div>
+
+      <!-- 05 Recommended PSU for Next GPU -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">05</span>&nbsp;<span data-i18n="resPsu">Recommended PSU for Next GPU Tier</span></div>
+        <div id="psu-rec-content"></div>
+      </div>
+
+      <!-- 06 Budget Fit & Estimated Price Range -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">06</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></div>
+        <div id="budget-content"></div>
+      </div>
+
+      <!-- 07 Do Not Buy First -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">07</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></div>
+        <div class="dnu-row" id="dnu-row"></div>
+      </div>
+
+      <!-- 08 Final Decision -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">08</span>&nbsp;<span data-i18n="resFinal">Final Decision</span></div>
+        <div class="final-box" id="final-box">
+          <span class="fi" id="fi"></span>
+          <span class="ft" id="ft"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+    <div class="result-actions">
+      <button type="button" class="wizard-btn wizard-btn-secondary" id="result-adjust" data-i18n="changeInputsBtn">Change Inputs</button>
+      <button type="button" class="wizard-btn wizard-btn-primary" id="result-rerun" data-i18n="runAgainBtn">Run Again</button>
+    </div>
+
+  </section>
+
+  <div class="wizard-actions" id="wizard-actions">
+    <button type="button" class="wizard-btn wizard-btn-secondary" id="wizard-back" data-i18n="backBtn">Back</button>
+    <button type="button" class="wizard-btn wizard-btn-primary" id="wizard-next" data-i18n="nextBtn">Next</button>
+  </div>
+</div>
+</div><!-- /container -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
