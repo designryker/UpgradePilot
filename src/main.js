@@ -268,6 +268,43 @@ function setSelectValue(id, value) {
   if (node) node.value = value;
 }
 
+function resetInputsToDefaults() {
+  hasTouchedSpecs = false;
+  latestResultSummary = '';
+  currentWizardStep = 0;
+
+  document.querySelectorAll('select').forEach(select => {
+    const defaultOption = [...select.options].find(option => option.defaultSelected);
+    if (defaultOption) select.value = defaultOption.value;
+    else select.selectedIndex = 0;
+    select.querySelectorAll('option,optgroup').forEach(option => {
+      option.hidden = false;
+      option.disabled = false;
+    });
+  });
+
+  document.querySelectorAll('input, textarea').forEach(input => {
+    if (input.type === 'checkbox' || input.type === 'radio') {
+      input.checked = input.defaultChecked;
+      return;
+    }
+    input.value = input.defaultValue || '';
+  });
+
+  document.querySelectorAll('.quick-chip.active,.money-chip.active').forEach(node => {
+    node.classList.remove('active');
+  });
+  document.querySelectorAll('.ci.done').forEach(node => node.classList.remove('done'));
+  document.querySelectorAll('.cbox.on').forEach(node => {
+    node.classList.remove('on');
+    node.textContent = '';
+  });
+
+  el('loading-card')?.classList.remove('show');
+  el('result')?.classList.remove('show');
+  setCopyButtonState(false);
+}
+
 function setVirtualPcPart(part, label) {
   const visual = el('pc-visual');
   if (!visual) return;
@@ -494,8 +531,24 @@ function bindEvents() {
 
 // Initialise dropdown on page load
 window.addEventListener('DOMContentLoaded', () => {
+  resetInputsToDefaults();
   bindEvents();
   initWizard();
+  updateMemoryCompatibility();
+  updatePsuReadout();
+  updateSystemTypeFields();
+  updateQuickChips();
+  updateBudgetPresets();
+  updateVirtualPcRamMode();
+  updateVirtualPcSummary();
+  setVirtualPcPart('system');
+  setLanguage('en');
+});
+
+window.addEventListener('pageshow', event => {
+  if (!event.persisted) return;
+  resetInputsToDefaults();
+  goToWizardStep(0, false);
   updateMemoryCompatibility();
   updatePsuReadout();
   updateSystemTypeFields();

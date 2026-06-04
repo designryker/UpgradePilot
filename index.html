@@ -9,14 +9,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body autocomplete="off">
 <div class="container app-shell">
 
 <header>
   <div class="hero-copy">
   <div class="lang-switch">
     <label for="lang" data-i18n="languageLabel">Language</label>
-    <select id="lang" data-action="set-language">
+    <select id="lang" data-action="set-language" autocomplete="off">
       <option value="en" selected>English</option>
       <option value="tr">Türkçe</option>
     </select>
@@ -75,14 +75,14 @@
 <div class="g3">
   <div class="field">
     <label data-i18n="systemType">System Type</label>
-    <select id="system-type">
+    <select id="system-type" autocomplete="off">
       <option value="desktop" selected data-i18n="desktopPc">Desktop PC</option>
       <option value="laptop" data-i18n="gamingLaptop">Gaming Laptop</option>
     </select>
   </div>
   <div class="field advanced-field desktop-only">
     <label data-i18n="cpuCooling">CPU Cooling</label>
-    <select id="cpu-cooler">
+    <select id="cpu-cooler" autocomplete="off">
       <option value="unknown" data-i18n="dontKnow">I don't know</option>
       <option value="stock" data-i18n="stockCooler">Stock / boxed cooler</option>
       <option value="basic_air" data-i18n="basicAir">Basic air cooler</option>
@@ -95,7 +95,7 @@
   </div>
   <div class="field">
     <label><span data-i18n="gameDrive">Game Drive</span><span class="field-help" tabindex="0">?<span class="field-popover">SSD games usually load faster and stutter less than HDD installs. NVMe is the faster SSD type, but SATA SSD is already a big jump from HDD.</span></span></label>
-    <select id="game-drive">
+    <select id="game-drive" autocomplete="off">
       <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
       <option value="hdd">HDD</option>
       <option value="sata_ssd">SATA SSD</option>
@@ -106,7 +106,7 @@
 <div class="g2b">
   <div class="field advanced-field">
     <label data-i18n="windowsVersion">Windows Version</label>
-    <select id="os-version">
+    <select id="os-version" autocomplete="off">
       <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
       <option value="win10">Windows 10</option>
       <option value="win11">Windows 11</option>
@@ -119,7 +119,7 @@
 <div class="g1">
   <div class="field">
     <label data-i18n="secondaryGoal">Current Problem</label>
-    <select id="goal">
+    <select id="goal" autocomplete="off">
       <option value="none" data-i18n="goalNone">No specific problem</option>
       <option value="fps" data-i18n="goalFps">I cannot hold 60 FPS at 4K/1440p</option>
       <option value="visuals" selected data-i18n="goalVisuals">I want higher graphics without big FPS drops</option>
@@ -137,7 +137,7 @@
 <div class="g3">
   <div class="field">
     <label data-i18n="gameFocus">Primary Game Focus</label>
-    <select id="game">
+    <select id="game" autocomplete="off">
       <option value="compfps" data-i18n="gameCompfps">Competitive FPS (CS2, Valorant)</option>
       <option value="mmorpg" data-i18n="gameMmorpg">MMORPG</option>
       <option value="aaa" selected data-i18n="gameAaa">AAA / Open World</option>
@@ -151,7 +151,7 @@
   </div>
   <div class="field">
     <label data-i18n="resolution">Resolution</label>
-    <select id="res">
+    <select id="res" autocomplete="off">
       <option value="1080" selected>1080p</option>
       <option value="1440">1440p</option>
       <option value="4k">4K</option>
@@ -162,7 +162,7 @@
   </div>
   <div class="field">
     <label data-i18n="refreshRate">Refresh Rate</label>
-    <select id="hz">
+    <select id="hz" autocomplete="off">
       <option value="60">60 Hz</option>
       <option value="144" selected>144 Hz</option>
       <option value="165">165 – 240 Hz</option>
@@ -190,7 +190,7 @@
 <div class="g2">
   <div class="field">
     <label data-i18n="currentCpu">Current CPU</label>
-    <input class="search-box" id="cpu-search" type="search" data-i18n-placeholder="cpuSearchPlaceholder" data-filter-select="cpu" placeholder="Search CPU, e.g. 5600X">
+    <input class="search-box" id="cpu-search" type="search" data-i18n-placeholder="cpuSearchPlaceholder" data-filter-select="cpu" placeholder="Search CPU, e.g. 5600X" autocomplete="off">
     <div class="quick-grid" id="cpu-popular">
       <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="r5_2600">Ryzen 5 2600</button>
       <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="r5_3600">Ryzen 5 3600</button>
@@ -199,7 +199,7 @@
       <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i7_7700k">i7-7700K</button>
       <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i5_10400f">i5-10400F</button>
     </div>
-    <select id="cpu" data-action="update-memory-compatibility">
+    <select id="cpu" data-action="update-memory-compatibility" autocomplete="off">
       <optgroup label="AMD Ryzen 3000 / 5000 (AM4)">
         <option value="r5_1600">Ryzen 5 1600</option>
         <option value="r5_2600">Ryzen 5 2600</option>
@@ -296,7 +296,7 @@
   </div>
   <div class="field">
     <label data-i18n="currentGpu">Current GPU</label>
-    <input class="search-box" id="gpu-search" type="search" data-i18n-placeholder="gpuSearchPlaceholder" data-filter-select="gpu" placeholder="Search GPU, e.g. RTX 3060">
+    <input class="search-box" id="gpu-search" type="search" data-i18n-placeholder="gpuSearchPlaceholder" data-filter-select="gpu" placeholder="Search GPU, e.g. RTX 3060" autocomplete="off">
     <div class="quick-grid" id="gpu-popular">
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1050ti">GTX 1050 Ti</button>
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1060_6gb">GTX 1060</button>
@@ -305,7 +305,7 @@
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="rx580">RX 580</button>
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="rtx2060">RTX 2060</button>
     </div>
-    <select id="gpu">
+    <select id="gpu" autocomplete="off">
       <optgroup label="NVIDIA GeForce GTX / RTX 20">
         <option value="gtx970">GTX 970</option>
         <option value="gtx980ti">GTX 980 Ti</option>
@@ -406,7 +406,7 @@
 <div class="g2">
   <div class="field">
     <label><span data-i18n="ramCapacity">RAM Capacity</span><span class="field-help" tabindex="0">?<span class="field-popover">RAM is short-term memory. 8 GB can cause stutter in modern games; 16 GB is the practical baseline; 32 GB helps heavier games and multitasking.</span></span></label>
-    <select id="ram">
+    <select id="ram" autocomplete="off">
       <option value="8">8 GB</option>
       <option value="16" selected>16 GB</option>
       <option value="32">32 GB</option>
@@ -415,7 +415,7 @@
   </div>
   <div class="field">
     <label><span data-i18n="memoryType">Memory Type</span><span class="field-help" tabindex="0">?<span class="field-popover">DDR4 and DDR5 are different RAM generations. They are not interchangeable; your motherboard decides which one you can use.</span></span></label>
-    <select id="ram-type" data-action="update-ram-speeds">
+    <select id="ram-type" data-action="update-ram-speeds" autocomplete="off">
       <option value="ddr4" selected>DDR4</option>
       <option value="ddr5">DDR5</option>
     </select>
@@ -425,7 +425,7 @@
 <div class="g2b">
   <div class="field advanced-field">
     <label><span data-i18n="memorySpeed">Memory Speed</span><span class="field-help" tabindex="0">?<span class="field-popover">RAM speed can affect CPU-heavy games and 1% lows. If your RAM is running slower than advertised, enabling XMP/EXPO in BIOS may fix it for free.</span></span></label>
-    <select id="ram-speed">
+    <select id="ram-speed" autocomplete="off">
       <option value="ddr4_2400">DDR4 2400</option>
       <option value="ddr4_2666">DDR4 2666</option>
       <option value="ddr4_3000">DDR4 3000</option>
@@ -436,7 +436,7 @@
   </div>
   <div class="field advanced-field">
     <label><span data-i18n="channelMode">Memory Channel Mode</span><span class="field-help" tabindex="0">?<span class="field-popover">Dual channel means two matching RAM sticks work together. Single channel can reduce memory bandwidth and hurt FPS stability.</span></span></label>
-    <select id="channel">
+    <select id="channel" autocomplete="off">
       <option value="dual" selected data-i18n="dualChannel">Dual Channel</option>
       <option value="single" data-i18n="singleChannel">Single Channel</option>
     </select>
@@ -462,7 +462,7 @@
       <span class="field-hint" data-i18n="psuBarHint">Pick the watt value written on your PSU label.</span>
       <span class="psu-value"><span id="psu-readout">650</span>W</span>
     </div>
-    <input class="psu-bar" type="range" id="psu-watts" min="300" max="1200" step="50" value="650" data-action="update-psu-readout">
+    <input class="psu-bar" type="range" id="psu-watts" min="300" max="1200" step="50" value="650" data-action="update-psu-readout" autocomplete="off">
   </div>
 </div>
 </div>
@@ -474,11 +474,11 @@
 <div class="g2">
   <div class="field">
     <label data-i18n="budgetAmount">Budget Amount</label>
-    <input type="number" id="budget" data-i18n-placeholder="budgetPlaceholder" placeholder="e.g. 500" min="0">
+    <input type="number" id="budget" data-i18n-placeholder="budgetPlaceholder" placeholder="e.g. 500" min="0" autocomplete="off">
   </div>
   <div class="field">
     <label data-i18n="currency">Currency</label>
-    <select id="currency">
+    <select id="currency" autocomplete="off">
       <option value="usd" selected data-i18n="currencyUsd">USD (US Dollar)</option>
       <option value="eur" data-i18n="currencyEur">EUR (Euro)</option>
       <option value="try" data-i18n="currencyTry">TRY (Turkish Lira)</option>
