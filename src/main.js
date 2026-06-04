@@ -222,7 +222,10 @@ function updateSystemTypeFields() {
   if (kicker) kicker.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepKicker' : 'budgetStepKicker'];
   if (title) title.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepTitle' : 'budgetStepTitle'];
   if (copy) copy.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepCopy' : 'budgetStepCopy'];
-  if (isLaptopMode) setVirtualPcPart('system', currentLang === 'tr' ? 'Laptop modu' : 'Laptop mode');
+  setVirtualPcPart('system', isLaptopMode
+    ? (currentLang === 'tr' ? 'Laptop modu' : 'Laptop mode')
+    : (currentLang === 'tr' ? 'Sistem taramasi' : 'System scan')
+  );
   updateVirtualPcSummary();
 }
 
