@@ -305,6 +305,29 @@ function setBudgetPreset(amount) {
   if (budget) budget.value = amount;
 }
 
+function formatBudgetPresetLabel(amount, currency) {
+  if (currency === 'try') {
+    return amount >= 1000 ? (amount / 1000) + 'K TL' : amount + ' TL';
+  }
+  if (currency === 'eur') return '€' + amount;
+  return '$' + amount;
+}
+
+function updateBudgetPresets() {
+  const currency = el('currency')?.value || 'usd';
+  const presets = {
+    usd: [250, 500, 750, 1000],
+    eur: [250, 500, 750, 1000],
+    try: [10000, 20000, 35000, 50000],
+  }[currency] || [250, 500, 750, 1000];
+
+  document.querySelectorAll('[data-budget-preset]').forEach((button, index) => {
+    const amount = presets[index] || presets[presets.length - 1];
+    button.dataset.budgetPreset = String(amount);
+    button.textContent = formatBudgetPresetLabel(amount, currency);
+  });
+}
+
 const WIZARD_STEPS = [
   {id:'goal', labelKey:'stepGoal'},
   {id:'specs', labelKey:'stepSpecs'},
@@ -374,6 +397,7 @@ function bindEvents() {
   el('psu-watts')?.addEventListener('input', updatePsuReadout);
   el('popular-game')?.addEventListener('change', applyPopularGame);
   el('game')?.addEventListener('change', updatePopularGameOptions);
+  el('currency')?.addEventListener('change', updateBudgetPresets);
 
   [
     ['cpu','cpu','CPU focus'], ['cpu-search','cpu','CPU search'],
@@ -425,6 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateSystemTypeFields();
   updatePopularGameOptions();
   updateQuickChips();
+  updateBudgetPresets();
   updateVirtualPcRamMode();
   setVirtualPcPart('system');
   setLanguage('en');

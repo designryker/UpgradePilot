@@ -65,9 +65,9 @@
   .field{background:linear-gradient(180deg,rgba(255,255,255,.025),transparent),var(--surface);border:1px solid var(--border);border-radius:10px;padding:.82rem 1.1rem;transition:border-color .2s,background .2s,box-shadow .2s}
   .field:focus-within{border-color:var(--accent2);background:var(--surface2);box-shadow:0 0 0 1px rgba(255,176,32,.12)}
   .field label{display:block;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
-  .field-help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:.35rem;border:1px solid var(--border);border-radius:50%;color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0;text-transform:none;position:relative;cursor:help;vertical-align:middle}
+  .field-help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:.35rem;border:1px solid var(--accent2-border);border-radius:50%;background:var(--accent2-soft);color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0;text-transform:none;position:relative;cursor:help;vertical-align:middle;box-shadow:0 0 0 1px rgba(255,176,32,.06)}
   .field-popover{display:none;position:absolute;left:0;bottom:135%;z-index:10;width:min(260px,calc(100vw - 48px));background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .7rem;box-shadow:0 14px 34px rgba(0,0,0,.32);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.75rem;line-height:1.45;text-transform:none;letter-spacing:0;font-weight:400}
-  .field-help:hover,.field-help:focus{border-color:var(--accent2);color:var(--text)}
+  .field-help:hover,.field-help:focus{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
   .field-help:hover .field-popover,.field-help:focus .field-popover{display:block}
   .field select,.field input[type="number"]{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none}
   .field input[type="number"]{cursor:text;-moz-appearance:textfield}
