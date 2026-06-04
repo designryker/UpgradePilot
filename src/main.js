@@ -223,8 +223,8 @@ function updateSystemTypeFields() {
   if (title) title.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepTitle' : 'budgetStepTitle'];
   if (copy) copy.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepCopy' : 'budgetStepCopy'];
   setVirtualPcPart('system', isLaptopMode
-    ? (currentLang === 'tr' ? 'Laptop modu' : 'Laptop mode')
-    : (currentLang === 'tr' ? 'Sistem taramasi' : 'System scan')
+    ? (currentLang === 'tr' ? 'Laptop profili' : 'Laptop profile')
+    : (currentLang === 'tr' ? 'Mevcut sistem' : 'Current rig')
   );
   updateVirtualPcSummary();
 }
@@ -247,7 +247,7 @@ function setVirtualPcPart(part, label) {
     gpu:'GPU focus',
     ram:'Memory focus',
     psu:'Power focus',
-    system:'System scan'
+    system: currentLang === 'tr' ? 'Mevcut sistem' : 'Current rig'
   }[safePart];
 }
 
@@ -1418,7 +1418,7 @@ function analyze(skipLoading) {
   // 04 Best upgrade
   const meta = (best.score <= 1) ? PART_META.none : PART_META[best.key];
   const visualPart = best.key === 'ramcap' || best.key === 'ramspd' ? 'ram' : (best.key || 'system');
-  setVirtualPcPart(best.score <= 1 ? 'system' : visualPart, best.score <= 1 ? inTr('System scan','Sistem taramasi') : meta.name);
+  setVirtualPcPart(best.score <= 1 ? 'system' : visualPart, best.score <= 1 ? inTr('Current rig','Mevcut sistem') : meta.name);
   el('uicon').innerHTML    = meta.icon;
   el('uicon').className    = 'uicon ' + meta.icls;
   el('uname').textContent  = meta.name;
