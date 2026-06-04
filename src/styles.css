@@ -47,6 +47,10 @@
   .pc-visual[data-active-part="psu"] .pc-psu{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px rgba(54,242,197,.18),0 0 22px rgba(54,242,197,.22);color:var(--text);transform:scale(1.03)}
   .pc-visual[data-ram-mode="single"] .pc-ram-b{opacity:.24;background:rgba(255,92,112,.08);border-color:rgba(255,92,112,.28)}
   .pc-visual[data-ram-mode="single"][data-active-part="ram"] .pc-ram-b{box-shadow:none;color:var(--muted);transform:none}
+  .pc-summary{display:grid;grid-template-columns:1fr 1fr;gap:.42rem;margin-top:.7rem}
+  .pc-summary div{border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.025);padding:.45rem .5rem;min-width:0}
+  .pc-summary span{display:block;font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.18rem}
+  .pc-summary strong{display:block;font-size:.72rem;line-height:1.25;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   .lang-switch{display:flex;align-items:center;justify-content:flex-end;gap:.55rem;margin-bottom:.75rem;animation:fadeDown .6s ease both}
   .lang-switch label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}

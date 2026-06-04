@@ -199,6 +199,12 @@ function updateQuickChips() {
 function updatePsuReadout() {
   const readout = el('psu-readout');
   if (readout) readout.textContent = el('psu-watts').value;
+  updateVirtualPcSummary();
+}
+
+function selectedOptionText(id) {
+  const node = el(id);
+  return node?.selectedOptions?.[0]?.textContent?.trim() || '';
 }
 
 function updateSystemTypeFields() {
@@ -215,6 +221,7 @@ function updateSystemTypeFields() {
   if (title) title.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepTitle' : 'budgetStepTitle'];
   if (copy) copy.textContent = I18N[currentLang][isLaptopMode ? 'laptopBudgetStepCopy' : 'budgetStepCopy'];
   if (isLaptopMode) setVirtualPcPart('system', currentLang === 'tr' ? 'Laptop modu' : 'Laptop mode');
+  updateVirtualPcSummary();
 }
 
 function setSelectValue(id, value) {
@@ -228,6 +235,7 @@ function setVirtualPcPart(part, label) {
   const safePart = ['cpu','gpu','ram','psu','system'].includes(part) ? part : 'system';
   visual.dataset.activePart = safePart;
   updateVirtualPcRamMode();
+  updateVirtualPcSummary();
   const labelNode = el('pc-visual-label');
   if (labelNode) labelNode.textContent = label || {
     cpu:'CPU focus',
@@ -242,6 +250,27 @@ function updateVirtualPcRamMode() {
   const visual = el('pc-visual');
   if (!visual) return;
   visual.dataset.ramMode = el('channel')?.value || 'dual';
+}
+
+function updateVirtualPcSummary() {
+  const isLaptopMode = el('system-type')?.value === 'laptop';
+  const cpu = selectedOptionText('cpu') || 'CPU';
+  const gpu = selectedOptionText('gpu') || 'GPU';
+  const ram = (selectedOptionText('ram') || 'RAM') + ' ' + (selectedOptionText('ram-type') || '');
+  const speed = selectedOptionText('ram-speed');
+  const channel = selectedOptionText('channel');
+  const power = isLaptopMode
+    ? inTr('Laptop power', 'Laptop gucu')
+    : (el('psu-watts')?.value || '650') + 'W PSU';
+
+  const cpuNode = el('pc-summary-cpu');
+  const gpuNode = el('pc-summary-gpu');
+  const ramNode = el('pc-summary-ram');
+  const powerNode = el('pc-summary-power');
+  if (cpuNode) cpuNode.textContent = cpu.replace(/^Intel /, '');
+  if (gpuNode) gpuNode.textContent = gpu;
+  if (ramNode) ramNode.textContent = ram + (speed ? ' / ' + speed.replace(/^DDR[45]\s*/,'') : '') + (channel ? ' / ' + channel : '');
+  if (powerNode) powerNode.textContent = power;
 }
 
 function detectDisplay() {
@@ -451,6 +480,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateQuickChips();
   updateBudgetPresets();
   updateVirtualPcRamMode();
+  updateVirtualPcSummary();
   setVirtualPcPart('system');
   setLanguage('en');
 });
