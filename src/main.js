@@ -14,6 +14,7 @@ function toggleCheck(id){
 
 // ── Simple EN/TR language layer for MVP testing ──
 let currentLang = 'en';
+let hasTouchedSpecs = false;
 function setLanguage(lang){
   currentLang = lang === 'tr' ? 'tr' : 'en';
   document.documentElement.lang = currentLang;
@@ -176,6 +177,7 @@ function filterSelectOptions(selectId, query) {
 }
 
 function quickPick(selectId, value) {
+  hasTouchedSpecs = true;
   setSelectValue(selectId, value);
   setVirtualPcPart(selectId === 'gpu' ? 'gpu' : 'cpu', selectId === 'gpu' ? 'GPU focus' : 'CPU focus');
   const search = el(selectId + '-search');
@@ -258,6 +260,18 @@ function updateVirtualPcRamMode() {
 }
 
 function updateVirtualPcSummary() {
+  if (!hasTouchedSpecs) {
+    const empty = inTr('Not selected', 'Secilmedi');
+    const cpuNode = el('pc-summary-cpu');
+    const gpuNode = el('pc-summary-gpu');
+    const ramNode = el('pc-summary-ram');
+    const powerNode = el('pc-summary-power');
+    if (cpuNode) cpuNode.textContent = empty;
+    if (gpuNode) gpuNode.textContent = empty;
+    if (ramNode) ramNode.textContent = empty;
+    if (powerNode) powerNode.textContent = empty;
+    return;
+  }
   const isLaptopMode = el('system-type')?.value === 'laptop';
   const cpu = selectedOptionText('cpu') || 'CPU';
   const gpu = selectedOptionText('gpu') || 'GPU';
@@ -442,8 +456,14 @@ function bindEvents() {
     const node = el(id);
     if (!node) return;
     node.addEventListener('focus', () => setVirtualPcPart(part, label));
-    node.addEventListener('change', () => setVirtualPcPart(part, label));
-    node.addEventListener('input', () => setVirtualPcPart(part, label));
+    node.addEventListener('change', () => {
+      hasTouchedSpecs = true;
+      setVirtualPcPart(part, label);
+    });
+    node.addEventListener('input', () => {
+      hasTouchedSpecs = true;
+      setVirtualPcPart(part, label);
+    });
   });
 
   el('budget-content')?.addEventListener('click', event => {
