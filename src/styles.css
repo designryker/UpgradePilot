@@ -14,7 +14,7 @@
   body::after{content:'';position:fixed;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 100%),linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 100%);background-size:96px 96px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 58%);pointer-events:none;z-index:0}
   .container{max-width:880px;margin:0 auto;padding:3rem 1.5rem 5rem;position:relative;z-index:1}
 
-  header{margin-bottom:2.75rem;animation:fadeDown .6s ease both;position:relative;padding-right:310px;min-height:220px}
+  header{margin-bottom:2.75rem;animation:fadeDown .6s ease both;position:relative;padding-right:310px;min-height:335px}
   .eyebrow{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.22em;text-transform:uppercase;margin-bottom:.6rem}
   h1{font-family:'Space Mono',monospace;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;line-height:1.1;letter-spacing:0}
   h1 .accent{color:var(--accent)} h1 .dim{color:var(--muted);font-weight:400}
@@ -26,7 +26,7 @@
   .pc-visual-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.65rem;margin-bottom:.7rem}
   .pc-visual-top span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   .pc-visual-top strong{font-family:'Space Mono',monospace;font-size:12px;line-height:1.25;color:var(--accent);text-align:right;max-width:135px}
-  .pc-case{height:168px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.012));padding:.65rem;position:relative;overflow:hidden}
+  .pc-case{height:154px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.012));padding:.65rem;position:relative;overflow:hidden}
   .pc-case::before{content:'';position:absolute;inset:9px;border:1px solid rgba(255,255,255,.045);border-radius:10px;pointer-events:none}
   .pc-case::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(54,242,197,.09),transparent);transform:translateX(-110%);animation:pcScan 3.6s ease-in-out infinite;pointer-events:none}
   .pc-board{height:100%;border:1px solid rgba(42,58,72,.92);border-radius:10px;background:linear-gradient(135deg,rgba(54,242,197,.035),transparent 45%),rgba(8,13,18,.72);position:relative;overflow:hidden}
@@ -47,10 +47,10 @@
   .pc-visual[data-active-part="psu"] .pc-psu{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px rgba(54,242,197,.18),0 0 22px rgba(54,242,197,.22);color:var(--text);transform:scale(1.03)}
   .pc-visual[data-ram-mode="single"] .pc-ram-b{opacity:.24;background:rgba(255,92,112,.08);border-color:rgba(255,92,112,.28)}
   .pc-visual[data-ram-mode="single"][data-active-part="ram"] .pc-ram-b{box-shadow:none;color:var(--muted);transform:none}
-  .pc-summary{display:grid;grid-template-columns:1fr 1fr;gap:.42rem;margin-top:.7rem}
-  .pc-summary div{border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.025);padding:.45rem .5rem;min-width:0}
+  .pc-summary{display:grid;grid-template-columns:1fr 1fr;gap:.38rem;margin-top:.62rem}
+  .pc-summary div{border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.025);padding:.38rem .45rem;min-width:0}
   .pc-summary span{display:block;font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.18rem}
-  .pc-summary strong{display:block;font-size:.72rem;line-height:1.25;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pc-summary strong{display:block;font-size:.68rem;line-height:1.2;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pc-visual[data-system-type="laptop"] .pc-case{height:150px;border-radius:16px 16px 9px 9px;padding:.55rem .65rem .85rem;background:linear-gradient(180deg,rgba(103,183,255,.075),rgba(255,255,255,.018))}
   .pc-visual[data-system-type="laptop"] .pc-case::before{inset:7px 10px 18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent)}
   .pc-visual[data-system-type="laptop"] .pc-case::after{height:5px;top:auto;bottom:5px;left:36px;right:36px;inset:auto 36px 5px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);transform:none;animation:none;border-radius:999px}
