@@ -88,7 +88,7 @@
   .psu-readout{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:.35rem 0 .45rem}
   .psu-value{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);font-weight:700}
   .is-hidden{display:none!important}
-  .money-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin-top:.7rem}
+  .money-tools{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-top:.7rem}
   .money-chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:8px;padding:.52rem .35rem;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:.15s}
   .money-chip:hover{border-color:var(--accent2);color:var(--text);background:var(--surface2)}
 
@@ -226,6 +226,9 @@
   .laptop-card{min-height:204px}
   .laptop-specs{display:flex;flex-wrap:wrap;gap:.32rem;margin:.2rem 0}
   .laptop-specs span{border:1px solid var(--border);border-radius:999px;padding:.22rem .45rem;font-size:.7rem;color:var(--muted);background:rgba(255,255,255,.025)}
+  .build-block{border-color:var(--accent-border);background:rgba(54,242,197,.04)}
+  .build-grid{grid-template-columns:repeat(3,1fr)}
+  .build-card{min-height:222px}
   .example-title{font-size:.88rem;font-weight:800;line-height:1.35;color:var(--text)}
   .example-price{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--accent);font-weight:700;line-height:1.35}
   .link-slot{display:inline-flex;align-items:center;justify-content:center;text-align:center;margin-top:auto;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:7px;padding:.45rem .55rem;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:border-color .15s,background .15s,color .15s}
@@ -257,5 +260,5 @@
   @keyframes scan{0%{transform:translateX(-80%)}100%{transform:translateX(260%)}}
   @keyframes pcScan{0%,52%{transform:translateX(-115%)}100%{transform:translateX(115%)}}
   @media(max-width:760px){header{padding-right:0;min-height:0}.pc-visual{position:relative;right:auto;top:auto;width:100%;max-width:280px;margin-top:1rem}}
-  @media(max-width:660px){.g3,.g3b,.psu-rec-grid,.metrics2,.upgrade-path{grid-template-columns:1fr 1fr}.wizard-progress{grid-template-columns:1fr 1fr}.discovery-grid,.example-grid,.laptop-grid{grid-template-columns:1fr}}
+  @media(max-width:660px){.g3,.g3b,.psu-rec-grid,.metrics2,.upgrade-path{grid-template-columns:1fr 1fr}.wizard-progress{grid-template-columns:1fr 1fr}.discovery-grid,.example-grid,.laptop-grid,.build-grid{grid-template-columns:1fr}}
   @media(max-width:420px){.g2,.g3,.g3b,.g2b,.psu-rec-grid,.metrics2,.money-tools,.upgrade-path,.wizard-progress{grid-template-columns:1fr}.price-market-row{align-items:flex-start;flex-direction:column;gap:.25rem}.price-market-row strong{text-align:left}.result-actions{flex-direction:column}.result-actions .wizard-btn{width:100%}}

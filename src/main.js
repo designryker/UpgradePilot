@@ -316,10 +316,10 @@ function formatBudgetPresetLabel(amount, currency) {
 function updateBudgetPresets() {
   const currency = el('currency')?.value || 'usd';
   const presets = {
-    usd: [250, 500, 750, 1000],
-    eur: [250, 500, 750, 1000],
-    try: [10000, 20000, 35000, 50000],
-  }[currency] || [250, 500, 750, 1000];
+    usd: [250, 500, 750, 1000, 1500],
+    eur: [250, 500, 750, 1000, 1500],
+    try: [10000, 20000, 35000, 50000, 75000],
+  }[currency] || [250, 500, 750, 1000, 1500];
 
   document.querySelectorAll('[data-budget-preset]').forEach((button, index) => {
     const amount = presets[index] || presets[presets.length - 1];
@@ -1669,6 +1669,85 @@ function analyze(skipLoading) {
       '</div>' +
     '</div>';
   }
+  function buildCompleteBuildCards() {
+    if (isLaptop) return '';
+    const oldIntel =
+      cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
+      cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
+      cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
+      cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9');
+    const oldAm4 =
+      cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') ||
+      cpuKey.startsWith('r5_3') || cpuKey.startsWith('r7_2') || cpuKey.startsWith('r7_3');
+    const weakWholeSystem = cpuSc <= 5 && gpuSc <= 5;
+    const shouldShow = budgetN === 0 || budgetUSD >= 650 || oldIntel || weakWholeSystem;
+    if (!shouldShow) return '';
+
+    const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
+    const marketplaceUrl = query => marketplaceHost + encodeURIComponent(query);
+    const cards = [];
+
+    if (oldIntel || (oldAm4 && cpuSc <= 5)) {
+      cards.push({
+        k: inTr('Compatible platform bundle','Uyumlu platform paketi'),
+        t: oldIntel
+          ? 'Ryzen 5 5600 + B550 + 2x16 GB DDR4'
+          : 'Ryzen 7 5700X3D + BIOS check + keep DDR4',
+        p: oldIntel
+          ? formatRangeForCurrency(260, 430, 'retail')
+          : formatRangeForCurrency(180, 320, 'retail'),
+        specs: oldIntel
+          ? ['AM4/B550', 'DDR4 3200-3600', 'keep GPU first']
+          : ['AM4 drop-in', 'DDR4 stays', 'BIOS required'],
+        q: oldIntel ? 'Ryzen 5 5600 B550 motherboard 32GB DDR4 bundle' : 'Ryzen 7 5700X3D',
+        c: oldIntel
+          ? inTr('Older Intel usually needs CPU + motherboard, and RAM may move with the platform. This is safer than buying a random old i7.',
+                 'Eski Intel tarafinda genelde CPU + anakart gerekir; RAM platforma gore degisebilir. Rastgele eski i7 almaktan daha guvenli bir rota.')
+          : inTr('AM4 can be upgraded cheaply if the motherboard supports the CPU. Confirm BIOS support before buying.',
+                 'AM4, anakart CPUyu destekliyorsa ucuza guclenebilir. Satin almadan once BIOS destegini dogrula.')
+      });
+    }
+
+    cards.push({
+      k: inTr('Value complete build','Value komple kasa'),
+      t: 'Ryzen 5 5600 / i5-12400F + RX 6600 / RTX 3060',
+      p: formatRangeForCurrency(650, 900, 'retail'),
+      specs: ['6-core CPU', 'B550/B660', '2x16 GB DDR4', '650W PSU'],
+      q: 'Ryzen 5 5600 RX 6600 gaming pc build',
+      c: inTr('Best when both CPU and GPU are old. It keeps the build realistic instead of overspending on one shiny part.',
+              'CPU ve GPU birlikte eskiyse en mantikli rota. Tek parlak parcaya fazla para gommek yerine dengeli kasa kurar.')
+    });
+
+    cards.push({
+      k: inTr('Balanced modern build','Dengeli modern kasa'),
+      t: 'Ryzen 5 7500F / 7600 + B650 + 32 GB DDR5',
+      p: formatRangeForCurrency(950, 1500, 'retail'),
+      specs: ['AM5/B650', 'DDR5 6000', 'RX 7800 XT / RTX 4070', '750W PSU'],
+      q: 'Ryzen 5 7500F B650 DDR5 RX 7800 XT gaming pc build',
+      c: inTr('A cleaner long-term route if the budget allows. CPU, motherboard, RAM, GPU, and PSU are considered together.',
+              'Butce yetiyorsa daha temiz uzun vadeli rota. CPU, anakart, RAM, GPU ve PSU birlikte dusunulur.')
+    });
+
+    const visibleCards = budgetN > 0 && budgetUSD < 600 ? cards.slice(0, 1) : cards;
+
+    return '<div class="example-block build-block">' +
+      '<div class="discovery-head">' + inTr('Complete PC build path','Komple PC toplama rotasi') + '</div>' +
+      '<div class="example-grid build-grid">' + visibleCards.map(card =>
+        '<div class="example-card build-card" data-focus-part="system" data-focus-label="Full build path">' +
+          '<div class="path-kicker">' + card.k + '</div>' +
+          '<div class="example-title">' + card.t + '</div>' +
+          '<div class="example-price">' + card.p + '</div>' +
+          '<div class="laptop-specs">' + card.specs.map(spec => '<span>' + spec + '</span>').join('') + '</div>' +
+          '<div class="path-copy">' + card.c + '</div>' +
+          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('Search this tier','Bu seviyeyi ara') + '</a>' +
+        '</div>'
+      ).join('') + '</div>' +
+      '<div class="info-note">' +
+        inTr('These are compatibility-aware build directions, not final shopping carts. Always verify motherboard socket, chipset, BIOS support, RAM type, case fit, and PSU quality before buying.',
+             'Bunlar uyumluluk dusunen kasa rotalaridir, kesin sepet degildir. Satin almadan once anakart soketi, chipset, BIOS destegi, RAM turu, kasa uyumu ve PSU kalitesini dogrula.') +
+      '</div>' +
+    '</div>';
+  }
   let budHTML = '';
   if (bandDesc) {
     budHTML += '<div class="price-block">' +
@@ -1686,6 +1765,7 @@ function analyze(skipLoading) {
   }
   budHTML += buildBudgetDiscoveryCards();
   budHTML += buildExamplePartCards();
+  budHTML += buildCompleteBuildCards();
   budHTML += buildLaptopSuggestionCards();
   budHTML +=
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">' +
