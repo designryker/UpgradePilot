@@ -209,6 +209,8 @@ function selectedOptionText(id) {
 
 function updateSystemTypeFields() {
   const isLaptopMode = el('system-type')?.value === 'laptop';
+  const visual = el('pc-visual');
+  if (visual) visual.dataset.systemType = isLaptopMode ? 'laptop' : 'desktop';
   document.querySelectorAll('.desktop-only').forEach(node => {
     node.classList.toggle('is-hidden', isLaptopMode);
   });
@@ -260,7 +262,7 @@ function updateVirtualPcSummary() {
   const speed = selectedOptionText('ram-speed');
   const channel = selectedOptionText('channel');
   const power = isLaptopMode
-    ? inTr('Laptop power', 'Laptop gucu')
+    ? inTr('Charger / power mode', 'Adaptor / guc modu')
     : (el('psu-watts')?.value || '650') + 'W PSU';
 
   const cpuNode = el('pc-summary-cpu');
