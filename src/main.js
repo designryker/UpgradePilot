@@ -1569,6 +1569,81 @@ function analyze(skipLoading) {
       ).join('') + '</div>' +
     '</div>';
   }
+  function buildLaptopSuggestionCards() {
+    if (!isLaptop) return '';
+    const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
+    const marketplaceUrl = query => marketplaceHost + encodeURIComponent(query);
+    const intro = budgetN > 0
+      ? inTr('Laptop budget examples','Laptop butce ornekleri')
+      : inTr('Laptop examples need a budget','Laptop ornegi icin butce gerekli');
+    if (budgetN <= 0) {
+      return '<div class="example-block laptop-block">' +
+        '<div class="discovery-head">' + intro + '</div>' +
+        '<div class="path-copy">' +
+          inTr('Enter a budget to compare rough laptop classes. Until a live product API is connected, RigPilot will show honest example tiers instead of pretending to know current listings.',
+               'Laptop siniflarini karsilastirmak icin butce gir. Canli urun API baglanana kadar RigPilot guncel ilan biliyormus gibi yapmaz; durust ornek seviyeler gosterir.') +
+        '</div>' +
+      '</div>';
+    }
+
+    const tiers = [
+      {
+        min: 0, max: 650,
+        k: inTr('Entry budget laptop','Giris butce laptop'),
+        t: 'GTX 1650 / RTX 2050 / RTX 3050 class',
+        specs: ['16 GB RAM', '512 GB SSD', '1080p'],
+        q: 'gaming laptop RTX 3050 16GB SSD',
+        c: inTr('Only makes sense if the price is low. Good for esports and lighter games; avoid 8 GB RAM models unless upgradeable.',
+                'Fiyati dusukse mantikli. Espor ve hafif oyunlar icin iyi; yukseltilebilir degilse 8 GB RAM modellerden uzak dur.')
+      },
+      {
+        min: 650, max: 950,
+        k: inTr('Best value laptop lane','En mantikli laptop araligi'),
+        t: 'RTX 4050 / RTX 4060 class',
+        specs: ['16 GB RAM', '512 GB-1 TB SSD', 'MUX if possible'],
+        q: 'gaming laptop RTX 4060 16GB SSD',
+        c: inTr('This is the first range I would compare seriously for a new laptop. Cooling quality and GPU wattage matter a lot here.',
+                'Yeni laptop icin ciddi bakilacak ilk aralik burasi. Sogutma kalitesi ve GPU watt degeri burada cok onemli.')
+      },
+      {
+        min: 950, max: 1400,
+        k: inTr('Stronger 1080p / 1440p laptop','Daha guclu 1080p / 1440p laptop'),
+        t: 'RTX 4060 high-watt / RTX 4070 class',
+        specs: ['32 GB ideal', '1 TB SSD', 'better cooling'],
+        q: 'gaming laptop RTX 4070 32GB 1TB',
+        c: inTr('Worth it if you want longer use and better 1% lows. Compare screen quality, thermals, and warranty before paying extra.',
+                'Daha uzun kullanim ve daha iyi 1% low icin mantikli. Ekstra para vermeden once ekran, sicaklik ve garantiyi karsilastir.')
+      },
+      {
+        min: 1400, max: Infinity,
+        k: inTr('High-end laptop shortlist','Ust seviye laptop kisa liste'),
+        t: 'RTX 4070 / RTX 4080 class',
+        specs: ['32 GB RAM', '1 TB+ SSD', 'premium cooling'],
+        q: 'gaming laptop RTX 4080 32GB 1TB',
+        c: inTr('Do not buy purely by GPU name. A high-watt RTX 4070 laptop can beat a poorly cooled higher-tier machine in real use.',
+                'Sadece GPU adina gore alma. Yuksek wattli RTX 4070 laptop, kotu sogutulan daha ust seviye bir modeli gercek kullanimda gecebilir.')
+      }
+    ];
+    const nearby = tiers.filter(tier => budgetUSD >= tier.min * .85 && budgetUSD <= tier.max * 1.18).slice(0, 3);
+    const cards = nearby.length ? nearby : [tiers[0], tiers[1]];
+    return '<div class="example-block laptop-block">' +
+      '<div class="discovery-head">' + intro + '</div>' +
+      '<div class="example-grid laptop-grid">' + cards.map(card =>
+        '<div class="example-card laptop-card" data-focus-part="system" data-focus-label="Laptop examples">' +
+          '<div class="path-kicker">' + card.k + '</div>' +
+          '<div class="example-title">' + card.t + '</div>' +
+          '<div class="example-price">' + formatRangeForCurrency(Math.max(350, card.min || 450), card.max === Infinity ? budgetUSD * 1.2 : card.max, 'retail') + '</div>' +
+          '<div class="laptop-specs">' + card.specs.map(spec => '<span>' + spec + '</span>').join('') + '</div>' +
+          '<div class="path-copy">' + card.c + '</div>' +
+          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('Search this tier','Bu seviyeyi ara') + '</a>' +
+        '</div>'
+      ).join('') + '</div>' +
+      '<div class="info-note">' +
+        inTr('Laptop examples are rough buying tiers, not live listings. When a product API is connected, this area can become real model recommendations.',
+             'Laptop ornekleri canli ilan degil, yaklasik satin alma seviyeleridir. Urun API baglaninca bu alan gercek model onerilerine donusebilir.') +
+      '</div>' +
+    '</div>';
+  }
   let budHTML = '';
   if (bandDesc) {
     budHTML += '<div class="price-block">' +
@@ -1586,6 +1661,7 @@ function analyze(skipLoading) {
   }
   budHTML += buildBudgetDiscoveryCards();
   budHTML += buildExamplePartCards();
+  budHTML += buildLaptopSuggestionCards();
   budHTML +=
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">' +
       '<div class="metric"><div class="mlabel">' + inTr('Budget Match','Bütçe Eşleşmesi') + '</div><div class="mval ' + budgetFitCls + '">' + budgetFitLabel + '</div><div class="msub">' + budgetFitNote + '</div></div>' +
