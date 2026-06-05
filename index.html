@@ -38,7 +38,7 @@
       <span data-status-part="cpu">CPU</span>
       <span data-status-part="gpu">GPU</span>
       <span data-status-part="ram">RAM</span>
-      <span data-status-part="psu">PSU</span>
+      <span data-status-part="psu" id="pc-status-power">PSU</span>
     </div>
     <div class="pc-case">
       <div class="pc-board">
@@ -55,7 +55,7 @@
       <div data-summary-part="cpu"><span>CPU</span><strong id="pc-summary-cpu">Not selected</strong></div>
       <div data-summary-part="gpu"><span>GPU</span><strong id="pc-summary-gpu">Not selected</strong></div>
       <div data-summary-part="ram"><span>RAM</span><strong id="pc-summary-ram">Not selected</strong></div>
-      <div data-summary-part="psu"><span>Power</span><strong id="pc-summary-power">Not selected</strong></div>
+      <div data-summary-part="psu" id="pc-summary-power-row"><span id="pc-summary-power-label">Power</span><strong id="pc-summary-power">Not selected</strong></div>
     </div>
   </div>
 </header>
@@ -73,7 +73,7 @@
     <!-- System, Cooling & Storage -->
 <div class="sec-label" data-i18n="secSystemCooling">System, Cooling &amp; Storage</div>
 <div class="g3">
-  <div class="field" data-pc-part="cpu">
+  <div class="field" data-pc-part="system" data-pc-label="System type">
     <label data-i18n="systemType">System Type</label>
     <select id="system-type" autocomplete="off">
       <option value="desktop" selected data-i18n="desktopPc">Desktop PC</option>
@@ -104,7 +104,7 @@
   </div>
 </div>
 <div class="g2b">
-  <div class="field advanced-field">
+  <div class="field advanced-field" data-pc-part="system" data-pc-label="Windows settings">
     <label data-i18n="windowsVersion">Windows Version</label>
     <select id="os-version" autocomplete="off">
       <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
@@ -117,7 +117,7 @@
 
 <div class="sec-label" data-i18n="secondaryGoal">Current Problem</div>
 <div class="g1">
-  <div class="field" data-pc-part="ram">
+  <div class="field" data-pc-part="system" data-pc-label="Performance goal">
     <label data-i18n="secondaryGoal">Current Problem</label>
     <select id="goal" autocomplete="off">
       <option value="none" data-i18n="goalNone">No specific problem</option>
@@ -135,7 +135,7 @@
     <!-- Display & Gaming -->
 <div class="sec-label" data-i18n="secDisplay">Display &amp; Gaming Profile</div>
 <div class="g3">
-  <div class="field" data-pc-part="ram">
+  <div class="field" data-pc-part="system" data-pc-label="Game profile">
     <label data-i18n="gameFocus">Primary Game Focus</label>
     <select id="game" autocomplete="off">
       <option value="compfps" data-i18n="gameCompfps">Competitive FPS (CS2, Valorant)</option>

@@ -583,6 +583,11 @@ function updateVirtualPcRamMode() {
 }
 
 function updateVirtualPcSummary() {
+  const isLaptopMode = el('system-type')?.value === 'laptop';
+  const powerLabel = el('pc-summary-power-label');
+  const powerStatus = el('pc-status-power');
+  if (powerLabel) powerLabel.textContent = isLaptopMode ? inTr('Power Mode', 'Guc Modu') : 'Power';
+  if (powerStatus) powerStatus.textContent = isLaptopMode ? inTr('Mode', 'Mod') : 'PSU';
   if (!hasTouchedSpecs) {
     const empty = inTr('Not selected', 'Secilmedi');
     const cpuNode = el('pc-summary-cpu');
@@ -595,7 +600,6 @@ function updateVirtualPcSummary() {
     if (powerNode) powerNode.textContent = empty;
     return;
   }
-  const isLaptopMode = el('system-type')?.value === 'laptop';
   const cpu = selectedOptionText('cpu') || 'CPU';
   const gpu = selectedOptionText('gpu') || 'GPU';
   const ram = (selectedOptionText('ram') || 'RAM') + ' ' + (selectedOptionText('ram-type') || '');

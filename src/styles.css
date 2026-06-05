@@ -64,6 +64,7 @@
   .pc-visual[data-system-type="laptop"] .pc-ram{top:28px;height:52px;width:10px}
   .pc-visual[data-system-type="laptop"] .pc-ram-a{left:92px}.pc-visual[data-system-type="laptop"] .pc-ram-b{left:108px}
   .pc-visual[data-system-type="laptop"] .pc-psu{display:none}
+  .pc-visual[data-system-type="laptop"] [data-status-part="psu"]{display:none}
   .pc-visual[data-system-type="laptop"] .pc-fan{right:18px;width:26px;height:26px}
   .pc-visual[data-system-type="laptop"] .pc-fan-a{top:22px}.pc-visual[data-system-type="laptop"] .pc-fan-b{top:54px}
 
@@ -1524,6 +1525,16 @@ h1{
     rgba(18,19,25,.96);
   box-shadow:0 0 0 1px rgba(0,228,121,.18),0 0 30px rgba(0,228,121,.22),inset 0 1px 0 rgba(255,255,255,.08);
 }
+.pc-visual[data-active-part="system"] .pc-case{
+  border-color:rgba(0,228,121,.34);
+  box-shadow:0 0 0 1px rgba(0,228,121,.10),0 0 28px rgba(0,228,121,.12),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.pc-visual[data-active-part="system"] .pc-board{
+  border-color:rgba(143,233,255,.22);
+  background:
+    linear-gradient(180deg,rgba(0,228,121,.075),rgba(8,13,18,.82)),
+    rgba(13,15,20,.86);
+}
 .pc-summary{
   position:relative;
   z-index:1;
@@ -1558,6 +1569,9 @@ h1{
 }
 .pc-visual[data-system-type="laptop"] .pc-ram-a{left:96px}
 .pc-visual[data-system-type="laptop"] .pc-ram-b{left:114px}
+.pc-visual[data-system-type="laptop"] [data-status-part="psu"]{
+  display:none;
+}
 
 @keyframes pcFanSpin{
   to{transform:rotate(360deg)}

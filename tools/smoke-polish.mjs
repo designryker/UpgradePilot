@@ -70,6 +70,7 @@ assert.equal(
 
 const mainSource = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const styleSource = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 const htmlStepOrder = [...indexSource.matchAll(/<section class="wizard-step" data-step="([^"]+)"/g)].map(match => match[1]);
 assert.deepEqual(htmlStepOrder, ['goal', 'specs', 'budget', 'result'], 'HTML wizard sections should keep system type first and Analyze before result');
 assert.ok(
@@ -91,6 +92,14 @@ assert.ok(
   !/<div class="field" data-pc-part="gpu">\s*<label><span data-i18n="gameDrive"/.test(indexSource),
   'game drive should not activate the GPU section in the virtual PC'
 );
+assert.ok(indexSource.includes('data-pc-label="System type"'), 'system type should map to system focus, not CPU');
+assert.ok(indexSource.includes('data-pc-label="Windows settings"'), 'Windows settings should map to system focus');
+assert.ok(indexSource.includes('data-pc-label="Game profile"'), 'game profile should map to system focus, not RAM');
+assert.ok(indexSource.includes('data-pc-label="Performance goal"'), 'current problem should map to system focus, not RAM');
+assert.ok(styleSource.includes('data-active-part="system"'), 'system focus should have a visible virtual PC state');
+assert.ok(indexSource.includes('id="pc-summary-power-label"'), 'virtual PC power summary label should be adjustable by system mode');
+assert.ok(mainSource.includes("powerLabel.textContent = isLaptopMode ? inTr('Power Mode'"), 'laptop mode should rename power summary away from PSU language');
+assert.ok(styleSource.includes('[data-status-part="psu"]{display:none}'), 'laptop mode should hide the PSU status pill');
 assert.ok(
   mainSource.includes("control.tagName === 'SELECT'") && mainSource.includes('field-click-cue'),
   'select fields should receive a visible click cue'
