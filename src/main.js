@@ -342,7 +342,7 @@ function resetInputsToDefaults() {
   });
 
   clearAnalysisSequence();
-  el('loading-card')?.classList.remove('show');
+  el('loading-card')?.classList.remove('show', 'is-analyzing');
   el('result')?.classList.remove('show');
   setCopyButtonState(false);
 }
@@ -672,7 +672,7 @@ function initWizard() {
     goToWizardStep(Number(pill.dataset.wizardStep));
   });
   el('result-adjust')?.addEventListener('click', () => goToWizardStep(0));
-  el('result-rerun')?.addEventListener('click', () => analyze(true));
+  el('result-rerun')?.addEventListener('click', () => analyze());
   el('result-copy')?.addEventListener('click', copyResultSummary);
   initResultGuidance();
 }
@@ -779,6 +779,7 @@ function analyze(skipLoading) {
     const result = el('result');
     if (result) result.classList.remove('show');
     if (loader) loader.classList.remove('show');
+    goToWizardStep(WIZARD_STEPS.length - 2, false);
     startAnalysisSequence(() => analyze(true));
     return;
   }
@@ -2510,8 +2511,8 @@ function analyze(skipLoading) {
   updateFreeBoostProgress();
   // Show result
   const r = el('result');
-  r.className = 'show';
   showResultStep();
+  r.classList.add('show');
   r.style.animation = 'none';
   void r.offsetWidth;
   r.style.animation = 'fadeUp .45s ease both';

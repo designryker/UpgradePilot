@@ -109,6 +109,18 @@ assert.equal(enAnalysisMessages.some(message => /^loading/i.test(message)), fals
 assert.equal(enAnalysisMessages.some(message => /parts|shopping/i.test(message)), false);
 assert.ok(indexSource.includes('id="analysis-message"'), 'loading card should expose a dynamic analysis message node');
 assert.ok(indexSource.includes('Optimize first. Upgrade smart.'), 'loading card should reinforce the product promise');
+assert.ok(
+  /el\('result-rerun'\)\?\.addEventListener\('click', \(\) => analyze\(\)\);/.test(mainSource),
+  'result rerun should use the normal loading sequence so repeated analysis works'
+);
+assert.ok(
+  /if \(!skipLoading\) \{[\s\S]*goToWizardStep\(WIZARD_STEPS\.length - 2, false\);[\s\S]*startAnalysisSequence\(\(\) => analyze\(true\)\);/.test(mainSource),
+  'normal analysis should move back to the budget/loading step before showing the loader'
+);
+assert.ok(
+  mainSource.includes("r.classList.add('show')"),
+  'result reveal should add the show class without replacing the result element class list'
+);
 [
   'Enable XMP/EXPO',
   'Update GPU and chipset drivers',
