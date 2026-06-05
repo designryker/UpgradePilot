@@ -531,7 +531,7 @@
         </div>
       </div>
 
-      <!-- 02 Best Next Upgrade -->
+      <!-- 02 Best Next Upgrade + Upgrade Picks (specific part suggestions at the top) -->
       <div class="r-sec result-upgrade-section">
         <div class="r-sec-label"><span class="r-num">02</span>&nbsp;<span data-i18n="resBest">Best Next Upgrade</span></div>
         <div class="upgrade-hero">
@@ -545,45 +545,44 @@
         <div id="buying-action"></div>
         <div class="path-label">Upgrade Path</div>
         <div class="upgrade-path" id="upgrade-path"></div>
+        <!-- Specific part/GPU cards rendered here at the top of results -->
+        <div id="upgrade-picks"></div>
       </div>
 
-      <!-- 03 Do Not Buy First -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">03</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></div>
-        <div class="dnu-row" id="dnu-row"></div>
+      <!-- 03 Free Performance Fixes -->
+      <div class="r-sec r-sec-collapsible" data-accordion="open">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">03</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div class="checklist" id="checklist"></div></div></div>
       </div>
 
-      <!-- 04 Budget Fit & Estimated Price Range -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">04</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></div>
-        <div id="budget-content"></div>
+      <!-- 04 Before You Buy: Validate -->
+      <div class="r-sec r-sec-collapsible" data-accordion="closed">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">04</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div class="bench-list" id="bench-list"></div></div></div>
       </div>
 
-      <!-- 05 Recommended PSU for Next GPU -->
-      <div class="r-sec" id="psu-result-section">
-        <div class="r-sec-label"><span class="r-num">05</span>&nbsp;<span data-i18n="resPsu">Recommended PSU for Next GPU Tier</span></div>
-        <div id="psu-rec-content"></div>
+      <!-- 05 PSU -->
+      <div class="r-sec r-sec-collapsible" id="psu-result-section" data-accordion="closed">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">05</span>&nbsp;<span data-i18n="resPsu">Recommended PSU for Next GPU Tier</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div id="psu-rec-content"></div></div></div>
       </div>
 
-      <!-- 06 Before You Buy: Validate the Bottleneck -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">06</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></div>
-        <div class="bench-list" id="bench-list"></div>
+      <!-- 06 Budget & Options -->
+      <div class="r-sec r-sec-collapsible" data-accordion="closed">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">06</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div id="budget-content"></div></div></div>
       </div>
 
-      <!-- 07 Free Performance Fixes -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">07</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></div>
-        <div class="checklist" id="checklist"></div>
+      <!-- 07 Do Not Buy -->
+      <div class="r-sec r-sec-collapsible" data-accordion="closed">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">07</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div class="dnu-row" id="dnu-row"></div></div></div>
       </div>
 
       <!-- 08 Performance Diagnosis -->
-      <div class="r-sec">
-        <div class="r-sec-label"><span class="r-num">08</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></div>
-        <div class="diag-block">
-          <div class="diag-pill" id="diag-pill"></div>
-          <div class="diag-text" id="diag-text"></div>
-        </div>
+      <div class="r-sec r-sec-collapsible" data-accordion="closed">
+        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">08</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></span><span class="r-chevron">&#8964;</span></div>
+        <div class="r-sec-body"><div class="r-sec-inner"><div class="diag-block"><div class="diag-pill" id="diag-pill"></div><div class="diag-text" id="diag-text"></div></div></div></div>
       </div>
 
     </div>

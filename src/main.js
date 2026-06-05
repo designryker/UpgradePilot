@@ -458,6 +458,21 @@ function showResultStep() {
   goToWizardStep(WIZARD_STEPS.length - 1, false);
 }
 
+
+// ── Accordion toggle ──────────────────────────────────────────────────
+function initAccordion() {
+  const resultCard = el('result');
+  if (!resultCard) return;
+  resultCard.addEventListener('click', event => {
+    const toggle = event.target.closest('.r-sec-toggle');
+    if (!toggle) return;
+    const sec = toggle.closest('.r-sec-collapsible');
+    if (!sec) return;
+    const isOpen = sec.dataset.accordion === 'open';
+    sec.dataset.accordion = isOpen ? 'closed' : 'open';
+  });
+}
+
 function initWizard() {
   renderWizardProgress();
   goToWizardStep(0, false);
@@ -534,6 +549,7 @@ window.addEventListener('DOMContentLoaded', () => {
   resetInputsToDefaults();
   bindEvents();
   initWizard();
+  initAccordion();
   updateMemoryCompatibility();
   updatePsuReadout();
   updateSystemTypeFields();
@@ -548,6 +564,7 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('pageshow', event => {
   if (!event.persisted) return;
   resetInputsToDefaults();
+  initAccordion();
   goToWizardStep(0, false);
   updateMemoryCompatibility();
   updatePsuReadout();
@@ -1576,6 +1593,10 @@ function analyze(skipLoading) {
       '<div class="path-copy">' + card.c + '</div>' +
     '</div>'
   ).join('');
+  // Render specific part/GPU recommendations at top of results (Section 02)
+  // These move here from the budget section to create the top-hook effect.
+  const upgradePicksEl = el('upgrade-picks');
+  if (upgradePicksEl) upgradePicksEl.innerHTML = buildExamplePartCards();
 
   // 05 PSU Recommendation (desktop only — efficiency field removed for now)
   if (isLaptop) {
@@ -1943,7 +1964,7 @@ function analyze(skipLoading) {
     '</div>';
   }
   budHTML += buildBudgetDiscoveryCards();
-  budHTML += buildExamplePartCards();
+  // buildExamplePartCards() now renders in Section 02 (top) — see upgrade-picks above
   budHTML += buildCompleteBuildCards();
   budHTML += buildLaptopSuggestionCards();
   budHTML +=
@@ -1994,6 +2015,11 @@ function analyze(skipLoading) {
   ].join('\n');
   setCopyButtonState(false);
 
+  // Reset accordion: sec 03 open, 04-08 closed each run
+  document.querySelectorAll('.r-sec-collapsible').forEach(sec => {
+    const num = sec.querySelector('.r-num')?.textContent?.trim();
+    sec.dataset.accordion = (num === '03') ? 'open' : 'closed';
+  });
   // Show result
   const r = el('result');
   r.className = 'show';

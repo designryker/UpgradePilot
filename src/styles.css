@@ -1667,3 +1667,69 @@ h1{
     grid-template-columns:1fr;
   }
 }
+
+/* ── Accordion ─────────────────────────────────────────────────────── */
+.r-sec-collapsible .r-sec-label {
+  cursor:pointer;
+  user-select:none;
+  justify-content:space-between;
+  margin-bottom:0;
+  padding:.65rem 0;
+  border-radius:6px;
+  transition:color .15s;
+}
+.r-sec-collapsible .r-sec-label:hover .r-sec-label-inner { color:var(--text); }
+.r-sec-label-inner { display:flex; align-items:center; gap:8px; }
+.r-chevron {
+  font-size:16px;
+  color:var(--muted);
+  transition:transform .28s cubic-bezier(.4,0,.2,1), color .15s;
+  line-height:1;
+  flex-shrink:0;
+}
+.r-sec-collapsible[data-accordion="open"] .r-chevron {
+  transform:rotate(180deg);
+  color:var(--accent);
+}
+.r-sec-collapsible[data-accordion="open"] .r-sec-label {
+  margin-bottom:.55rem;
+  color:var(--text);
+}
+/* Grid-row accordion — smoothest method */
+.r-sec-body {
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .32s cubic-bezier(.4,0,.2,1);
+}
+.r-sec-collapsible[data-accordion="open"] .r-sec-body {
+  grid-template-rows:1fr;
+}
+.r-sec-inner { overflow:hidden; }
+.r-sec-collapsible[data-accordion="open"] .r-sec-inner { padding-bottom:.35rem; }
+
+/* Collapsed preview hint */
+.r-sec-collapsible[data-accordion="closed"] .r-sec-label { opacity:.82; }
+.r-sec-collapsible[data-accordion="closed"] .r-sec-label:hover { opacity:1; }
+
+/* ── Final Decision hero ────────────────────────────────────────────── */
+.final-decision-section {
+  background:linear-gradient(135deg,rgba(0,228,121,.055),rgba(200,173,255,.035));
+  border-radius:12px;
+  border:1px solid rgba(0,228,121,.18) !important;
+  padding:1.15rem 1.25rem !important;
+  margin-bottom:.5rem;
+}
+.final-decision-section .r-sec-label {
+  font-size:9px;
+  color:var(--accent2);
+  margin-bottom:.6rem;
+}
+.final-box { padding:.5rem 0 0; }
+.ft { font-size:1.05rem; font-weight:600; line-height:1.5; }
+
+/* ── Upgrade section polish ─────────────────────────────────────────── */
+.result-upgrade-section { padding-top:.85rem; }
+.result-upgrade-section .r-sec-label { color:var(--text); font-size:10px; }
+
+/* ── r-sec open: restore normal label margin ────────────────────────── */
+.r-sec:not(.r-sec-collapsible) .r-sec-label { margin-bottom:.7rem; }
