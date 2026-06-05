@@ -4,24 +4,24 @@ export function normalizePartSearch(value) {
     .replace(/[^a-z0-9]/g, '');
 }
 
-export const ANALYSIS_SEQUENCE_MS = 2100;
+export const ANALYSIS_SEQUENCE_MS = 2400;
 
 const ANALYSIS_MESSAGES = {
   en: [
-    'Analyzing your system balance...',
-    'Checking CPU/GPU bottlenecks...',
-    'Reviewing RAM, storage, and cooling...',
-    'Looking for free optimizations first...',
+    'Analyzing your system...',
+    'Checking CPU and GPU balance...',
+    'Looking for performance bottlenecks...',
+    'Searching for free optimizations...',
     'Estimating upgrade value...',
-    'Building your upgrade plan...',
+    'Building your upgrade decision...',
   ],
   tr: [
-    'Sistem dengesi analiz ediliyor...',
-    'CPU/GPU darboğazı kontrol ediliyor...',
-    'RAM, depolama ve soğutma gözden geçiriliyor...',
-    'Önce ücretsiz optimizasyonlar aranıyor...',
-    'Yükseltme değeri tahmin ediliyor...',
-    'Upgrade planın hazırlanıyor...',
+    'Sisteminiz analiz ediliyor...',
+    'CPU ve GPU dengesi kontrol ediliyor...',
+    'Performans darboğazları aranıyor...',
+    'Ücretsiz optimizasyonlar inceleniyor...',
+    'Yükseltme değeri hesaplanıyor...',
+    'Yükseltme kararınız hazırlanıyor...',
   ],
 };
 

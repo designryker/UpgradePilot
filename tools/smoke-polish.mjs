@@ -90,16 +90,34 @@ assert.ok(
   'laptop mode should not render desktop upgrade-path cards'
 );
 assert.ok(
-  ANALYSIS_SEQUENCE_MS >= 1500 && ANALYSIS_SEQUENCE_MS <= 3000,
-  'analysis sequence should feel brief, between 1.5s and 3s'
+  ANALYSIS_SEQUENCE_MS >= 2000 && ANALYSIS_SEQUENCE_MS <= 3000,
+  'analysis sequence should feel brief, between 2s and 3s'
 );
 const enAnalysisMessages = getAnalysisMessages('en');
 const trAnalysisMessages = getAnalysisMessages('tr');
 assert.ok(enAnalysisMessages.length >= 6, 'English analysis sequence should have enough message variety');
 assert.ok(trAnalysisMessages.length >= 6, 'Turkish analysis sequence should have enough message variety');
-assert.ok(enAnalysisMessages.includes('Checking CPU/GPU bottlenecks...'));
-assert.ok(trAnalysisMessages.includes('CPU/GPU darboğazı kontrol ediliyor...'));
+assert.ok(enAnalysisMessages.includes('Analyzing your system...'));
+assert.ok(enAnalysisMessages.includes('Checking CPU and GPU balance...'));
+assert.ok(enAnalysisMessages.includes('Looking for performance bottlenecks...'));
+assert.ok(enAnalysisMessages.includes('Searching for free optimizations...'));
+assert.ok(enAnalysisMessages.includes('Building your upgrade decision...'));
+assert.ok(trAnalysisMessages.includes('Sisteminiz analiz ediliyor...'));
+assert.ok(trAnalysisMessages.includes('CPU ve GPU dengesi kontrol ediliyor...'));
+assert.ok(trAnalysisMessages.includes('Yükseltme kararınız hazırlanıyor...'));
 assert.equal(enAnalysisMessages.some(message => /^loading/i.test(message)), false);
+assert.equal(enAnalysisMessages.some(message => /parts|shopping/i.test(message)), false);
 assert.ok(indexSource.includes('id="analysis-message"'), 'loading card should expose a dynamic analysis message node');
+assert.ok(indexSource.includes('Optimize first. Upgrade smart.'), 'loading card should reinforce the product promise');
+[
+  'Enable XMP/EXPO',
+  'Update GPU and chipset drivers',
+  'Check CPU/GPU temperatures',
+  'Move the game to SSD/NVMe',
+  'Close heavy background apps and overlays',
+  'Retest before upgrading',
+].forEach(requiredAction => {
+  assert.ok(mainSource.includes(requiredAction), 'free fixes should include: ' + requiredAction);
+});
 
 console.log('polish smoke checks passed');

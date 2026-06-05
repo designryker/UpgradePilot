@@ -66,7 +66,7 @@ function startAnalysisSequence(onComplete) {
   if (progressNode) {
     progressNode.style.animation = 'none';
     void progressNode.offsetWidth;
-    progressNode.style.animation = 'analysisProgress ' + ANALYSIS_SEQUENCE_MS + 'ms cubic-bezier(.2,.8,.2,1) forwards';
+    progressNode.style.animation = 'analysisProgress ' + ANALYSIS_SEQUENCE_MS + 'ms cubic-bezier(.2,.8,.2,1) forwards, diagnosticScan 1.1s ease-in-out infinite';
   }
   if (messageNode) messageNode.textContent = messages[index];
 
@@ -124,6 +124,10 @@ function groupLabel(g){
     'Windows':'Windows',
     'GPU':'GPU',
     'CPU':'CPU',
+    'Drivers':'Suruculer',
+    'Thermals':'Sicaklik',
+    'Storage':'Depolama',
+    'Retest':'Tekrar Test',
     'Memory':'Bellek',
     'Storage / Stutter':'Depolama / Stutter',
     'Confirm GPU Bottleneck':'GPU Darboğazını Doğrula',
@@ -1960,56 +1964,19 @@ function analyze(skipLoading) {
   function buildPolishedFreeChecks() {
     const items = [];
     const add = (g, t) => {
-      if (items.length < 8 && !items.some(item => item.t === t)) items.push({g, t});
+      if (items.length < 6 && !items.some(item => item.t === t)) items.push({g, t});
     };
 
-    add('Windows', inTr('Set Windows power mode to Balanced or Best Performance.', 'Windows guc modunu Dengeli veya En Iyi Performans yap.'));
-    add('Display / Monitor', inTr('Confirm the monitor refresh rate in Windows Display Settings.', 'Windows ekran ayarlarinda monitor yenileme hizini dogrula.'));
-
-    if (showCPU || diagKey === 'opt' || diagKey === 'bal') {
-      add('Windows', inTr('Close heavy background apps before testing.', 'Testten once agir arka plan uygulamalarini kapat.'));
-      add('CPU', inTr('Update AMD or Intel chipset drivers.', 'AMD veya Intel chipset surucusunu guncelle.'));
+    add('Memory', inTr('Enable XMP/EXPO, then confirm RAM speed in CPU-Z.', 'XMP/EXPO ac, sonra CPU-Z ile RAM hizini dogrula.'));
+    add('Drivers', inTr('Update GPU and chipset drivers.', 'GPU ve chipset suruculerini guncelle.'));
+    add('Thermals', inTr('Check CPU/GPU temperatures while gaming.', 'Oyun sirasinda CPU/GPU sicakliklarini kontrol et.'));
+    if (hddGameDrive || showStutter) {
+      add('Storage', hddGameDrive
+        ? inTr('Move the game to SSD/NVMe.', 'Oyunu SSD/NVMe diske tasi.')
+        : inTr('Move the game to SSD/NVMe if storage stutter appears.', 'Depolama stutteri varsa oyunu SSD/NVMe diske tasi.'));
     }
-
-    if (showGPU) {
-      add('GPU', inTr('Update GPU drivers with NVIDIA App, GeForce Experience, or AMD Adrenalin.', 'GPU surucusunu NVIDIA App, GeForce Experience veya AMD Adrenalin ile guncelle.'));
-      add('GPU', inTr('Check GPU usage and temperature during a real game.', 'Gercek oyunda GPU kullanimini ve sicakligini kontrol et.'));
-    }
-
-    if (showMemory) {
-      if (isSingleCh) add('Memory', inTr('Fix single-channel RAM slot placement before buying parts.', 'Parca almadan once tek kanal RAM slot yerlesimini duzelt.'));
-      add('Memory', inTr('Verify RAM speed and channel mode in CPU-Z.', 'CPU-Z ile RAM hizi ve kanal modunu dogrula.'));
-    }
-
-    const bios = getBiosRecommendation({
-      cpuKey,
-      bestKey: best.key,
-      ramSpeedTier: ramSpd,
-      isSingleChannel: isSingleCh,
-      oldIntelPlatform,
-      oldAm4Platform,
-      isModernIntelHybrid,
-      unknownCooler,
-      weakCooler,
-    });
-    if (bios) add(bios.group, currentLang === 'tr'
-      ? bios.text
-        .replace('Check XMP/EXPO in BIOS, then confirm the actual RAM speed in CPU-Z.', 'BIOS icinde XMP/EXPO durumunu kontrol et, sonra CPU-Z ile RAM hizini dogrula.')
-        .replace('Before an AM4 CPU upgrade, confirm motherboard BIOS support for the target CPU.', 'AM4 CPU yukseltmesinden once anakart BIOS destegini dogrula.')
-        .replace('For hybrid Intel CPUs, keep BIOS and chipset drivers current before judging CPU scheduling.', 'Hibrit Intel CPUlarda CPU zamanlamasini yorumlamadan once BIOS ve chipset surucusunu guncel tut.')
-        .replace('If temperatures and boost clocks look wrong, check BIOS defaults before replacing the CPU.', 'Sicaklik ve boost frekansi hatali gorunuyorsa CPU degistirmeden once BIOS varsayilanlarini kontrol et.')
-        .replace('Older Intel platforms rarely have a clean CPU drop-in path; verify board support before buying.', 'Eski Intel platformlarda temiz CPU tak-cikar rotasi nadirdir; almadan once anakart destegini dogrula.')
-      : bios.text);
-
-    if (showStutter || hddGameDrive) {
-      add('Storage / Stutter', hddGameDrive
-        ? inTr('Move the game from HDD to SSD/NVMe.', 'Oyunu HDDden SSD/NVMe diske tasi.')
-        : inTr('Keep the game drive below 85% full and check storage health.', 'Oyun diskini %85 altinda tut ve disk sagligini kontrol et.'));
-    }
-
-    if (isLaptop || throttleLoss.show || weakCooler || unknownCooler) {
-      add(isLaptop ? 'Laptop Cooling' : 'Cooling / Thermals', inTr('Check CPU/GPU temperatures under load.', 'Yuk altinda CPU/GPU sicakliklarini kontrol et.'));
-    }
+    add('Windows', inTr('Close heavy background apps and overlays.', 'Agir arka plan uygulamalarini ve overlayleri kapat.'));
+    add('Retest', inTr('Retest before upgrading.', 'Yukseltmeden once tekrar test et.'));
 
     return items;
   }
