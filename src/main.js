@@ -978,6 +978,27 @@ function analyze(skipLoading) {
         note: inTr('Rough estimate: no paid part is likely to deliver a clean gain before the blocker is fixed.', 'Yaklasik tahmin: blokaj cozulmeden ucretli bir parcanin temiz kazanc vermesi beklenmez.')
       };
     }
+    if (psuDependencyActive) {
+      return {
+        label: formatGainRange(0, 5),
+        cls: 'c-mid',
+        note: inTr('Do not count GPU gains yet. Resolve PSU readiness first, then rerun the estimate.', 'GPU kazancini henuz hesaba katma. Once PSU hazirligini coz, sonra tahmini tekrar calistir.')
+      };
+    }
+    if (psuW === 0 && (best.key === 'gpu' || best.key === 'psu' || psuBlockUpgr)) {
+      return {
+        label: formatGainRange(0, 8),
+        cls: 'c-mid',
+        note: inTr('Confidence-limited estimate: enter PSU wattage before trusting a GPU upgrade range.', 'Guven sinirli tahmin: GPU yukseltme araligina guvenmeden once PSU watt degerini gir.')
+      };
+    }
+    if (unknownCooler && (best.key === 'cpu' || best.key === 'gpu')) {
+      return {
+        label: formatGainRange(0, 8),
+        cls: 'c-mid',
+        note: inTr('Confidence-limited estimate: check temperatures first because throttling can hide the real gain.', 'Guven sinirli tahmin: once sicakliklari kontrol et; throttling gercek kazanci saklayabilir.')
+      };
+    }
     if (best.key === 'gpu') {
       const target = res === '4k' ? 9 : res === '1440' ? 8 : hz >= 165 ? 7 : 6;
       const gap = Math.max(1, target - gpuSc);

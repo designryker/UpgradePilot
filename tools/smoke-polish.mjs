@@ -118,6 +118,9 @@ assert.ok(mainSource.includes('Compare complete laptop classes only after checki
 assert.ok(mainSource.includes('psuDependencyActive'), 'desktop PSU dependency should be centralized');
 assert.ok(mainSource.includes('Resolve PSU readiness before buying a stronger GPU'), 'PSU blocker should clearly come before GPU purchase');
 assert.ok(mainSource.includes('PSU blocks GPU path'), 'result trust row should expose PSU dependency when it blocks the GPU path');
+assert.ok(mainSource.includes('Do not count GPU gains yet. Resolve PSU readiness first'), 'PSU blockers should suppress aggressive GPU gain estimates');
+assert.ok(mainSource.includes('Confidence-limited estimate: enter PSU wattage'), 'missing PSU wattage should reduce gain confidence');
+assert.ok(mainSource.includes('throttling can hide the real gain'), 'unknown cooling should reduce gain confidence');
 assert.ok(
   ANALYSIS_SEQUENCE_MS >= 2000 && ANALYSIS_SEQUENCE_MS <= 3000,
   'analysis sequence should feel brief, between 2s and 3s'
