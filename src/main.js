@@ -566,8 +566,8 @@ function updateBudgetPresets() {
 }
 
 const WIZARD_STEPS = [
-  {id:'specs', labelKey:'stepSpecs'},
   {id:'goal', labelKey:'stepGoal'},
+  {id:'specs', labelKey:'stepSpecs'},
   {id:'budget', labelKey:'stepBudget'},
   {id:'result', labelKey:'stepResult'},
 ];
@@ -588,6 +588,8 @@ function renderWizardProgress() {
 
 function goToWizardStep(index, scroll = true) {
   currentWizardStep = clamp(index, 0, WIZARD_STEPS.length - 1);
+  const wizard = el('wizard');
+  if (wizard) wizard.dataset.currentStep = String(currentWizardStep);
   const activeStepId = WIZARD_STEPS[currentWizardStep].id;
   document.querySelectorAll('.wizard-step').forEach(step => {
     step.classList.toggle('active', step.dataset.step === activeStepId);
@@ -597,7 +599,7 @@ function goToWizardStep(index, scroll = true) {
   if (back) back.disabled = currentWizardStep === 0;
   if (next) next.style.display = currentWizardStep >= WIZARD_STEPS.length - 2 ? 'none' : '';
   renderWizardProgress();
-  if (scroll) el('wizard')?.scrollIntoView({behavior:'smooth', block:'start'});
+  if (scroll) wizard?.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function nextWizardStep() {
@@ -2511,8 +2513,8 @@ function analyze(skipLoading) {
   updateFreeBoostProgress();
   // Show result
   const r = el('result');
-  showResultStep();
   r.classList.add('show');
+  showResultStep();
   r.style.animation = 'none';
   void r.offsetWidth;
   r.style.animation = 'fadeUp .45s ease both';

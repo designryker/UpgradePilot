@@ -70,6 +70,16 @@ assert.equal(
 
 const mainSource = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const htmlStepOrder = [...indexSource.matchAll(/<section class="wizard-step" data-step="([^"]+)"/g)].map(match => match[1]);
+assert.deepEqual(htmlStepOrder, ['goal', 'specs', 'budget', 'result'], 'HTML wizard sections should keep system type first and Analyze before result');
+assert.ok(
+  /const WIZARD_STEPS = \[\s+\{id:'goal', labelKey:'stepGoal'\},\s+\{id:'specs', labelKey:'stepSpecs'\},\s+\{id:'budget', labelKey:'stepBudget'\},\s+\{id:'result', labelKey:'stepResult'\},\s+\];/.test(mainSource),
+  'JS wizard step order should match the HTML order so Analyze is reachable predictably'
+);
+assert.ok(
+  mainSource.includes("wizard.dataset.currentStep = String(currentWizardStep);"),
+  'wizard should expose the current step state for reliable UI/debugging'
+);
 const activeSelector = mainSource.match(/querySelectorAll\('([^']+)'\)\.forEach\(node => \{\s+const targetPart = node\.dataset\.summaryPart \|\| node\.dataset\.statusPart;/);
 assert.ok(activeSelector, 'active-part sync selector should be easy to audit');
 assert.equal(
@@ -110,6 +120,10 @@ assert.equal(enAnalysisMessages.some(message => /parts|shopping/i.test(message))
 assert.ok(indexSource.includes('id="analysis-message"'), 'loading card should expose a dynamic analysis message node');
 assert.ok(indexSource.includes('Optimize first. Upgrade smart.'), 'loading card should reinforce the product promise');
 assert.ok(
+  indexSource.includes('<button type="button" class="btn" data-action="analyze"'),
+  'analyze button should be a non-submit button for reliable repeated runs'
+);
+assert.ok(
   /el\('result-rerun'\)\?\.addEventListener\('click', \(\) => analyze\(\)\);/.test(mainSource),
   'result rerun should use the normal loading sequence so repeated analysis works'
 );
@@ -118,8 +132,8 @@ assert.ok(
   'normal analysis should move back to the budget/loading step before showing the loader'
 );
 assert.ok(
-  mainSource.includes("r.classList.add('show')"),
-  'result reveal should add the show class without replacing the result element class list'
+  /const r = el\('result'\);\s+r\.classList\.add\('show'\);\s+showResultStep\(\);/.test(mainSource),
+  'result reveal should add the show class before switching to the result step'
 );
 [
   'Enable XMP/EXPO',
