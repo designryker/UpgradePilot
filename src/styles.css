@@ -282,7 +282,7 @@
   @media(max-width:660px){.g3,.g3b,.psu-rec-grid,.metrics2,.upgrade-path{grid-template-columns:1fr 1fr}.wizard-progress{grid-template-columns:1fr 1fr}.discovery-grid,.example-grid,.laptop-grid,.build-grid{grid-template-columns:1fr}}
   @media(max-width:420px){.g2,.g3,.g3b,.g2b,.psu-rec-grid,.metrics2,.money-tools,.upgrade-path,.wizard-progress{grid-template-columns:1fr}.price-market-row{align-items:flex-start;flex-direction:column;gap:.25rem}.price-market-row strong{text-align:left}.result-actions{flex-direction:column}.result-actions .wizard-btn{width:100%}}
 
-/* === RigPilot report redesign layer === */
+/* === UpgradePilot report redesign layer === */
 :root{
   --bg:#121216;
   --surface:#15151c;
@@ -792,7 +792,7 @@ header{
 }
 h1{
   font-size:clamp(3.4rem,8.4vw,7.1rem);
-  max-width:8.8ch;
+  max-width:12.5ch;
 }
 .tagline{color:#d7c5ff}
 .subtitle{
@@ -1403,7 +1403,7 @@ h1{
   }
   .app-shell h1{
     max-width:100%;
-    font-size:clamp(2.55rem,4.15vw,4.25rem);
+    font-size:clamp(2.05rem,3vw,3.15rem);
     line-height:.92;
     white-space:nowrap;
     text-wrap:nowrap;

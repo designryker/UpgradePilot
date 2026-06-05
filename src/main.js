@@ -1583,8 +1583,8 @@ function analyze(skipLoading) {
       ? inTr('Laptop class for your budget', 'Butcene uygun laptop sinifi')
       : meta.name;
     const copy = isNoBuy
-      ? inTr('RigPilot does not see a strong paid upgrade yet. Run the validation checks, apply the free fixes, then rerun this result with fresh observations.',
-             'RigPilot su an guclu bir ucretli yukseltme gormuyor. Dogrulama kontrollerini yap, ucretsiz duzeltmeleri uygula, sonra yeni gozlemlerle tekrar calistir.')
+      ? inTr('UpgradePilot does not see a strong paid upgrade yet. Run the validation checks, apply the free fixes, then rerun this result with fresh observations.',
+             'UpgradePilot su an guclu bir ucretli yukseltme gormuyor. Dogrulama kontrollerini yap, ucretsiz duzeltmeleri uygula, sonra yeni gozlemlerle tekrar calistir.')
       : inTr('Start with this comparison lane. It keeps the recommendation tied to your diagnosis instead of sending you into random product listings.',
              'Bu karsilastirma araligindan basla. Boylece rastgele urun listelerine girmek yerine tavsiye analiz sonucuna bagli kalir.');
     const queryByKind = {
@@ -1619,8 +1619,8 @@ function analyze(skipLoading) {
       '<div class="buying-action-side">' +
         '<div class="buying-price">' + price + '</div>' +
         link +
-        '<div class="affiliate-note">' + inTr('RigPilot may earn a commission from qualifying purchases. Recommendations stay based on your diagnosis.',
-          'RigPilot uygun satin alimlardan komisyon kazanabilir. Tavsiyeler analiz sonucuna bagli kalir.') + '</div>' +
+        '<div class="affiliate-note">' + inTr('UpgradePilot may earn a commission from qualifying purchases. Recommendations stay based on your diagnosis.',
+          'UpgradePilot uygun satin alimlardan komisyon kazanabilir. Tavsiyeler analiz sonucuna bagli kalir.') + '</div>' +
       '</div>' +
     '</div>';
   }
@@ -1894,8 +1894,8 @@ function analyze(skipLoading) {
       return '<div class="example-block laptop-block">' +
         '<div class="discovery-head">' + intro + '</div>' +
         '<div class="path-copy">' +
-          inTr('Enter a budget to compare rough laptop classes. Until a live product API is connected, RigPilot will show honest example tiers instead of pretending to know current listings.',
-               'Laptop siniflarini karsilastirmak icin butce gir. Canli urun API baglanana kadar RigPilot guncel ilan biliyormus gibi yapmaz; durust ornek seviyeler gosterir.') +
+          inTr('Enter a budget to compare rough laptop classes. Until a live product API is connected, UpgradePilot will show honest example tiers instead of pretending to know current listings.',
+               'Laptop siniflarini karsilastirmak icin butce gir. Canli urun API baglanana kadar UpgradePilot guncel ilan biliyormus gibi yapmaz; durust ornek seviyeler gosterir.') +
         '</div>' +
       '</div>';
     }
@@ -2089,7 +2089,7 @@ function analyze(skipLoading) {
   el('fi').innerHTML        = finalIco;
   el('ft').textContent      = finalSent;
   latestResultSummary = [
-    'RigPilot Result',
+    'UpgradePilot Result',
     'Decision: ' + finalSent,
     'Best next move: ' + meta.name + ' - ' + meta.sub,
     'Why: ' + whyText,
@@ -2100,7 +2100,7 @@ function analyze(skipLoading) {
     'GPU: ' + gpuName,
     'RAM: ' + ramGB + 'GB ' + ramType.toUpperCase(),
     'Target: ' + resLabel + ' / ' + hz + 'Hz / ' + gameLabel,
-    'Use RigPilot to validate before spending.'
+    'Use UpgradePilot to validate before spending.'
   ].join('\n');
   setCopyButtonState(false);
 

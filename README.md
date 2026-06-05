@@ -1,11 +1,12 @@
-# RigPilot
+# UpgradePilot
 
-RigPilot is a Vite-based PC performance and upgrade advisor focused on budget-conscious desktop and laptop upgrade decisions.
+UpgradePilot is a Vite-based PC upgrade advisor focused on helping users know what to upgrade before they spend money.
 
 It currently includes:
 
 - EN/TR language support
 - Guided upgrade flow
+- Free Boost Path before paid recommendations
 - CPU/GPU autocomplete and quick picks
 - Budget-aware upgrade advice
 - Desktop/laptop mode handling
