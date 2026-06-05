@@ -41,6 +41,12 @@ export const CPU_SCORE = {
 
   // Intel Core Ultra 200S
   ultra5_245k:7, ultra7_265k:8, ultra9_285k:8,
+
+  // Laptop CPUs — approximate sustained gaming class, cooling dependent
+  i5_10300h:3, i5_11400h:4, i5_12500h:6, i5_13500h:6,
+  i7_10750h:4, i7_11800h:5, i7_12700h:7, i7_13700h:7,
+  r5_4600h:4, r5_5600h:5, r7_5800h:6, r7_6800h:6,
+  r7_7735hs:6, r7_7840hs:7, r9_7940hs:7,
 };
 
 // ── GPU Performance Scores (rasterization gaming, approximate) ──
@@ -77,6 +83,12 @@ export const GPU_SCORE = {
 
   // Intel Arc
   arc_a380:2, arc_a580:4, arc_a750:5, arc_a770:5, arc_b570:5, arc_b580:6,
+
+  // Laptop GPUs — approximate real-world class, wattage/cooling dependent
+  gtx1650_laptop:2, gtx1660ti_laptop:3,
+  rtx3050_laptop:3, rtx3060_laptop:5, rtx3070_laptop:6,
+  rtx4050_laptop:4, rtx4060_laptop:6, rtx4070_laptop:7, rtx4080_laptop:9,
+  rx5600m:4, rx6600m:5, rx6800m:7, rx7600s:5,
 };
 
 // ── GPU Hardware Encoder Strength (streaming/recording) ──
@@ -103,6 +115,12 @@ export const GPU_ENC = {
 
   // Intel Arc
   arc_a380:2, arc_a580:2, arc_a750:2, arc_a770:2, arc_b570:3, arc_b580:3,
+
+  // Laptop GPUs
+  gtx1650_laptop:1, gtx1660ti_laptop:1,
+  rtx3050_laptop:2, rtx3060_laptop:2, rtx3070_laptop:2,
+  rtx4050_laptop:3, rtx4060_laptop:3, rtx4070_laptop:3, rtx4080_laptop:3,
+  rx5600m:1, rx6600m:1, rx6800m:2, rx7600s:2,
 };
 
 // ── PSU: maximum safe GPU score by wattage ──

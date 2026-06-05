@@ -20,6 +20,44 @@ let hasTouchedSpecs = false;
 let latestResultSummary = '';
 let analysisSequenceTimer = null;
 let analysisMessageTimer = null;
+const QUICK_PARTS = {
+  desktop: {
+    cpu: [
+      ['r5_2600', 'Ryzen 5 2600'],
+      ['r5_3600', 'Ryzen 5 3600'],
+      ['r5_5600', 'Ryzen 5 5600'],
+      ['i5_9400f', 'i5-9400F'],
+      ['i7_7700k', 'i7-7700K'],
+      ['i5_10400f', 'i5-10400F'],
+    ],
+    gpu: [
+      ['gtx1050ti', 'GTX 1050 Ti'],
+      ['gtx1060_6gb', 'GTX 1060'],
+      ['gtx1650', 'GTX 1650'],
+      ['gtx1660s', 'GTX 1660S'],
+      ['rx580', 'RX 580'],
+      ['rtx2060', 'RTX 2060'],
+    ],
+  },
+  laptop: {
+    cpu: [
+      ['i5_10300h', 'i5-10300H'],
+      ['i5_11400h', 'i5-11400H'],
+      ['i7_10750h', 'i7-10750H'],
+      ['i7_12700h', 'i7-12700H'],
+      ['r5_5600h', 'Ryzen 5 5600H'],
+      ['r7_5800h', 'Ryzen 7 5800H'],
+    ],
+    gpu: [
+      ['gtx1650_laptop', 'GTX 1650 Laptop'],
+      ['rtx3050_laptop', 'RTX 3050 Laptop'],
+      ['rtx3060_laptop', 'RTX 3060 Laptop'],
+      ['rtx4050_laptop', 'RTX 4050 Laptop'],
+      ['rtx4060_laptop', 'RTX 4060 Laptop'],
+      ['rtx4070_laptop', 'RTX 4070 Laptop'],
+    ],
+  },
+};
 function setLanguage(lang){
   currentLang = lang === 'tr' ? 'tr' : 'en';
   document.documentElement.lang = currentLang;
@@ -139,6 +177,7 @@ function groupLabel(g){
     'General Checks':'Genel Kontroller',
     'Cooling / Thermals':'Soğutma / Sıcaklık',
     'Laptop Cooling':'Laptop Soğutması',
+    'Laptop Power':'Laptop Gücü',
     'Display / Monitor':'Ekran / Monitör',
     'Windows Version':'Windows Sürümü',
     'Storage Upgrade':'Depolama Yükseltmesi',
@@ -225,21 +264,30 @@ function updateMemoryCompatibility() {
 function filterSelectOptions(selectId, query) {
   const select = el(selectId);
   if (!select) return;
+  applySystemModeToPartSelects(selectId);
   const q = query.trim().toLowerCase();
   const nq = q.replace(/[^a-z0-9]/g, '');
   let firstMatch = null;
 
   select.querySelectorAll('option').forEach(option => {
+    const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
+    const groupMode = option.closest('optgroup')?.dataset.systemMode || 'desktop';
+    const modeMatch = groupMode === mode;
     const label = option.textContent.toLowerCase();
     const normalizedLabel = buildPartSearchText(selectId, option.value, option.textContent);
-    const isMatch = !q || label.includes(q) || normalizedLabel.includes(nq);
-    option.hidden = false;
+    const isSearchMatch = !q || label.includes(q) || normalizedLabel.includes(nq);
+    const isMatch = modeMatch && isSearchMatch;
+    option.hidden = !modeMatch;
     option.disabled = !isMatch;
     if (isMatch && !firstMatch) firstMatch = option;
   });
   select.querySelectorAll('optgroup').forEach(group => {
-    group.hidden = false;
-    group.disabled = q && ![...group.querySelectorAll('option')].some(option => !option.disabled);
+    const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
+    const groupMode = group.dataset.systemMode || 'desktop';
+    const modeMatch = groupMode === mode;
+    const hasVisibleMatch = [...group.querySelectorAll('option')].some(option => !option.disabled);
+    group.hidden = !modeMatch;
+    group.disabled = !modeMatch || (q && !hasVisibleMatch);
   });
 
   if (q && firstMatch) {
@@ -247,6 +295,51 @@ function filterSelectOptions(selectId, query) {
     if (selectId === 'cpu') updateMemoryCompatibility();
     updateQuickChips();
   }
+}
+
+function isOptionAvailableForCurrentMode(option) {
+  if (!option) return false;
+  const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
+  const groupMode = option.closest('optgroup')?.dataset.systemMode || 'desktop';
+  return groupMode === mode && !option.disabled && !option.hidden;
+}
+
+function firstAvailablePartOption(select) {
+  return [...select.options].find(option => isOptionAvailableForCurrentMode(option));
+}
+
+function renderQuickChipsForMode() {
+  const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
+  ['cpu','gpu'].forEach(id => {
+    const grid = el(id + '-popular');
+    if (!grid) return;
+    grid.innerHTML = QUICK_PARTS[mode][id].map(([value, label]) =>
+      '<button type="button" class="quick-chip" data-quick-pick="' + id + '" data-value="' + value + '">' + label + '</button>'
+    ).join('');
+  });
+}
+
+function applySystemModeToPartSelects(selectId) {
+  const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
+  const ids = selectId ? [selectId] : ['cpu','gpu'];
+  ids.forEach(id => {
+    const select = el(id);
+    if (!select) return;
+    select.querySelectorAll('optgroup').forEach(group => {
+      const groupMode = group.dataset.systemMode || 'desktop';
+      const hidden = groupMode !== mode;
+      group.hidden = hidden;
+      group.disabled = hidden;
+      group.querySelectorAll('option').forEach(option => {
+        option.hidden = hidden;
+        option.disabled = hidden;
+      });
+    });
+    if (!isOptionAvailableForCurrentMode(select.selectedOptions?.[0])) {
+      const fallback = firstAvailablePartOption(select);
+      if (fallback) select.value = fallback.value;
+    }
+  });
 }
 
 function quickPick(selectId, value) {
@@ -286,6 +379,12 @@ function updateSystemTypeFields() {
   const isLaptopMode = el('system-type')?.value === 'laptop';
   const visual = el('pc-visual');
   if (visual) visual.dataset.systemType = isLaptopMode ? 'laptop' : 'desktop';
+  renderQuickChipsForMode();
+  ['cpu-search','gpu-search'].forEach(id => {
+    const input = el(id);
+    if (input) input.value = '';
+  });
+  applySystemModeToPartSelects();
   document.querySelectorAll('.desktop-only').forEach(node => {
     node.classList.toggle('is-hidden', isLaptopMode);
   });
@@ -301,6 +400,7 @@ function updateSystemTypeFields() {
     ? (currentLang === 'tr' ? 'Laptop profili' : 'Laptop profile')
     : (currentLang === 'tr' ? 'Mevcut sistem' : 'Current rig')
   );
+  updateMemoryCompatibility();
   updateVirtualPcSummary();
 }
 
@@ -719,8 +819,11 @@ function bindEvents() {
   document.querySelectorAll('[data-filter-select]').forEach(input => {
     input.addEventListener('input', event => filterSelectOptions(input.dataset.filterSelect, event.target.value));
   });
-  document.querySelectorAll('[data-quick-pick]').forEach(button => {
-    button.addEventListener('click', () => quickPick(button.dataset.quickPick, button.dataset.value));
+  ['cpu-popular','gpu-popular'].forEach(gridId => {
+    el(gridId)?.addEventListener('click', event => {
+      const button = event.target.closest('[data-quick-pick]');
+      if (button) quickPick(button.dataset.quickPick, button.dataset.value);
+    });
   });
   document.querySelectorAll('[data-budget-preset]').forEach(button => {
     button.addEventListener('click', () => setBudgetPreset(Number(button.dataset.budgetPreset)));
@@ -1266,7 +1369,9 @@ function analyze(skipLoading) {
     checks.push({g:'Display / Monitor', t:inTr('Your monitor is set to 60 Hz. For competitive FPS or low-latency goals, a 144 Hz+ monitor can be more noticeable than a small CPU/GPU upgrade. First confirm Windows is not accidentally limiting a high-refresh monitor to 60 Hz.','Monitör 60 Hz seçili. Rekabetçi FPS veya düşük gecikme hedefinde 144 Hz+ monitör, küçük bir CPU/GPU yükseltmesinden daha hissedilir olabilir. Önce Windows’un yüksek Hz monitörü yanlışlıkla 60 Hz’e sabitlemediğini doğrula.')});
   }
   if (isLaptop) {
-    checks.push({g:'Laptop Cooling', t:inTr('Laptop selected: CPU/GPU upgrades are usually limited. Before spending money, clean dust from fans/vents, use the laptop on a hard surface, and check temperatures under load. Thermal throttling can look like a hardware bottleneck.','Laptop seçildi: CPU/GPU yükseltmesi çoğu laptopta sınırlıdır. Para harcamadan önce fan/ızgara toz temizliği yap, laptopu sert zeminde kullan ve yük altında sıcaklıkları kontrol et. Thermal throttling donanım darboğazı gibi görünebilir.')});
+    checks.push({g:'Laptop Cooling', t:inTr('Clean fans and vents, then test CPU/GPU temperatures under load. Thermal throttling can look like a hardware bottleneck.','Fan ve ızgaraları temizle, sonra yük altında CPU/GPU sıcaklığını test et. Thermal throttling donanım darboğazı gibi görünebilir.')});
+    checks.push({g:'Laptop Cooling', t:inTr('Laptop cooling pad / stand: raise the rear of the laptop and keep intake vents open before buying hardware.','Laptop cooling pad / stand: donanım almadan önce laptopun arkasını yükselt ve hava girişlerini açık tut.')});
+    checks.push({g:'Laptop Power', t:inTr('Use plugged-in mode and confirm Windows/OEM performance mode is active before judging FPS.','FPS yorumlamadan önce laptopu adaptöre tak ve Windows/OEM performans modunun açık olduğunu doğrula.')});
   } else if (strongCpu && (weakCooler || unknownCooler)) {
     checks.push({g:'Cooling / Thermals', t:inTr('You selected a strong CPU with weak or unknown cooling. Check CPU temperatures first. If the CPU cannot hold boost clocks, a better tower air cooler or 240mm+ liquid cooler may be more sensible than changing the CPU.','Güçlü bir işlemciyle zayıf/bilinmeyen soğutma seçtin. Önce CPU sıcaklıklarını kontrol et. İşlemci boost hızlarını koruyamıyorsa CPU değiştirmek yerine iyi bir kule tipi hava soğutucu veya 240mm+ sıvı soğutma daha mantıklı olabilir.')});
   }
@@ -1973,6 +2078,10 @@ function analyze(skipLoading) {
     add('Memory', inTr('Enable XMP/EXPO, then confirm RAM speed in CPU-Z.', 'XMP/EXPO ac, sonra CPU-Z ile RAM hizini dogrula.'));
     add('Drivers', inTr('Update GPU and chipset drivers.', 'GPU ve chipset suruculerini guncelle.'));
     add('Thermals', inTr('Check CPU/GPU temperatures while gaming.', 'Oyun sirasinda CPU/GPU sicakliklarini kontrol et.'));
+    if (isLaptop) {
+      add('Laptop Cooling', inTr('Clean vents and test with a laptop cooling pad / stand.', 'Izgaralari temizle ve laptop cooling pad / stand ile test et.'));
+      add('Laptop Power', inTr('Use plugged-in performance mode.', 'Adaptore takili performans modunu kullan.'));
+    }
     if (hddGameDrive || showStutter) {
       add('Storage', hddGameDrive
         ? inTr('Move the game to SSD/NVMe.', 'Oyunu SSD/NVMe diske tasi.')

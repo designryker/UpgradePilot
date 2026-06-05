@@ -99,6 +99,11 @@ assert.ok(
   /function buildUpgradePath\(\) \{\s+if \(isLaptop\) return \[\];/.test(mainSource),
   'laptop mode should not render desktop upgrade-path cards'
 );
+assert.ok(indexSource.includes('data-system-mode="laptop"'), 'laptop CPU/GPU option groups should be present');
+assert.ok(indexSource.includes('Intel i7-12700H'), 'common laptop CPUs should be selectable');
+assert.ok(indexSource.includes('RTX 4060 Laptop'), 'common laptop GPUs should be selectable');
+assert.ok(mainSource.includes('applySystemModeToPartSelects'), 'system mode should filter CPU/GPU options');
+assert.ok(mainSource.includes('Laptop cooling pad / stand'), 'laptop mode should recommend practical cooling accessories');
 assert.ok(
   ANALYSIS_SEQUENCE_MS >= 2000 && ANALYSIS_SEQUENCE_MS <= 3000,
   'analysis sequence should feel brief, between 2s and 3s'

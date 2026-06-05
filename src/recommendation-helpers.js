@@ -56,6 +56,19 @@ const GPU_ALIASES = {
   rx7900gre: ['7900gre', '7900 gre'],
   rx7900xt: ['7900xt', '7900 xt'],
   rx7900xtx: ['7900xtx', '7900 xtx'],
+  gtx1650_laptop: ['gtx 1650 laptop', '1650 mobile'],
+  gtx1660ti_laptop: ['gtx 1660 ti laptop', '1660ti mobile', '1660 ti mobile'],
+  rtx3050_laptop: ['rtx 3050 laptop', '3050 mobile'],
+  rtx3060_laptop: ['rtx 3060 laptop', '3060 mobile'],
+  rtx3070_laptop: ['rtx 3070 laptop', '3070 mobile'],
+  rtx4050_laptop: ['rtx 4050 laptop', '4050 mobile'],
+  rtx4060_laptop: ['rtx 4060 laptop', '4060 mobile'],
+  rtx4070_laptop: ['rtx 4070 laptop', '4070 mobile'],
+  rtx4080_laptop: ['rtx 4080 laptop', '4080 mobile'],
+  rx5600m: ['rx 5600m', 'radeon rx 5600m'],
+  rx6600m: ['rx 6600m', 'radeon rx 6600m'],
+  rx6800m: ['rx 6800m', 'radeon rx 6800m'],
+  rx7600s: ['rx 7600s', 'radeon rx 7600s'],
 };
 
 const CPU_ALIASES = {
@@ -70,6 +83,21 @@ const CPU_ALIASES = {
   r5_5600x: ['5600x', 'ryzen 5600x'],
   r7_5700x3d: ['5700x3d', 'ryzen 5700x3d'],
   r7_5800x3d: ['5800x3d', 'ryzen 5800x3d'],
+  i5_10300h: ['10300h', 'i5 10300h', 'core i5 10300h'],
+  i5_11400h: ['11400h', 'i5 11400h', 'core i5 11400h'],
+  i5_12500h: ['12500h', 'i5 12500h', 'core i5 12500h'],
+  i5_13500h: ['13500h', 'i5 13500h', 'core i5 13500h'],
+  i7_10750h: ['10750h', 'i7 10750h', 'core i7 10750h'],
+  i7_11800h: ['11800h', 'i7 11800h', 'core i7 11800h'],
+  i7_12700h: ['12700h', 'i7 12700h', 'core i7 12700h'],
+  i7_13700h: ['13700h', 'i7 13700h', 'core i7 13700h'],
+  r5_4600h: ['4600h', 'ryzen 4600h'],
+  r5_5600h: ['5600h', 'ryzen 5600h'],
+  r7_5800h: ['5800h', 'ryzen 5800h'],
+  r7_6800h: ['6800h', 'ryzen 6800h'],
+  r7_7735hs: ['7735hs', 'ryzen 7735hs'],
+  r7_7840hs: ['7840hs', 'ryzen 7840hs'],
+  r9_7940hs: ['7940hs', 'ryzen 7940hs'],
 };
 
 export function buildPartSearchText(selectId, value, label) {
