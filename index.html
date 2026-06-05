@@ -529,6 +529,10 @@
           <span class="fi" id="fi"></span>
           <span class="ft" id="ft"></span>
         </div>
+        <div class="result-route">
+          <button type="button" class="route-btn route-btn-primary" id="result-free-boost" data-i18n="freeBoostStart">Start Free Boost Path</button>
+          <button type="button" class="route-btn route-btn-secondary" id="result-upgrade-jump" data-i18n="upgradeJump">Review Upgrade Options</button>
+        </div>
       </div>
 
       <!-- 02 Best Next Upgrade + Upgrade Picks (specific part suggestions at the top) -->
@@ -552,7 +556,24 @@
       <!-- 03 Free Performance Fixes -->
       <div class="r-sec r-sec-collapsible" data-accordion="open">
         <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">03</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div class="checklist" id="checklist"></div></div></div>
+        <div class="r-sec-body"><div class="r-sec-inner">
+          <div class="free-boost-panel">
+            <div>
+              <div class="free-boost-kicker" data-i18n="freeBoostKicker">Optimize First</div>
+              <h3 data-i18n="freeBoostTitle">Try the free wins before buying hardware.</h3>
+              <p data-i18n="freeBoostCopy">Work through these checks, then rerun the result. If the system still falls short, the upgrade recommendation below becomes easier to trust.</p>
+            </div>
+            <div class="free-boost-meter" aria-live="polite">
+              <span id="free-boost-count">0/0</span>
+              <div class="free-boost-track"><div id="free-boost-progress"></div></div>
+            </div>
+          </div>
+          <div class="checklist" id="checklist"></div>
+          <div class="free-boost-footer">
+            <span data-i18n="freeBoostFooter">Finished the quick checks?</span>
+            <button type="button" class="mini-action-btn" id="free-boost-review" data-i18n="freeBoostReview">Review upgrade recommendation</button>
+          </div>
+        </div></div>
       </div>
 
       <!-- 04 Before You Buy: Validate -->

@@ -10,6 +10,7 @@ function toggleCheck(id){
   const on=box.classList.toggle('on');
   box.textContent=on?'\u2713':'';
   row.classList.toggle('done',on);
+  updateFreeBoostProgress();
 }
 
 // ── Simple EN/TR language layer for MVP testing ──
@@ -463,6 +464,8 @@ function showResultStep() {
 function initAccordion() {
   const resultCard = el('result');
   if (!resultCard) return;
+  if (resultCard.dataset.accordionBound === 'true') return;
+  resultCard.dataset.accordionBound = 'true';
   resultCard.addEventListener('click', event => {
     const toggle = event.target.closest('.r-sec-toggle');
     if (!toggle) return;
@@ -471,6 +474,38 @@ function initAccordion() {
     const isOpen = sec.dataset.accordion === 'open';
     sec.dataset.accordion = isOpen ? 'closed' : 'open';
   });
+}
+
+function openResultSection(number) {
+  const target = [...document.querySelectorAll('.r-sec-collapsible')].find(sec => {
+    return sec.querySelector('.r-num')?.textContent?.trim() === String(number).padStart(2, '0');
+  });
+  if (!target) return;
+  target.dataset.accordion = 'open';
+  target.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function scrollToUpgradeRecommendation() {
+  document.querySelector('.result-upgrade-section')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function updateFreeBoostProgress() {
+  const checks = [...document.querySelectorAll('#checklist .ci[data-check-id]')];
+  const done = checks.filter(row => row.classList.contains('done')).length;
+  const total = checks.length;
+  const count = el('free-boost-count');
+  const bar = el('free-boost-progress');
+  if (count) count.textContent = done + '/' + total;
+  if (bar) bar.style.width = total ? Math.round((done / total) * 100) + '%' : '0%';
+}
+
+function initResultGuidance() {
+  const result = el('result');
+  if (!result || result.dataset.guidanceBound === 'true') return;
+  result.dataset.guidanceBound = 'true';
+  el('result-free-boost')?.addEventListener('click', () => openResultSection(3));
+  el('result-upgrade-jump')?.addEventListener('click', scrollToUpgradeRecommendation);
+  el('free-boost-review')?.addEventListener('click', scrollToUpgradeRecommendation);
 }
 
 function initWizard() {
@@ -486,6 +521,7 @@ function initWizard() {
   el('result-adjust')?.addEventListener('click', () => goToWizardStep(0));
   el('result-rerun')?.addEventListener('click', () => analyze(true));
   el('result-copy')?.addEventListener('click', copyResultSummary);
+  initResultGuidance();
 }
 
 
@@ -1558,6 +1594,7 @@ function analyze(skipLoading) {
     clHTML += '<div class="ci" id="ci-' + i + '" data-check-id="' + i + '"><div class="cbox"></div><span class="ctxt">' + c.t + '</span></div>';
   });
   el('checklist').innerHTML = clHTML;
+  updateFreeBoostProgress();
 
   // 03 Benchmarks
   let bHTML = '';
@@ -2020,6 +2057,7 @@ function analyze(skipLoading) {
     const num = sec.querySelector('.r-num')?.textContent?.trim();
     sec.dataset.accordion = (num === '03') ? 'open' : 'closed';
   });
+  updateFreeBoostProgress();
   // Show result
   const r = el('result');
   r.className = 'show';
@@ -2029,4 +2067,3 @@ function analyze(skipLoading) {
   r.style.animation = 'fadeUp .45s ease both';
   setTimeout(() => r.scrollIntoView({behavior:'smooth',block:'start'}), 60);
 }
-
