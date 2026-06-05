@@ -1244,6 +1244,14 @@ function analyze(skipLoading) {
   if (singleChannelPreBuyBlocker) {
     best = {key:'none', score:0};
   }
+  const psuDependencyActive = !isLaptop && (
+    psuDanger ||
+    best.key === 'psu' ||
+    (best.key === 'gpu' && psuW > 0 && psuBlockUpgr)
+  );
+  const psuDependencyAction = psuW > 0
+    ? inTr('Resolve PSU readiness before buying a stronger GPU.', 'Daha guclu GPU almadan once PSU hazirligini coz.')
+    : inTr('Enter PSU wattage and verify PSU quality before choosing a stronger GPU.', 'Daha guclu GPU secmeden once PSU watt degerini gir ve PSU kalitesini dogrula.');
 
   // ── Do Not Upgrade list ──
   const dnuSet = new Set();
@@ -1876,6 +1884,9 @@ function analyze(skipLoading) {
       if (steps.length < 5 && !steps.includes(text)) steps.push(text);
     };
 
+    if (psuDependencyActive) {
+      add(psuDependencyAction);
+    }
     add(inTr('Set Windows power mode correctly and confirm the monitor refresh rate.', 'Windows guc modunu dogru ayarla ve monitor yenileme hizini dogrula.'));
 
     if (diagnostics.bottleneckKey === 'ram' || showMemory) {
@@ -1947,6 +1958,11 @@ function analyze(skipLoading) {
   // Hard pre-buy blockers: free configuration fixes or laptop limitations first.
   if (singleChannelPreBuyBlocker) {
     finalSent = inTr('Do not buy parts yet. Fix or verify dual-channel RAM first, then rerun the analysis.','Şimdilik parça alma. Önce RAM’in çift kanal çalıştığını doğrula/düzelt, sonra analizi tekrar çalıştır.');
+    finalCls  = 'fb-hold'; finalIco = '&#9135;';
+  } else if (psuDependencyActive) {
+    finalSent = psuW > 0
+      ? inTr('Do not buy a stronger GPU yet. Resolve PSU readiness first, then rerun the recommendation.', 'Henuz daha guclu GPU alma. Once PSU hazirligini coz, sonra oneriyi tekrar calistir.')
+      : inTr('Do not choose a GPU upgrade yet. Enter PSU wattage and verify PSU quality first.', 'Henuz GPU yukseltmesi secme. Once PSU watt degerini gir ve PSU kalitesini dogrula.');
     finalCls  = 'fb-hold'; finalIco = '&#9135;';
   } else if (isLaptop && best.score <= 2) {
     finalSent = inTr('Optimize the laptop first: clean cooling, check throttling, verify power mode, then consider RAM or SSD only if the tests point there.','Önce laptopu optimize et: soğutmayı temizle, throttling kontrol et, güç modunu doğrula; testler işaret ederse sadece RAM veya SSD düşün.');
@@ -2030,7 +2046,11 @@ function analyze(skipLoading) {
         '<div class="buying-copy">' + copy + '</div>' +
         '<div class="buying-trust-row">' +
           '<span>' + inTr('Free fixes first', 'Once ucretsiz cozumler') + '</span>' +
-          '<span>' + inTr('PSU considered', 'PSU hesaba katildi') + '</span>' +
+          '<span>' + (isLaptop
+            ? inTr('Power mode checked', 'Guc modu kontrol edildi')
+            : psuDependencyActive
+              ? inTr('PSU blocks GPU path', 'PSU GPU rotasini sinirliyor')
+            : inTr('PSU considered', 'PSU hesaba katildi')) + '</span>' +
           '<span>' + inTr('Waste risk checked', 'Israf riski kontrol edildi') + '</span>' +
         '</div>' +
       '</div>' +
@@ -2578,7 +2598,7 @@ function analyze(skipLoading) {
     budHTML += '<div class="info-note">' + inTr('Prices are rough market estimates, not live listings. Used-market value depends heavily on condition, warranty and seller trust.','Fiyatlar canlı piyasa verisi değildir; yaklaşık değer aralığıdır. İkinci el değeri kondisyon, garanti ve satıcı güvenine göre ciddi değişebilir.') + '</div>';
   }
   if (isLaptop) {
-    budHTML += '<div class="info-note">' + inTr('Laptop mode: desktop PSU and internal CPU/GPU upgrade paths are hidden. With a product API, this budget can later be used to suggest complete laptop options instead.','Laptop modu: masaustu PSU ve dahili CPU/GPU yukseltme rotalari gizlenir. Urun API baglantisi geldiginde bu butce komple laptop onerileri icin kullanilabilir.') + '</div>';
+    budHTML += '<div class="info-note">' + inTr('Laptop mode: desktop PSU and internal CPU/GPU upgrade paths are hidden. Compare complete laptop classes only after checking temperatures, charger connection, performance mode, RAM, and SSD options.','Laptop modu: masaustu PSU ve dahili CPU/GPU yukseltme rotalari gizlenir. Komple laptop siniflarini ancak sicaklik, adaptor baglantisi, performans modu, RAM ve SSD seceneklerini kontrol ettikten sonra karsilastir.') + '</div>';
   }
   el('budget-content').innerHTML = budHTML;
 

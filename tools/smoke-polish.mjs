@@ -113,6 +113,11 @@ assert.ok(indexSource.includes('Intel i7-12700H'), 'common laptop CPUs should be
 assert.ok(indexSource.includes('RTX 4060 Laptop'), 'common laptop GPUs should be selectable');
 assert.ok(mainSource.includes('applySystemModeToPartSelects'), 'system mode should filter CPU/GPU options');
 assert.ok(mainSource.includes('Laptop cooling pad / stand'), 'laptop mode should recommend practical cooling accessories');
+assert.ok(mainSource.includes('Power mode checked'), 'laptop buying trust row should avoid desktop PSU wording');
+assert.ok(mainSource.includes('Compare complete laptop classes only after checking temperatures'), 'laptop budget copy should give practical next checks');
+assert.ok(mainSource.includes('psuDependencyActive'), 'desktop PSU dependency should be centralized');
+assert.ok(mainSource.includes('Resolve PSU readiness before buying a stronger GPU'), 'PSU blocker should clearly come before GPU purchase');
+assert.ok(mainSource.includes('PSU blocks GPU path'), 'result trust row should expose PSU dependency when it blocks the GPU path');
 assert.ok(
   ANALYSIS_SEQUENCE_MS >= 2000 && ANALYSIS_SEQUENCE_MS <= 3000,
   'analysis sequence should feel brief, between 2s and 3s'
