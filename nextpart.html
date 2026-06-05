@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RigPilot — PC Performance &amp; Upgrade Advisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;
+    --accent:#00ff88;--accent2:#7c3aed;--text:#e8e8f0;--muted:#6b6b80;
+    --danger:#ff4444;--warn:#ffaa00;--info:#7c9fe0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;top:-40%;left:-20%;width:60%;height:60%;background:radial-gradient(ellipse,rgba(124,58,237,.13) 0%,transparent 70%);pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;bottom:-30%;right:-10%;width:50%;height:50%;background:radial-gradient(ellipse,rgba(0,255,136,.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+  .container{max-width:880px;margin:0 auto;padding:3rem 1.5rem 5rem;position:relative;z-index:1}
+
+  header{margin-bottom:2.75rem;animation:fadeDown .6s ease both}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.22em;text-transform:uppercase;margin-bottom:.6rem}
+  h1{font-family:'Space Mono',monospace;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+  h1 .accent{color:var(--accent)} h1 .dim{color:var(--muted);font-weight:400}
+  .tagline{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent2);letter-spacing:.14em;text-transform:uppercase;margin-top:.45rem}
+  .subtitle{margin-top:.55rem;color:var(--muted);font-size:.9rem;font-weight:300;line-height:1.6}
+  .subtitle strong{color:var(--text);font-weight:500}
+
+  .sec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin:1.75rem 0 .65rem;display:flex;align-items:center;gap:10px}
+  .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;animation:fadeUp .6s .1s ease both}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;animation:fadeUp .6s .12s ease both}
+  .g3b{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin-top:.7rem;animation:fadeUp .6s .14s ease both}
+  .g2b{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.7rem;animation:fadeUp .6s .16s ease both}
+  .g1{display:grid;grid-template-columns:1fr;gap:.7rem;margin-top:.7rem;animation:fadeUp .6s .14s ease both}
+
+  .field{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.82rem 1.1rem;transition:border-color .2s,background .2s}
+  .field:focus-within{border-color:var(--accent2);background:var(--surface2)}
+  .field label{display:block;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+  .field select,.field input[type="number"]{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none}
+  .field input[type="number"]{cursor:text;-moz-appearance:textfield}
+  .field input[type="number"]::-webkit-outer-spin-button,.field input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+  .field input::placeholder{color:var(--muted);font-weight:300}
+  .field select option{background:#1a1a24;color:var(--text)}
+  .field-hint{font-size:11px;color:var(--muted);margin-top:.32rem;line-height:1.45;font-style:italic}
+
+  .btn-wrap{margin-top:1.4rem;animation:fadeUp .6s .25s ease both}
+  .btn{width:100%;padding:1rem;background:var(--accent);color:#0a0a0f;border:none;border-radius:10px;font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,255,136,.28)}
+  .btn:active{transform:translateY(0)}
+
+  /* === RESULT CARD === */
+  #result{margin-top:2rem;display:none}
+  #result.show{display:block;animation:fadeUp .45s ease both}
+  .r-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .r-topbar{padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .r-product{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .vbadge{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px}
+  .vb-upgrade{background:rgba(0,255,136,.12);color:var(--accent);border:1px solid rgba(0,255,136,.3)}
+  .vb-maybe{background:rgba(255,170,0,.12);color:var(--warn);border:1px solid rgba(255,170,0,.3)}
+  .vb-hold{background:rgba(255,68,68,.1);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+  .r-body{padding:1.5rem;display:flex;flex-direction:column;gap:0}
+  .r-sec{padding:1.1rem 0;border-bottom:1px solid var(--border)}
+  .r-sec:last-child{border-bottom:none;padding-bottom:.5rem}
+  .r-sec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.65rem;display:flex;align-items:center;gap:8px}
+  .r-num{color:var(--accent2);font-size:9px}
+
+  /* 01 Diagnosis */
+  .diag-block{background:var(--surface2);border-radius:10px;padding:1rem 1.2rem}
+  .diag-pill{display:inline-flex;align-items:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:.65rem}
+  .dp-gpu{background:rgba(124,58,237,.18);color:#a78bfa;border:1px solid rgba(124,58,237,.35)}
+  .dp-cpu{background:rgba(0,255,136,.12);color:var(--accent);border:1px solid rgba(0,255,136,.3)}
+  .dp-ram{background:rgba(255,170,0,.12);color:var(--warn);border:1px solid rgba(255,170,0,.3)}
+  .dp-psu{background:rgba(255,68,68,.12);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+  .dp-opt{background:rgba(124,159,224,.12);color:var(--info);border:1px solid rgba(124,159,224,.3)}
+  .dp-bal{background:rgba(107,107,128,.15);color:var(--muted);border:1px solid var(--border)}
+  .diag-text{font-size:.87rem;color:var(--text);line-height:1.72;font-weight:300}
+
+  /* 02 Free Fixes + 03 Benchmark */
+  .checklist{display:flex;flex-direction:column;gap:.38rem}
+  .ci{display:flex;align-items:flex-start;gap:.6rem;font-size:.85rem;line-height:1.55;cursor:pointer}
+  .ci:hover .cbox{border-color:var(--accent)}
+  .cbox{width:16px;height:16px;min-width:16px;border-radius:4px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);transition:.15s;margin-top:2px;user-select:none}
+  .cbox.on{background:rgba(0,255,136,.15);border-color:var(--accent)}
+  .ci.done .ctxt{text-decoration:line-through;color:var(--muted)}
+  .cl-grp{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+  .cl-grp:first-child{margin-top:0}
+
+  .bench-list{display:flex;flex-direction:column;gap:.75rem}
+  .bench-grp-lbl{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+  .bench-item{display:flex;align-items:flex-start;gap:.55rem;font-size:.85rem;line-height:1.55;color:var(--text);font-weight:300}
+  .bdot{width:6px;height:6px;min-width:6px;border-radius:50%;background:var(--accent2);margin-top:.45rem}
+  .bench-warning{font-size:.82rem;color:var(--warn);background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.2);border-radius:8px;padding:.6rem .85rem;margin-top:.5rem;line-height:1.55}
+
+  /* 04 Best Upgrade */
+  .upgrade-hero{display:flex;align-items:center;gap:1rem;background:var(--surface2);border-radius:10px;padding:.95rem 1.2rem;margin-bottom:.7rem}
+  .uicon{width:50px;height:50px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
+  .ui-gpu{background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.3)}
+  .ui-cpu{background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.25)}
+  .ui-ram{background:rgba(255,170,0,.12);border:1px solid rgba(255,170,0,.25)}
+  .ui-psu{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.25)}
+  .ui-none{background:rgba(107,107,128,.15);border:1px solid var(--border)}
+  .utext .uname{font-family:'Space Mono',monospace;font-size:1.05rem;font-weight:700;line-height:1.2}
+  .utext .usub{font-size:.83rem;color:var(--muted);margin-top:3px;font-weight:300}
+  .why-box{border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;background:var(--surface2);padding:.9rem 1.1rem;font-size:.87rem;line-height:1.72;font-weight:300;color:var(--text)}
+
+  /* 05 PSU Recommendation */
+  .psu-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.65rem}
+  .psu-rec-card{background:var(--surface2);border-radius:9px;padding:.8rem 1rem}
+  .psu-rc-lbl{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+  .psu-rc-val{font-size:.87rem;font-weight:500;line-height:1.5}
+  .psu-verdict{display:flex;align-items:flex-start;gap:.65rem;border-radius:8px;padding:.75rem 1rem;font-size:.87rem;line-height:1.55}
+  .pv-ok{background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.22)} .pv-ok .pvi{color:var(--accent)}
+  .pv-warn{background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.22)} .pv-warn .pvi{color:var(--warn)}
+  .pv-bad{background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.22)} .pv-bad .pvi{color:var(--danger)}
+  .pvi{font-family:'Space Mono',monospace;font-size:.9rem;flex-shrink:0;margin-top:1px;font-weight:700}
+
+  /* 06 Budget & Price */
+  .metrics2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.65rem}
+  .metric{background:var(--surface2);border-radius:9px;padding:.85rem 1rem}
+  .mlabel{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+  .mval{font-family:'Space Mono',monospace;font-size:1.2rem;font-weight:700;line-height:1}
+  .msub{font-size:.75rem;color:var(--muted);margin-top:3px}
+  .sbar-wrap{margin-top:6px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+  .sbar{height:100%;border-radius:2px;transition:width .7s ease}
+  .c-hi{color:var(--accent)} .c-mid{color:var(--warn)} .c-lo{color:var(--danger)}
+  .c-wlo{color:var(--accent)} .c-wmd{color:var(--warn)} .c-whi{color:var(--danger)}
+  .c-byes{color:var(--accent)} .c-btight{color:var(--warn)} .c-bno{color:var(--danger)}
+  .price-block{background:var(--surface2);border-radius:9px;padding:.85rem 1rem;margin-bottom:.65rem}
+  .price-range{font-size:.88rem;font-weight:500;color:var(--text);margin-bottom:.25rem}
+  .price-note{font-size:.78rem;color:var(--muted);font-style:italic;line-height:1.5}
+  .info-note{font-size:.8rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.55rem .85rem;margin-top:.55rem;line-height:1.55;font-style:italic}
+
+  /* 07 DNU */
+  .dnu-row{display:flex;flex-wrap:wrap;gap:.4rem}
+  .dnu-tag{font-size:.8rem;padding:4px 11px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+
+  /* 08 Final */
+  .final-box{border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.75rem}
+  .fi{font-family:'Space Mono',monospace;font-size:1rem;flex-shrink:0;margin-top:1px}
+  .ft{font-size:.92rem;line-height:1.65;font-weight:500}
+  .fb-upgrade{border:1px solid rgba(0,255,136,.25);background:rgba(0,255,136,.05)} .fb-upgrade .fi{color:var(--accent)}
+  .fb-maybe{border:1px solid rgba(255,170,0,.25);background:rgba(255,170,0,.05)}   .fb-maybe .fi{color:var(--warn)}
+  .fb-hold{border:1px solid rgba(255,68,68,.25);background:rgba(255,68,68,.05)}     .fb-hold .fi{color:var(--danger)}
+
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:660px){.g3,.g3b,.psu-rec-grid,.metrics2{grid-template-columns:1fr 1fr}}
+  @media(max-width:420px){.g2,.g3,.g3b,.g2b,.psu-rec-grid,.metrics2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="eyebrow">// v0.3.1 — PC Performance &amp; Upgrade Advisor</div>
+  <h1>Rig<span class="accent">Pilot</span><span class="dim">.</span></h1>
+  <div class="tagline">Optimize first. Upgrade smart.</div>
+  <p class="subtitle">Fill in your current specs. RigPilot will tell you what is likely limiting you, what free fixes to try first, and <strong>only then</strong> whether a hardware upgrade is actually worth the money.</p>
+</header>
+
+<!-- CPU & GPU -->
+<div class="sec-label">CPU &amp; GPU</div>
+<div class="g2">
+  <div class="field">
+    <label>Current CPU</label>
+    <select id="cpu">
+      <optgroup label="AMD Ryzen">
+        <option value="r5_5600">Ryzen 5 5600</option>
+        <option value="r5_7600">Ryzen 5 7600</option>
+        <option value="r7_5800x3d">Ryzen 7 5800X3D</option>
+        <option value="r7_7800x3d" selected>Ryzen 7 7800X3D</option>
+        <option value="r7_9800x3d">Ryzen 7 9800X3D</option>
+      </optgroup>
+      <optgroup label="Intel Core">
+        <option value="i5_12400f">Intel i5-12400F</option>
+        <option value="i5_12600k">Intel i5-12600K</option>
+        <option value="i5_13600kf">Intel i5-13600KF</option>
+        <option value="i5_14600k">Intel i5-14600K</option>
+        <option value="i7_12700k">Intel i7-12700K</option>
+        <option value="i7_13700k">Intel i7-13700K</option>
+        <option value="i7_14700k">Intel i7-14700K</option>
+        <option value="i9_13900k">Intel i9-13900K</option>
+        <option value="i9_14900k">Intel i9-14900K</option>
+      </optgroup>
+    </select>
+  </div>
+  <div class="field">
+    <label>Current GPU</label>
+    <select id="gpu">
+      <optgroup label="NVIDIA GeForce">
+        <option value="gtx1070">GTX 1070</option>
+        <option value="gtx1660s">GTX 1660 Super</option>
+        <option value="rtx2060">RTX 2060</option>
+        <option value="rtx3060" selected>RTX 3060</option>
+        <option value="rtx3060ti">RTX 3060 Ti</option>
+        <option value="rtx3070">RTX 3070</option>
+        <option value="rtx3080">RTX 3080</option>
+        <option value="rtx4060">RTX 4060</option>
+        <option value="rtx4060ti">RTX 4060 Ti</option>
+        <option value="rtx4070">RTX 4070</option>
+        <option value="rtx4070s">RTX 4070 Super</option>
+        <option value="rtx4070ti">RTX 4070 Ti</option>
+        <option value="rtx4080">RTX 4080</option>
+        <option value="rtx4090">RTX 4090</option>
+      </optgroup>
+      <optgroup label="AMD Radeon">
+        <option value="rx6600">RX 6600</option>
+        <option value="rx6700xt">RX 6700 XT</option>
+        <option value="rx6800xt">RX 6800 XT</option>
+        <option value="rx7800xt">RX 7800 XT</option>
+        <option value="rx7900xt">RX 7900 XT</option>
+        <option value="rx7900xtx">RX 7900 XTX</option>
+      </optgroup>
+    </select>
+  </div>
+</div>
+
+<!-- Memory -->
+<div class="sec-label">Memory</div>
+<div class="g2">
+  <div class="field">
+    <label>RAM Capacity</label>
+    <select id="ram">
+      <option value="8">8 GB</option>
+      <option value="16" selected>16 GB</option>
+      <option value="32">32 GB</option>
+      <option value="64">64 GB+</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Memory Type</label>
+    <select id="ram-type" onchange="updateRamSpeeds()">
+      <option value="ddr4" selected>DDR4</option>
+      <option value="ddr5">DDR5</option>
+    </select>
+  </div>
+</div>
+<div class="g2b">
+  <div class="field">
+    <label>Memory Speed</label>
+    <select id="ram-speed">
+      <option value="ddr4_2400">DDR4 2400</option>
+      <option value="ddr4_2666">DDR4 2666</option>
+      <option value="ddr4_3000">DDR4 3000</option>
+      <option value="ddr4_3200" selected>DDR4 3200</option>
+      <option value="ddr4_3600">DDR4 3600</option>
+      <option value="ddr4_4000">DDR4 4000+</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Memory Channel Mode</label>
+    <select id="channel">
+      <option value="dual" selected>Dual Channel</option>
+      <option value="single">Single Channel</option>
+    </select>
+  </div>
+</div>
+
+<!-- Power Supply -->
+<div class="sec-label">Power Supply</div>
+<div class="g2">
+  <div class="field">
+    <label>PSU Wattage</label>
+    <input type="number" id="psu-watts" placeholder="e.g. 650" min="0" max="2000">
+  </div>
+  <div class="field">
+    <label>Efficiency Rating</label>
+    <select id="psu-eff">
+      <option value="unknown">I don't know</option>
+      <option value="bronze" selected>80+ Bronze</option>
+      <option value="gold">80+ Gold</option>
+      <option value="platinum_plus">80+ Platinum+</option>
+    </select>
+    <div class="field-hint">Efficiency rating is not a quality rating. It only measures power efficiency.</div>
+  </div>
+</div>
+
+<!-- Display & Gaming -->
+<div class="sec-label">Display &amp; Gaming Profile</div>
+<div class="g3">
+  <div class="field">
+    <label>Resolution</label>
+    <select id="res">
+      <option value="1080">1080p</option>
+      <option value="1440" selected>1440p</option>
+      <option value="4k">4K</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Refresh Rate</label>
+    <select id="hz">
+      <option value="60">60 Hz</option>
+      <option value="144" selected>144 Hz</option>
+      <option value="165">165 – 240 Hz</option>
+      <option value="360">240 Hz+</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Primary Game Focus</label>
+    <select id="game">
+      <option value="compfps">Competitive FPS (CS2, Valorant)</option>
+      <option value="mmorpg">MMORPG</option>
+      <option value="aaa" selected>AAA / Open World</option>
+      <option value="battle">Battle Royale (Warzone, Fortnite)</option>
+      <option value="sim">Simulation / Strategy</option>
+      <option value="racing">Racing / Flight Sim</option>
+      <option value="modded">Modded Games</option>
+      <option value="stream">Streaming / Recording</option>
+      <option value="mixed">General Mixed Gaming</option>
+    </select>
+  </div>
+</div>
+<div class="g2b">
+  <div class="field">
+    <label>Secondary Goal</label>
+    <select id="goal">
+      <option value="none">No specific secondary goal</option>
+      <option value="fps">Higher FPS</option>
+      <option value="visuals" selected>Better visual quality</option>
+      <option value="smooth">Less stutter / smoother gameplay</option>
+      <option value="latency">Low latency / fast response</option>
+      <option value="stream">Streaming quality</option>
+      <option value="future">Future-proofing</option>
+      <option value="cheap">Cheapest meaningful improvement</option>
+    </select>
+  </div>
+</div>
+
+<!-- Budget -->
+<div class="sec-label">Upgrade Budget</div>
+<div class="g2">
+  <div class="field">
+    <label>Budget Amount</label>
+    <input type="number" id="budget" placeholder="e.g. 500" min="0">
+  </div>
+  <div class="field">
+    <label>Currency</label>
+    <select id="currency">
+      <option value="usd" selected>USD (US Dollar)</option>
+      <option value="eur">EUR (Euro)</option>
+      <option value="try">TRY (Turkish Lira)</option>
+    </select>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <button class="btn" onclick="analyze()">&#9658;&nbsp;&nbsp;Diagnose My PC &amp; Find Free Fixes First</button>
+</div>
+
+<!-- =================== RESULT =================== -->
+<div id="result">
+  <div class="r-card">
+    <div class="r-topbar">
+      <span class="r-product">RigPilot &middot; Analysis</span>
+      <span class="vbadge" id="vbadge"></span>
+    </div>
+    <div class="r-body">
+
+      <!-- 01 Performance Diagnosis -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">01</span>&nbsp;Performance Diagnosis</div>
+        <div class="diag-block">
+          <div class="diag-pill" id="diag-pill"></div>
+          <div class="diag-text" id="diag-text"></div>
+        </div>
+      </div>
+
+      <!-- 02 Free Performance Fixes -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">02</span>&nbsp;Free Performance Fixes</div>
+        <div class="checklist" id="checklist"></div>
+      </div>
+
+      <!-- 03 Before You Buy: Validate the Bottleneck -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">03</span>&nbsp;Before You Buy: Validate the Bottleneck</div>
+        <div class="bench-list" id="bench-list"></div>
+      </div>
+
+      <!-- 04 Best Next Upgrade -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">04</span>&nbsp;Best Next Upgrade</div>
+        <div class="upgrade-hero">
+          <div class="uicon" id="uicon"></div>
+          <div class="utext">
+            <div class="uname" id="uname"></div>
+            <div class="usub"  id="usub"></div>
+          </div>
+        </div>
+        <div class="why-box" id="why-box"></div>
+      </div>
+
+      <!-- 05 Recommended PSU for Next GPU -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">05</span>&nbsp;Recommended PSU for Next GPU Tier</div>
+        <div id="psu-rec-content"></div>
+      </div>
+
+      <!-- 06 Budget Fit & Estimated Price Range -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">06</span>&nbsp;Budget Fit &amp; Estimated Price Range</div>
+        <div id="budget-content"></div>
+      </div>
+
+      <!-- 07 Do Not Upgrade -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">07</span>&nbsp;Do Not Upgrade</div>
+        <div class="dnu-row" id="dnu-row"></div>
+      </div>
+
+      <!-- 08 Final Decision -->
+      <div class="r-sec">
+        <div class="r-sec-label"><span class="r-num">08</span>&nbsp;Final Decision</div>
+        <div class="final-box" id="final-box">
+          <span class="fi" id="fi"></span>
+          <span class="ft" id="ft"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div><!-- /container -->
+
+<script>
+/* ==============================================================
+   RIGPILOT v0.3.1 — Rule-Based Performance & Upgrade Decision Engine
+   Goal: Stop users wasting money. Free fixes first, then upgrades.
+   ============================================================== */
+
+// ── CPU Performance Scores (approximate gaming benchmark ranking) ──
+// 5 = capable entry, 10 = best-in-class
+// TODO: Add more CPU models here as the list grows
+//   Format: key: score,  e.g. 'r9_7950x3d': 10, 'i9_14900ks': 9
+//   Suggested additions: Ryzen 9 7950X3D, Intel i9-14900KS, Core Ultra 9 285K,
+//   Ryzen 9 9950X, older models like i7-10700K, Ryzen 5 3600, etc.
+const CPU_SCORE = {
+  r5_5600:5, i5_12400f:5, i5_12600k:6, r5_7600:6,
+  i5_13600kf:7, i5_14600k:7, i7_12700k:7, r7_5800x3d:8,
+  i7_13700k:8, i7_14700k:8, r7_7800x3d:9, i9_13900k:9,
+  i9_14900k:9, r7_9800x3d:10,
+};
+
+// ── GPU Performance Scores (rasterization gaming, approximate) ──
+// 3 = budget 1080p, 10 = current flagship
+// TODO: Add more GPU models here as the list grows
+//   Format: key: score,  e.g. 'rtx5080': 10, 'rx9700xt': 8
+//   Suggested additions: RTX 5000 series, RX 9000 series, older GTX 1000/900 series,
+//   Intel Arc A770/A750, RX 6500 XT, GTX 1070, RTX 2070 Super, etc.
+const GPU_SCORE = {
+  gtx1070:3, gtx1660s:3, rx6600:4, rtx2060:4,
+  rtx3060:5, rtx4060:5,
+  rx6700xt:6, rtx3060ti:6, rtx4060ti:6,
+  rtx3070:7, rx7800xt:7,
+  rtx3080:8, rtx4070:8, rx6800xt:8,
+  rtx4070s:9, rtx4070ti:9, rx7900xt:9,
+  rtx4080:10, rx7900xtx:10, rtx4090:10,
+};
+
+// ── GPU Hardware Encoder Strength (streaming/recording) ──
+// 1=basic, 2=good H.265, 3=excellent (NVENC AV1 / recent AMF)
+const GPU_ENC = {
+  gtx1070:1, gtx1660s:1, rtx2060:2, rtx3060:2, rtx3060ti:2, rtx3070:2, rtx3080:2,
+  rtx4060:3, rtx4060ti:3, rtx4070:3, rtx4070s:3, rtx4070ti:3, rtx4080:3, rtx4090:3,
+  rx6600:1, rx6700xt:1, rx6800xt:2, rx7800xt:2, rx7900xt:2, rx7900xtx:2,
+};
+
+// ── PSU: maximum safe GPU score by wattage ──
+function psuMaxGpu(watts) {
+  if (!watts || watts < 300) return 0;
+  if (watts < 450) return 2;
+  if (watts < 550) return 5;
+  if (watts < 650) return 6;
+  if (watts < 750) return 8;
+  if (watts < 850) return 9;
+  return 10;
+}
+
+// ── RAM speed tier from dropdown value ──
+// 0 = slow, 1 = average, 2 = good, 3 = fast
+// DDR4: 2400/2666 = slow | 3000/3200 = normal | 3600 = good | 4000+ = fast
+// DDR5: 4800/5200 = average | 5600 = decent | 6000/6400/7200+ = good/fast
+function ramSpeedTier(speedVal) {
+  const T = {
+    ddr4_2400:0, ddr4_2666:0,
+    ddr4_3000:1, ddr4_3200:1,
+    ddr4_3600:2, ddr4_4000:3,
+    ddr5_4800:1, ddr5_5200:1,
+    ddr5_5600:2,
+    ddr5_6000:3, ddr5_6400:3, ddr5_7200:3,
+  };
+  return T[speedVal] !== undefined ? T[speedVal] : 1; // fallback to average
+}
+
+// ── Estimated upgrade price bands (USD) ──
+// [min, max_typical] for rough budget guidance only
+const PRICE_USD = {
+  ramcap: [25,  70,  'RAM capacity upgrade (8 → 16 GB)'],
+  ramspd: [40,  110, 'RAM speed upgrade (DDR4 3600+ kit)'],
+  psu:    [60,  140, 'PSU upgrade (650W+ Gold quality)'],
+  cpu_lo: [140, 280, 'CPU upgrade (mid-range tier)'],
+  cpu_hi: [280, 520, 'CPU upgrade (high-end tier)'],
+  gpu_lo: [200, 420, 'GPU upgrade (mid-range tier)'],
+  gpu_mid:[420, 680, 'GPU upgrade (high 1440p tier)'],
+  gpu_hi: [680, 1400,'GPU upgrade (4K / flagship tier)'],
+};
+
+// ── Helpers ──
+function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+function el(id){ return document.getElementById(id); }
+function toggleCheck(id){
+  const row=el('ci-'+id), box=row.querySelector('.cbox');
+  const on=box.classList.toggle('on');
+  box.textContent=on?'\u2713':'';
+  row.classList.toggle('done',on);
+}
+
+// ── Dynamic RAM speed dropdown ──
+// Rebuilds the Memory Speed options when Memory Type changes.
+// No "I don't know" — user selects their actual speed or closest match.
+function updateRamSpeeds() {
+  const type = el('ram-type').value;
+  const spd  = el('ram-speed');
+  spd.innerHTML = '';
+
+  // Speed options per memory type
+  const OPTS = {
+    ddr4: [
+      ['ddr4_2400','DDR4 2400'],['ddr4_2666','DDR4 2666'],
+      ['ddr4_3000','DDR4 3000'],['ddr4_3200','DDR4 3200'],
+      ['ddr4_3600','DDR4 3600'],['ddr4_4000','DDR4 4000+'],
+    ],
+    ddr5: [
+      ['ddr5_4800','DDR5 4800'],['ddr5_5200','DDR5 5200'],
+      ['ddr5_5600','DDR5 5600'],['ddr5_6000','DDR5 6000'],
+      ['ddr5_6400','DDR5 6400+'],['ddr5_7200','DDR5 7200+'],
+    ],
+  };
+
+  // Sensible default when type changes
+  const DEFAULT = { ddr4: 'ddr4_3200', ddr5: 'ddr5_4800' };
+  const def = DEFAULT[type] || 'ddr4_3200';
+
+  (OPTS[type] || OPTS.ddr4).forEach(([v,t]) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = t;
+    if (v === def) o.selected = true;
+    spd.appendChild(o);
+  });
+}
+
+// Initialise dropdown on page load
+window.addEventListener('DOMContentLoaded', updateRamSpeeds);
+
+/* ==============================================================
+   MAIN ANALYZE FUNCTION
+   ============================================================== */
+function analyze() {
+
+  // ── Read inputs ──
+  const cpuKey   = el('cpu').value;
+  const gpuKey   = el('gpu').value;
+  const ramGB    = parseInt(el('ram').value);         // 8|16|32|64
+  const ramType  = el('ram-type').value;              // 'ddr4' | 'ddr5'
+  const ramSpVal = el('ram-speed').value;             // e.g. 'ddr4_3200', 'unknown', 'slow'
+  const channel  = el('channel').value;               // dual|single|unknown
+  const psuW     = parseInt(el('psu-watts').value)||0;
+  const psuEff   = el('psu-eff').value;
+  // XMP/EXPO and slot placement not in form this version — kept as placeholders for future logic
+  // const xmp   = 'unknown';  // future: re-enable if form field is added back
+  // const slots = 'unknown';  // future: re-enable if form field is added back
+  // PSU connector not in form — noted for future
+  // const psuConn = 'unknown';
+  const res      = el('res').value;
+  const hz       = parseInt(el('hz').value);
+  const game     = el('game').value;
+  const goal     = el('goal').value;
+  const budgetN  = parseFloat(el('budget').value)||0;
+  const currency = el('currency').value;
+
+  // ── Derived values ──
+  const cpuSc     = CPU_SCORE[cpuKey];
+  const gpuSc     = GPU_SCORE[gpuKey];
+  const enc       = GPU_ENC[gpuKey];
+  const ramSpd    = ramSpeedTier(ramSpVal);  // 0 to 3
+  const hiHz      = hz >= 144;
+  const vHiHz     = hz >= 165;
+  const is4k      = res === '4k';
+  const is1440    = res === '1440';
+  const is1080    = res === '1080';
+  const cpuGpuGap = gpuSc - cpuSc;
+
+  // ── PSU readiness ──
+  const psuMaxNow    = psuMaxGpu(psuW);
+  const psuDanger    = psuW > 0 && gpuSc > psuMaxNow;
+  const nextGpuSc    = Math.min(10, gpuSc + 2);
+  const psuBlockUpgr = nextGpuSc > psuMaxNow;
+
+  // ── RAM configuration flags ──
+  // channel is always 'dual' or 'single' — no unknown option
+  const isSingleCh = channel === 'single';
+
+  // ── RAM config penalty ──
+  // Reflects how much free-fix RAM issues are likely dragging performance
+  let ramConfigPenalty = 0;
+  if (isSingleCh) ramConfigPenalty += 4;  // 50% bandwidth loss — critical fix required
+
+  /* ============================================================
+     PRIORITY SCORES (0-10 each)
+     Higher = more urgent/valuable to upgrade
+     ============================================================ */
+  let gpuP=0, cpuP=0, ramCapP=0, ramSpdP=0, psuP=0;
+
+  // ═══ GPU ═══════════════════════════════════════════════════════
+  if (is4k) {
+    if (gpuSc < 8)       gpuP += 5;
+    else if (gpuSc < 10) gpuP += 2;
+  }
+  if (is1440) {
+    if (gpuSc < 6)       gpuP += 4;
+    else if (gpuSc < 8)  gpuP += 2;
+  }
+  if (is1080 && gpuSc < 5) gpuP += 2;
+
+  if (game === 'aaa' || game === 'racing') {
+    if (gpuSc < 7)       gpuP += 3;
+    else if (gpuSc < 9)  gpuP += 1;
+  }
+  if (game === 'battle') {
+    if (gpuSc < 6)       gpuP += 2;
+    else if (gpuSc < 8)  gpuP += 1;
+  }
+  if (game === 'modded' && gpuSc < 7) gpuP += 2;
+
+  if (goal === 'visuals' && gpuSc < 9)          gpuP += 2;
+  if (goal === 'future'  && gpuSc < 8)          gpuP += 2;
+  if (goal === 'fps' && !is1080 && gpuSc < 8)   gpuP += 1;
+  if (hiHz && !is1080 && gpuSc < 7)             gpuP += 2;
+
+  if (gpuSc >= 9)            gpuP = Math.max(0, gpuP - 5);
+  if (gpuSc >= 8 && is1080)  gpuP = Math.max(0, gpuP - 3);
+
+  // ═══ CPU ═══════════════════════════════════════════════════════
+  if (is1080 && hiHz) {
+    if (cpuSc < 7)       cpuP += 4;
+    else if (cpuSc < 9)  cpuP += 1;
+  }
+  if (game === 'compfps') {
+    if (cpuSc < 6)       cpuP += 4;
+    else if (cpuSc < 8)  cpuP += 2;
+  }
+  if (game === 'mmorpg' || game === 'sim') {
+    if (cpuSc < 7)       cpuP += 3;
+    else if (cpuSc < 9)  cpuP += 1;
+  }
+  if (game === 'stream' || goal === 'stream') {
+    if (cpuSc < 7)       cpuP += 4;
+    else if (cpuSc < 9)  cpuP += 1;
+    if (enc < 2)         cpuP += 2;
+  }
+  if (game === 'battle'  && cpuSc < 6) cpuP += 2;
+  if (game === 'racing'  && cpuSc < 6) cpuP += 1;
+
+  if (cpuGpuGap >= 5)       cpuP += 5;
+  else if (cpuGpuGap >= 3)  cpuP += 3;
+  else if (cpuGpuGap >= 2)  cpuP += 1;
+
+  if (goal === 'fps'     && is1080 && cpuSc < 9) cpuP += 3;
+  if (goal === 'latency' && cpuSc < 7)           cpuP += 2;
+  if (goal === 'stream'  && cpuSc < 7)           cpuP += 2;
+
+  // Rule: strong CPU — don't recommend unless chasing extreme 1080p FPS
+  const extremeFps = (is1080 && vHiHz && (goal === 'fps' || goal === 'latency'));
+  if (cpuSc >= 8 && !extremeFps) cpuP = 0;
+  if (cpuSc >= 10) cpuP = 0;
+
+  // ═══ RAM CAPACITY ══════════════════════════════════════════════
+  // Rule: 8 GB = critically low, top priority
+  if (ramGB === 8) {
+    ramCapP = 8;
+  } else if (ramGB === 16) {
+    // Rule: 16 GB = medium for heavy workloads
+    if (game === 'stream')            ramCapP += 4;
+    else if (game === 'mmorpg')       ramCapP += 3;
+    else if (game === 'modded')       ramCapP += 3;
+    else if (game === 'aaa')          ramCapP += 2;
+    else if (game === 'sim')          ramCapP += 2;
+    if (goal === 'smooth')            ramCapP += 1;
+    if (goal === 'stream')            ramCapP += 1;
+  } else {
+    // Rule: 32 GB+ = no capacity upgrade needed
+    ramCapP = 0;
+  }
+
+  // ═══ RAM SPEED ═════════════════════════════════════════════════
+  // If single-channel: don't score speed separately — fix channel mode first
+  if (isSingleCh) {
+    ramSpdP = 0;
+  } else {
+    // Speed is known and dual/unknown-channel — score normally
+    if (is1080 && hiHz && ramSpd === 0)              ramSpdP += 3;
+    if (game === 'compfps' || goal === 'latency') {
+      if (ramSpd === 0)                              ramSpdP += 3;
+      else if (ramSpd === 1 && (goal === 'fps' || goal === 'latency')) ramSpdP += 1;
+    }
+    if (ramSpd === 0 && cpuSc >= 6)                  ramSpdP += 2;
+    if (ramSpd >= 2)                                  ramSpdP = 0;
+  }
+
+  // ═══ PSU ═══════════════════════════════════════════════════════
+  if (psuDanger && psuW > 0) {
+    psuP = 10;
+  } else if (psuBlockUpgr && gpuP >= 4) {
+    psuP = 8;
+  } else if (psuBlockUpgr && gpuP >= 2) {
+    psuP = 3;
+  }
+
+  // ═══ SECONDARY GOAL MODIFIERS ══════════════════════════════════
+  if (goal === 'smooth') {
+    ramCapP = Math.min(10, ramCapP + 1);
+    ramSpdP = Math.min(10, ramSpdP + 1);
+  }
+  if (goal === 'fps') {
+    cpuP = Math.min(10, cpuP + 1);
+    ramSpdP = Math.min(10, ramSpdP + 1);
+  }
+  if (goal === 'future') {
+    if (gpuSc < 8) gpuP = Math.min(10, gpuP + 2);
+    if (cpuSc < 7) cpuP = Math.min(10, cpuP + 1);
+  }
+  if (goal === 'cheap') {
+    gpuP  = Math.max(0, gpuP  - 3);
+    cpuP  = Math.max(0, cpuP  - 2);
+    if (ramGB === 8) ramCapP = Math.min(10, ramCapP + 2);
+  }
+
+  // ═══ BUDGET GATING ═════════════════════════════════════════════
+  let budgetUSD = budgetN;
+  if (currency === 'eur') budgetUSD = budgetN * 1.08;
+
+  if (currency !== 'try') {
+    if (budgetUSD < 150) {
+      gpuP = Math.max(0, gpuP - 5);
+      cpuP = Math.max(0, cpuP - 4);
+    } else if (budgetUSD < 300) {
+      gpuP = Math.max(0, gpuP - 2);
+      cpuP = Math.max(0, cpuP - 1);
+    }
+  }
+
+  // Clamp all scores 0-10
+  gpuP    = clamp(gpuP,    0, 10);
+  cpuP    = clamp(cpuP,    0, 10);
+  ramCapP = clamp(ramCapP, 0, 10);
+  ramSpdP = clamp(ramSpdP, 0, 10);
+  psuP    = clamp(psuP,    0, 10);
+
+  /* ============================================================
+     PICK BEST UPGRADE
+     ============================================================ */
+  const candidates = [
+    {key:'psu',    score:psuP},
+    {key:'gpu',    score:gpuP},
+    {key:'cpu',    score:cpuP},
+    {key:'ramcap', score:ramCapP},
+    {key:'ramspd', score:ramSpdP},
+  ];
+  candidates.sort((a,b) => b.score - a.score);
+  const best = candidates[0];
+
+  // ── Do Not Upgrade list ──
+  const dnuSet = new Set();
+  candidates.forEach(c => { if (c.score <= 1) dnuSet.add(c.key); });
+  if (ramGB  >= 32)                             dnuSet.add('ramcap');
+  if (ramSpd >= 2 && !isSingleCh) dnuSet.add('ramspd');
+  if (cpuSc  >= 9)                             dnuSet.add('cpu');
+  if (gpuSc  >= 9 && !is4k)                   dnuSet.add('gpu');
+  if (!psuBlockUpgr && !psuDanger)             dnuSet.add('psu');
+  dnuSet.delete(best.key);
+
+  /* ============================================================
+     01 — PERFORMANCE DIAGNOSIS
+     ============================================================ */
+  const resLabel  = {'1080':'1080p','1440':'1440p','4k':'4K'}[res];
+  const gameLabel = {compfps:'competitive FPS',mmorpg:'MMORPG',aaa:'AAA / open-world',
+    battle:'battle royale',sim:'simulation / strategy',racing:'racing / flight sim',
+    modded:'modded games',stream:'streaming',mixed:'general gaming'}[game];
+  const cpuName = el('cpu').selectedOptions[0].text;
+  const gpuName = el('gpu').selectedOptions[0].text;
+
+  let diagKey, diagLabel, diagClass, diagText;
+
+  if (psuDanger && psuW > 0) {
+    diagKey='psu'; diagLabel='PSU Risk'; diagClass='dp-psu';
+    diagText = 'Your PSU (' + psuW + 'W) is likely insufficient for the ' + gpuName + '. This is a hardware safety issue — instability or damage is possible. Fix this before anything else.';
+  } else if (ramGB === 8) {
+    diagKey='ram'; diagLabel='RAM Limited'; diagClass='dp-ram';
+    diagText = '8 GB of RAM is critically low for modern gaming. You are almost certainly experiencing stutters, hitching, and slow load times. 16 GB kits are cheap and will likely be your most impactful fix.';
+  } else if (isSingleCh) {
+    diagKey='ram'; diagLabel='RAM Config Issue'; diagClass='dp-ram';
+    diagText = 'Your RAM is running in single-channel mode, which cuts memory bandwidth by roughly 50%. This is likely dragging down performance across all workloads. Fix this for free before buying any hardware — just move your sticks to the correct dual-channel slots.';
+  } else if (psuP >= 7) {
+    diagKey='psu'; diagLabel='PSU Risk'; diagClass='dp-psu';
+    diagText = 'Your GPU upgrade path is blocked by PSU readiness. Your current PSU cannot safely support the next GPU tier. Fix this before buying a new GPU.';
+  } else if (gpuP > cpuP && gpuP >= 4) {
+    diagKey='gpu'; diagLabel='GPU Limited'; diagClass='dp-gpu';
+    diagText = 'Your GPU (' + gpuName + ', score ' + gpuSc + '/10) is the primary limiter at ' + resLabel + ' / ' + hz + 'Hz for ' + gameLabel + '. A GPU upgrade is usually the highest-impact hardware change at this resolution.';
+  } else if (cpuP > gpuP && cpuP >= 4) {
+    diagKey='cpu'; diagLabel='CPU Limited'; diagClass='dp-cpu';
+    diagText = 'Your CPU (' + cpuName + ', score ' + cpuSc + '/10) is likely the main bottleneck.' +
+      (cpuGpuGap >= 3 ? ' Your GPU (score ' + gpuSc + '/10) has more headroom than the CPU allows it to use.' : '') +
+      (game === 'compfps' ? ' Competitive FPS is heavily CPU-dependent for high-refresh consistency.' : '') +
+      (game === 'stream'  ? ' Streaming places high load on the CPU.' : '');
+  } else if (best.score <= 2) {
+    diagKey='opt'; diagLabel='Optimize First'; diagClass='dp-opt';
+    diagText = 'Your system appears reasonably balanced for your use case. No single hardware upgrade offers strong value right now. Work through the free fixes first.';
+  } else {
+    diagKey='bal'; diagLabel='Mostly Balanced'; diagClass='dp-bal';
+    diagText = 'No dominant bottleneck found. A targeted upgrade can still help — validate with the tools in Section 03 before buying.';
+  }
+
+  /* ============================================================
+     02 — FREE PERFORMANCE FIXES (Checklist)
+     ============================================================ */
+  const checks = [];
+
+  // Always: universal basics
+  checks.push({g:'Display', t:'Confirm your monitor refresh rate is actually set in Windows Display Settings — not stuck at 60Hz'});
+  checks.push({g:'System',  t:'Set Windows Power Plan to High Performance or Balanced (not Power Saver)'});
+  checks.push({g:'System',  t:'Close background apps before gaming: browser, Discord video, cloud sync, antivirus scans'});
+
+  // RAM: simplified checks based on channel mode and speed
+  if (isSingleCh) {
+    checks.push({g:'RAM — Free Fix', t:'Move both RAM sticks to the correct dual-channel slots (usually A2+B2 — 2nd and 4th from the CPU). Single-channel mode cuts bandwidth by ~50%. This fix costs nothing.'});
+  }
+  // TODO (future revision): Add XMP/EXPO check module here
+  //   - Check if XMP/EXPO is enabled in BIOS
+  //   - Verify actual running speed with CPU-Z
+  //   - RAM slot placement verification (A2+B2)
+  //   - RAM stability testing with OCCT
+  if (ramSpd === 0) {
+    checks.push({g:'RAM — Free Fix', t:'Your RAM speed is slow. Before buying new sticks, check if XMP (Intel) or EXPO (AMD) is enabled in your BIOS. If not, enabling it is free and may bring your RAM up to its rated speed.'});
+  }
+
+  // GPU checks
+  if (diagKey === 'gpu' || best.key === 'gpu') {
+    checks.push({g:'GPU', t:'Update GPU drivers (NVIDIA App or AMD Adrenaline Software)'});
+    checks.push({g:'GPU', t:'Check GPU temperature under load — sustained throttling above 85°C suggests a cooling or airflow issue'});
+    checks.push({g:'GPU', t:'Disable unnecessary overlays (GeForce Experience, Steam, Discord) — each adds frametime overhead'});
+    checks.push({g:'GPU', t:'Lower GPU-heavy settings first (shadows, reflections, AA) before deciding to upgrade'});
+    checks.push({g:'GPU', t:'Enable DLSS (NVIDIA) / FSR (AMD) / XeSS (Intel) if supported — large FPS gains at minimal quality cost'});
+  }
+
+  // CPU checks
+  if (diagKey === 'cpu' || best.key === 'cpu') {
+    checks.push({g:'CPU', t:'Check CPU temperatures under load with HWiNFO64 — look for throttling above 90°C (Intel) or 95°C (AMD)'});
+    checks.push({g:'CPU', t:'Update motherboard chipset drivers from AMD.com or Intel.com'});
+    checks.push({g:'CPU', t:'Verify CPU boost is not disabled in BIOS — check Precision Boost Overdrive (AMD) or Turbo Boost (Intel)'});
+  }
+
+  // PSU checks
+  if (psuP >= 3 || best.key === 'psu') {
+    checks.push({g:'PSU', t:'Verify PSU wattage is sufficient for your GPU — check the GPU manufacturer page for TDP and recommended PSU spec'});
+  }
+
+  // TODO (future revision): BIOS Optimization module
+  //   - XMP/EXPO enable check
+  //   - CPU power limits and PBO/MCE settings
+  //   - Memory sub-timings guidance
+  // TODO (future revision): Windows Optimization module
+  //   - Power plan settings
+  //   - Game Mode / Hardware-Accelerated GPU Scheduling
+  //   - Background process cleanup
+  // TODO (future revision): NVIDIA / AMD driver settings
+  //   - Low-latency mode, shader cache, image sharpening
+  //   - Radeon Anti-Lag, NVIDIA Reflex guidance
+  // TODO (future revision): Temperature & stability testing module
+  //   - CPU/GPU throttle detection
+  //   - Stress test recommendations (OCCT, Prime95)
+  //   - RAM stability (MemTest86)
+
+  // Storage
+  checks.push({g:'Storage', t:'Install your game on an NVMe SSD if possible — HDD installations cause longer load times and higher 1% lows'});
+
+  /* ============================================================
+     03 — BEFORE YOU BUY: VALIDATE THE BOTTLENECK
+     ============================================================ */
+  const benches = [];
+
+  if (diagKey === 'gpu' || best.key === 'gpu') {
+    benches.push({g:'Confirm GPU Bottleneck', items:[
+      'MSI Afterburner (free) — GPU usage % and temperature overlay during gameplay',
+      'If GPU usage is sustained at 95–99%, the GPU is your confirmed bottleneck',
+      '3DMark Time Spy (free basic) — standardised GPU benchmark to compare against known scores',
+      'Unigine Superposition (free) — heavy GPU stress test for temperature stability',
+    ]});
+  }
+  if (diagKey === 'cpu' || best.key === 'cpu') {
+    benches.push({g:'Confirm CPU Bottleneck', items:[
+      'HWiNFO64 (free) — per-core temperatures, boost clocks, and power draw in real time',
+      'Cinebench R23 or R24 (free) — CPU score to compare against known results for your model',
+      'In-game: large gap between average FPS and 1% lows (e.g. 120 avg / 45 1%) usually means CPU or RAM',
+    ]});
+  }
+  if (diagKey === 'ram' || best.key === 'ramcap' || best.key === 'ramspd' || ramConfigPenalty >= 3) {
+    benches.push({g:'Confirm RAM Issue', items:[
+      'CPU-Z (free) — Memory tab shows actual running speed and dual-channel status',
+      'Verify RAM speed and dual-channel mode with CPU-Z before buying any RAM upgrade',
+      'OCCT Memory Test (free) — stability check, especially after changing slot configuration',
+    ]});
+  }
+  if (best.key === 'psu' || psuDanger) {
+    benches.push({g:'PSU / Stability Check', items:[
+      'Watch for pattern symptoms: shutdowns, black screens, BSOD, or driver crashes specifically under load',
+      'OCCT Power Test — can reveal PSU instability (do not run on systems you already suspect are unstable)',
+    ]});
+    benches.push({g:'Warning', items:[
+      '\u26a0\ufe0f Do not stress test a system you already believe has a PSU issue — fix it first.'], warn:true});
+  }
+  if (game === 'compfps' || goal === 'smooth' || goal === 'latency') {
+    benches.push({g:'Stutter & Frametime', items:[
+      'CapFrameX (free) — frametime recording during gameplay',
+      'RTSS (RivaTuner Statistics Server) — frametime graph overlay in-game',
+      'Look at 1% lows alongside average FPS — stutter shows as high average with poor lows',
+    ]});
+  }
+  if (benches.length === 0) {
+    benches.push({g:'General Checks', items:[
+      '3DMark (free basic) — overall system benchmark',
+      'HWiNFO64 — system sensor data for temperatures and clock speeds',
+    ]});
+  }
+
+  /* ============================================================
+     04 — BEST NEXT UPGRADE
+     ============================================================ */
+  const PART_META = {
+    gpu:    {name:'Graphics Card (GPU)',    sub:'Biggest gain for visuals and frame rate',   icon:'&#9646;', icls:'ui-gpu'},
+    cpu:    {name:'Processor (CPU)',         sub:'Core compute and frame-rate ceiling',       icon:'&#9643;', icls:'ui-cpu'},
+    ramcap: {name:'RAM Capacity',            sub:'More memory reduces stutters and hitching', icon:'&#9644;', icls:'ui-ram'},
+    ramspd: {name:'RAM Speed',               sub:'Faster timings feed the CPU better',        icon:'&#9654;', icls:'ui-ram'},
+    psu:    {name:'Power Supply (PSU)',       sub:'Required before any GPU upgrade',          icon:'&#9889;', icls:'ui-psu'},
+    none:   {name:'No Hardware Upgrade Yet', sub:'Optimize and verify first',                 icon:'&#10003;',icls:'ui-none'},
+  };
+  const PART_LABEL = {gpu:'GPU',cpu:'CPU',ramcap:'RAM Capacity',ramspd:'RAM Speed',psu:'PSU'};
+
+  const goalLabel = {
+    none:'general performance', fps:'higher FPS', visuals:'better visual quality',
+    smooth:'smoother gameplay', latency:'lower latency',
+    stream:'streaming quality', future:'future-proofing', cheap:'cheapest improvement',
+  }[goal];
+
+  let whyText = '';
+  if (best.key === 'gpu') {
+    whyText = 'At ' + resLabel + ' / ' + hz + 'Hz playing ' + gameLabel + ', the GPU is estimated to be your highest-impact upgrade for ' + goalLabel + '. Your ' + gpuName + ' (score ' + gpuSc + '/10) is ' + (gpuSc < 5 ? 'under-powered' : gpuSc < 7 ? 'limiting' : 'decent but not fully matched to your display') + ' for this profile. Validate with benchmarks in Section 03 before purchasing.';
+  } else if (best.key === 'cpu') {
+    whyText = 'For ' + gameLabel + ' at ' + resLabel + ' / ' + hz + 'Hz, your CPU (' + cpuName + ', score ' + cpuSc + '/10) is the likely ceiling.' + (cpuGpuGap >= 3 ? ' Your GPU (score ' + gpuSc + '/10) has more capability than your CPU allows.' : '') + ' Confirm with HWiNFO64 before buying.';
+  } else if (best.key === 'ramcap') {
+    whyText = (ramGB === 8 ? '8 GB causes real stutters in most modern games. Most titles require 12–16 GB minimum. ' : '16 GB is tight for ' + gameLabel + ' workloads. ') + 'RAM capacity upgrades are usually the cheapest high-impact change available.';
+  } else if (best.key === 'ramspd') {
+    whyText = 'Your RAM speed is leaving performance on the table. Before buying new sticks, verify your actual running speed with CPU-Z and confirm XMP/EXPO is enabled in BIOS. If already running at full rated speed, upgrading to DDR4 3600+ is estimated to improve 1% lows and FPS in CPU-sensitive titles.';
+  } else if (best.key === 'psu') {
+    whyText = 'Your PSU (' + (psuW||'unknown') + 'W) is ' + (psuDanger ? 'insufficient for your current GPU — safety issue. ' : 'too limited for the next GPU tier. ') + 'Upgrade to at least ' + (nextGpuSc >= 9 ? '850W 80+ Gold' : nextGpuSc >= 7 ? '750W 80+ Gold' : '650W 80+ Bronze') + ' before any GPU purchase.';
+  } else {
+    whyText = 'No single hardware upgrade offers strong estimated value for your current setup. Work through the free fixes in Section 02 and validate the actual bottleneck in Section 03 before spending.';
+  }
+
+  /* ============================================================
+     05 — PSU RECOMMENDATION FOR NEXT GPU TIER
+     ============================================================ */
+  const psuNeedWatts = [0,300,350,400,450,500,550,600,700,750,850][nextGpuSc] || 700;
+  const psuRecEff    = nextGpuSc >= 7 ? '80+ Gold or better' : '80+ Bronze minimum, Gold preferred';
+  const psuRecWatts  = nextGpuSc >= 9 ? '850W+' : nextGpuSc >= 7 ? '750W' : nextGpuSc >= 5 ? '650W' : '550W';
+
+  let psuVerdictText, psuVerdictCls;
+  if (psuW === 0) {
+    psuVerdictText = 'PSU wattage not entered — enter it for a specific verdict.';
+    psuVerdictCls  = 'pv-warn';
+  } else if (psuW >= psuNeedWatts * 1.15) {
+    psuVerdictText = 'Your PSU (' + psuW + 'W) appears sufficient for the next GPU tier.';
+    psuVerdictCls  = 'pv-ok';
+  } else if (psuW >= psuNeedWatts * 0.88) {
+    psuVerdictText = 'Borderline — ' + psuW + 'W is close to the minimum for the next GPU tier. Verify PSU quality before buying.';
+    psuVerdictCls  = 'pv-warn';
+  } else {
+    psuVerdictText = 'Your GPU upgrade path is likely blocked by PSU readiness. ' + (psuW||'Unknown') + 'W is estimated to be insufficient for the next tier (' + psuRecWatts + ' recommended).';
+    psuVerdictCls  = 'pv-bad';
+  }
+
+  /* ============================================================
+     06 — BUDGET FIT & ESTIMATED PRICE RANGE
+     ============================================================ */
+  let priceKey = null;
+  if (best.key === 'gpu') {
+    priceKey = gpuSc <= 4 ? 'gpu_lo' : gpuSc <= 7 ? 'gpu_mid' : 'gpu_hi';
+  } else if (best.key === 'cpu') {
+    priceKey = cpuSc >= 7 ? 'cpu_hi' : 'cpu_lo';
+  } else if (best.key === 'ramcap') { priceKey = 'ramcap'; }
+  else if (best.key === 'ramspd')   { priceKey = 'ramspd'; }
+  else if (best.key === 'psu')      { priceKey = 'psu'; }
+
+  let budgetFitLabel, budgetFitCls, budgetFitNote;
+  if (!priceKey || best.score <= 1) {
+    budgetFitLabel = 'N/A'; budgetFitCls = 'c-mid';
+    budgetFitNote  = 'No hardware purchase recommended right now.';
+  } else if (currency === 'try') {
+    budgetFitLabel = 'See Note'; budgetFitCls = 'c-mid';
+    budgetFitNote  = 'TRY pricing varies significantly. Check current prices on Trendyol, Vatan, MediaMarkt, or Hepsiburada.';
+  } else if (budgetN === 0) {
+    budgetFitLabel = 'Enter Budget'; budgetFitCls = 'c-mid';
+    budgetFitNote  = 'Enter your upgrade budget above for a budget fit result.';
+  } else {
+    const band = PRICE_USD[priceKey];
+    if (budgetUSD >= band[1] * 1.2) {
+      budgetFitLabel = 'Fits Comfortably'; budgetFitCls = 'c-byes';
+      budgetFitNote  = 'Your budget comfortably covers the estimated cost range.';
+    } else if (budgetUSD >= band[0]) {
+      budgetFitLabel = 'Tight But Possible'; budgetFitCls = 'c-btight';
+      budgetFitNote  = 'Budget is in range but tight. Used or open-box market may help.';
+    } else {
+      budgetFitLabel = 'Likely Not Enough'; budgetFitCls = 'c-bno';
+      budgetFitNote  = 'Below the estimated starting price. Consider saving more or used market.';
+    }
+  }
+
+  const sc     = best.score;
+  const scCls  = sc >= 7 ? 'c-hi'   : sc >= 4 ? 'c-mid'   : 'c-lo';
+  const barClr = sc >= 7 ? '#00ff88': sc >= 4 ? '#ffaa00' : '#ff4444';
+
+  let wasteLevel, wasteClass, wasteSub;
+  if (best.key === 'gpu' && cpuSc < 5 && gpuSc >= 7) {
+    wasteLevel='HIGH';   wasteClass='c-whi'; wasteSub='CPU may bottleneck a stronger GPU';
+  } else if (best.key === 'gpu' && (psuDanger || (psuW>0 && psuBlockUpgr))) {
+    wasteLevel='HIGH';   wasteClass='c-whi'; wasteSub='PSU upgrade required first';
+  } else if (best.key === 'cpu' && gpuSc < 4) {
+    wasteLevel='MEDIUM'; wasteClass='c-wmd'; wasteSub='GPU also needs attention';
+  } else if (best.key === 'ramspd') {
+    wasteLevel='MEDIUM'; wasteClass='c-wmd'; wasteSub='Verify speed with CPU-Z first — may be free';
+  } else if (sc <= 2) {
+    wasteLevel='HIGH';   wasteClass='c-whi'; wasteSub='No upgrade is high-value right now';
+  } else {
+    wasteLevel='LOW';    wasteClass='c-wlo'; wasteSub='Upgrade appears well-targeted';
+  }
+
+  /* ============================================================
+     08 — FINAL DECISION
+     ============================================================ */
+  let verdictLabel, verdictClass;
+  if (best.score >= 6)      { verdictLabel='Upgrade Now';        verdictClass='vb-upgrade'; }
+  else if (best.score >= 3) { verdictLabel='Consider Upgrading'; verdictClass='vb-maybe'; }
+  else                      { verdictLabel='Optimize First';     verdictClass='vb-hold'; }
+
+  const FINAL_SENT = {
+    gpu:    'Upgrade your GPU first. Validate the bottleneck with benchmarks before purchasing.',
+    cpu:    'Upgrade your CPU next. Confirm with HWiNFO64 before buying.',
+    ramcap: 'Upgrade your RAM capacity — one of the cheapest high-impact fixes.',
+    ramspd: 'Verify RAM speed with CPU-Z first. If XMP/EXPO is off, enabling it is free.',
+    psu:    'Upgrade your PSU before anything else. Your upgrade path depends on it.',
+  };
+  const FINAL_CLS = {gpu:'fb-upgrade',cpu:'fb-upgrade',ramcap:'fb-upgrade',ramspd:'fb-maybe',psu:'fb-hold'};
+  const FINAL_ICO = {gpu:'&#10003;',cpu:'&#10003;',ramcap:'&#10003;',ramspd:'&#126;',psu:'&#33;'};
+
+  let finalSent, finalCls, finalIco;
+  // Single-channel RAM is a free fix — if that's the main issue, hold spend
+  if (best.score <= 2 || (isSingleCh && best.score <= 4)) {
+    finalSent = 'Optimize first. Work through the free fixes in Section 02 and validate with benchmarks in Section 03 before spending money.';
+    finalCls  = 'fb-hold'; finalIco = '&#9135;';
+  } else {
+    finalSent = FINAL_SENT[best.key] || 'Optimize first, then reconsider.';
+    finalCls  = FINAL_CLS[best.key] || 'fb-hold';
+    finalIco  = FINAL_ICO[best.key] || '&#126;';
+  }
+
+  /* ============================================================
+     RENDER TO DOM
+     ============================================================ */
+  el('vbadge').textContent = verdictLabel;
+  el('vbadge').className   = 'vbadge ' + verdictClass;
+
+  // 01 Diagnosis
+  el('diag-pill').textContent = diagLabel;
+  el('diag-pill').className   = 'diag-pill ' + diagClass;
+  el('diag-text').textContent = diagText;
+
+  // 02 Free Fixes
+  let lastGrp='', clHTML='';
+  checks.forEach((c,i) => {
+    if (c.g !== lastGrp) {
+      clHTML += '<div class="cl-grp">' + c.g + '</div>';
+      lastGrp = c.g;
+    }
+    clHTML += '<div class="ci" id="ci-' + i + '" onclick="toggleCheck(' + i + ')"><div class="cbox"></div><span class="ctxt">' + c.t + '</span></div>';
+  });
+  el('checklist').innerHTML = clHTML;
+
+  // 03 Benchmarks
+  let bHTML = '';
+  benches.forEach(b => {
+    bHTML += '<div style="margin-bottom:.8rem">';
+    if (b.warn) {
+      bHTML += '<div class="bench-warning">' + b.items[0] + '</div>';
+    } else {
+      bHTML += '<div class="bench-grp-lbl">' + b.g + '</div>';
+      b.items.forEach(item => {
+        bHTML += '<div class="bench-item"><div class="bdot"></div><span>' + item + '</span></div>';
+      });
+    }
+    bHTML += '</div>';
+  });
+  el('bench-list').innerHTML = bHTML;
+
+  // 04 Best upgrade
+  const meta = (best.score <= 1) ? PART_META.none : PART_META[best.key];
+  el('uicon').innerHTML    = meta.icon;
+  el('uicon').className    = 'uicon ' + meta.icls;
+  el('uname').textContent  = meta.name;
+  el('usub').textContent   = meta.sub;
+  el('why-box').textContent = whyText;
+
+  // 05 PSU Recommendation (simplified — no connector field)
+  const psuEffLabel = {unknown:"I don't know",bronze:'80+ Bronze',gold:'80+ Gold',platinum_plus:'80+ Platinum+'}[psuEff] || psuEff;
+  el('psu-rec-content').innerHTML =
+    '<div class="psu-rec-grid">' +
+      '<div class="psu-rec-card"><div class="psu-rc-lbl">Your Current PSU</div><div class="psu-rc-val">' + (psuW||'Unknown') + 'W &middot; ' + psuEffLabel + '</div></div>' +
+      '<div class="psu-rec-card"><div class="psu-rc-lbl">Recommended for Next GPU Tier</div><div class="psu-rc-val">' + psuRecWatts + ' &middot; ' + psuRecEff + '</div></div>' +
+    '</div>' +
+    '<div class="psu-verdict ' + psuVerdictCls + '"><span class="pvi">' + (psuVerdictCls==='pv-ok'?'&#10003;':psuVerdictCls==='pv-warn'?'~':'!') + '</span><span>' + psuVerdictText + '</span></div>';
+
+  // 06 Budget & Price
+  const bandDesc = priceKey ? PRICE_USD[priceKey] : null;
+  const currSym  = {usd:'USD',eur:'EUR',try:'TRY'}[currency];
+  let budHTML = '';
+  if (bandDesc) {
+    budHTML += '<div class="price-block">' +
+      '<div class="price-range">Estimated typical range: ' + bandDesc[2] + '</div>' +
+      (currency !== 'try' ? '<div class="price-range">' + currSym + ' ~$' + bandDesc[0] + ' – $' + bandDesc[1] + (currency==='eur'?' (rough EUR equivalent)':'') + '</div>' : '') +
+      '<div class="price-note">Estimated typical retail price range. Used market can change the result. Local pricing may vary.</div>' +
+    '</div>';
+  }
+  budHTML +=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">' +
+      '<div class="metric"><div class="mlabel">Budget Fit</div><div class="mval ' + budgetFitCls + '">' + budgetFitLabel + '</div><div class="msub">' + budgetFitNote + '</div></div>' +
+      '<div class="metric"><div class="mlabel">Waste Risk</div><div class="mval ' + wasteClass + '">' + wasteLevel + '</div><div class="msub">' + wasteSub + '</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:.65rem">' +
+      '<div class="metric"><div class="mlabel">Upgrade Value Score</div><div class="mval ' + scCls + '">' + sc + '/10</div><div class="msub">' + (sc>=7?'Strong estimated value':sc>=4?'Moderate estimated value':'Low — optimize first') + '</div><div class="sbar-wrap"><div class="sbar" style="width:' + (sc*10) + '%;background:' + barClr + '"></div></div></div>' +
+    '</div>';
+  if (currency === 'try') {
+    budHTML += '<div class="info-note">Turkish lira pricing is highly volatile. RigPilot cannot estimate TRY costs reliably. Check current prices on local retailers before budgeting.</div>';
+  }
+  el('budget-content').innerHTML = budHTML;
+
+  // 07 DNU
+  const dnuEl = el('dnu-row');
+  if (dnuSet.size) {
+    dnuEl.innerHTML = [...dnuSet].map(k => '<span class="dnu-tag">' + (PART_LABEL[k]||k) + '</span>').join('');
+  } else {
+    dnuEl.innerHTML = '<span class="dnu-tag" style="color:var(--text)">All parts have room to improve</span>';
+  }
+
+  // 08 Final Decision
+  el('final-box').className = 'final-box ' + finalCls;
+  el('fi').innerHTML        = finalIco;
+  el('ft').textContent      = finalSent;
+
+  // Show result
+  const r = el('result');
+  r.className = 'show';
+  r.style.animation = 'none';
+  void r.offsetWidth;
+  r.style.animation = 'fadeUp .45s ease both';
+  setTimeout(() => r.scrollIntoView({behavior:'smooth',block:'start'}), 60);
+}
+</script>
+</body>
+</html>

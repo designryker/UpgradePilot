@@ -470,19 +470,65 @@ h1 .dim{color:#6c6d75}
 .sec-label::after{background:linear-gradient(90deg,var(--border),transparent)}
 .g2,.g3,.g3b,.g2b,.g1{gap:.8rem}
 .field{
+  position:relative;
   min-height:94px;
   border-radius:8px;
-  border-color:rgba(255,255,255,.065);
-  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018)),rgba(31,32,39,.74);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.12);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018)),
+    linear-gradient(90deg,rgba(255,255,255,.018),transparent 42%),
+    rgba(31,32,39,.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 0 0 1px rgba(255,255,255,.018),
+    0 12px 30px rgba(0,0,0,.12);
 }
-.field:hover{border-color:rgba(0,228,121,.16)}
-.field:focus-within{
+.field.is-clickable-field{
+  cursor:pointer;
+}
+.field:hover,
+.field.is-field-hover{
+  border-color:rgba(0,228,121,.34);
+}
+.field:focus-within,
+.field.is-field-active{
   border-color:var(--accent);
-  background:linear-gradient(180deg,rgba(0,228,121,.07),rgba(255,255,255,.02)),var(--surface2);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(0,228,121,.12),transparent 8rem),
+    linear-gradient(180deg,rgba(0,228,121,.07),rgba(255,255,255,.02)),
+    var(--surface2);
   box-shadow:0 0 0 1px rgba(0,228,121,.08),0 16px 38px rgba(0,0,0,.18);
 }
-.field label{color:#babcc4;letter-spacing:.12em}
+.field label{
+  color:#c6c8d0;
+  letter-spacing:.12em;
+}
+.field:has(.field-click-cue) label{
+  max-width:calc(100% - 112px);
+}
+.field-click-cue{
+  position:absolute;
+  top:.78rem;
+  right:.82rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:24px;
+  max-width:108px;
+  padding:.26rem .48rem;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;
+  background:rgba(9,10,14,.38);
+  color:#aeb2bd;
+  font-family:'Space Mono',monospace;
+  font-size:.56rem;
+  line-height:1;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  pointer-events:none;
+  transition:border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
 .field select,.field input[type="number"],.search-box{
   color:var(--text);
   font-size:.94rem;
@@ -592,7 +638,130 @@ h1 .dim{color:#6c6d75}
   letter-spacing:.15em;
 }
 .r-num{color:var(--accent);font-size:10px}
-.diag-block,.upgrade-hero,.why-box,.price-block,.example-block,.metric,.psu-rec-card,.path-card,.discovery-card{
+.diagnostic-summary{
+  display:grid;
+  grid-template-columns:minmax(210px,1.35fr) repeat(4,minmax(138px,1fr));
+  gap:.72rem;
+  margin:.3rem 0 1rem;
+}
+.summary-card{
+  position:relative;
+  min-height:118px;
+  padding:.92rem .95rem;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.048),rgba(255,255,255,.018)),
+    rgba(23,24,31,.76);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 34px rgba(0,0,0,.14);
+  overflow:hidden;
+}
+.summary-card::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  background:rgba(255,255,255,.08);
+}
+.diagnostic-summary[data-priority="high"] .summary-card::after{background:linear-gradient(90deg,var(--danger),var(--warn))}
+.diagnostic-summary[data-priority="medium"] .summary-card::after{background:linear-gradient(90deg,var(--warn),var(--accent2))}
+.diagnostic-summary[data-priority="low"] .summary-card::after{background:linear-gradient(90deg,var(--accent),rgba(143,233,255,.75))}
+.score-card{
+  min-height:142px;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(0,228,121,.18),transparent 9rem),
+    linear-gradient(180deg,rgba(0,228,121,.075),rgba(255,255,255,.018)),
+    rgba(21,26,28,.86);
+  border-color:rgba(0,228,121,.22);
+}
+.summary-label{
+  font-family:'Space Mono',monospace;
+  font-size:.62rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9da0a9;
+}
+.score-line{
+  display:flex;
+  align-items:flex-end;
+  gap:.42rem;
+  margin-top:.58rem;
+  color:#f4fff8;
+  font-family:'Space Mono',monospace;
+}
+.score-line span:first-child{
+  font-size:clamp(2.4rem,5vw,4.35rem);
+  line-height:.86;
+  color:var(--accent);
+}
+.score-line span:last-child{
+  padding-bottom:.28rem;
+  color:#abb0ba;
+  font-size:.85rem;
+}
+.summary-value{
+  margin-top:.78rem;
+  color:#f1eff6;
+  font-family:'Space Mono',monospace;
+  font-size:clamp(1.05rem,1.6vw,1.45rem);
+  line-height:1.05;
+  text-transform:uppercase;
+}
+.gain-value{color:var(--accent)}
+.summary-sub{
+  margin-top:.54rem;
+  color:#9fa3ad;
+  font-size:.75rem;
+  line-height:1.42;
+}
+.why-card{
+  margin-top:.72rem;
+}
+.why-title{
+  margin-bottom:.42rem;
+  color:#d9d9e2;
+  font-family:'Space Mono',monospace;
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.action-plan-card{
+  margin-top:.72rem;
+  padding:.95rem 1rem;
+  border-radius:8px;
+}
+.action-plan-list{
+  display:grid;
+  gap:.48rem;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.action-plan-list li{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  align-items:start;
+  gap:.62rem;
+  color:#e5e6ec;
+  font-size:.88rem;
+  line-height:1.45;
+}
+.action-step-num{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;
+  height:28px;
+  border:1px solid rgba(0,228,121,.26);
+  border-radius:6px;
+  background:rgba(0,228,121,.08);
+  color:var(--accent);
+  font-family:'Space Mono',monospace;
+  font-size:.72rem;
+}
+.diag-block,.upgrade-hero,.why-box,.action-plan-card,.price-block,.example-block,.metric,.psu-rec-card,.path-card,.discovery-card{
   border:1px solid rgba(255,255,255,.065);
   background:linear-gradient(180deg,rgba(255,255,255,.042),rgba(255,255,255,.018)),rgba(31,32,39,.66);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
@@ -622,6 +791,9 @@ h1 .dim{color:#6c6d75}
 .why-box{
   border-left-color:var(--accent);
   border-radius:8px;
+  padding:.9rem 1rem;
+  color:#e8e9ef;
+  line-height:1.55;
 }
 .path-card,.psu-rec-card,.metric,.price-block,.example-block,.discovery-card{border-radius:8px}
 .path-kicker,.discovery-head,.example-price{color:var(--accent)}
@@ -927,6 +1099,7 @@ h1{
   color:#dfe1e7;
   background:rgba(0,228,121,.045);
 }
+.why-card .why-box{margin-top:0}
 
 .buying-action-card{
   display:grid;
@@ -1338,6 +1511,12 @@ h1{
 }
 
 @media(max-width:900px){
+  .diagnostic-summary{
+    grid-template-columns:1fr 1fr;
+  }
+  .score-card{
+    grid-column:1 / -1;
+  }
   .pc-visual{
     width:100%;
     max-width:460px;
@@ -1345,6 +1524,15 @@ h1{
 }
 
 @media(max-width:760px){
+  .diagnostic-summary{
+    grid-template-columns:1fr;
+  }
+  .summary-card,.score-card{
+    min-height:auto;
+  }
+  .action-plan-list li{
+    font-size:.84rem;
+  }
   .pc-case{height:204px}
 }
 
@@ -1881,24 +2069,44 @@ h1{
   transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
 }
 .field[data-pc-part]:hover,
+.field[data-pc-part].is-field-hover,
+.field[data-pc-part].is-field-active,
 .field[data-pc-part].is-active,
 .field[data-pc-part]:focus-within{
   border-color:rgba(0,228,121,.32);
   background:
+    radial-gradient(circle at calc(100% - 52px) 1.1rem,rgba(0,228,121,.14),transparent 7rem),
     linear-gradient(180deg,rgba(0,228,121,.08),rgba(255,255,255,.018)),
     rgba(28,29,36,.82);
 }
 .field[data-pc-part]:hover::after,
+.field[data-pc-part].is-field-hover::after,
+.field[data-pc-part].is-field-active::after,
 .field[data-pc-part].is-active::after,
 .field[data-pc-part]:focus-within::after{
   border-color:rgba(0,228,121,.45);
   box-shadow:0 0 0 1px rgba(0,228,121,.08),0 0 22px rgba(0,228,121,.10);
 }
 .field[data-pc-part].is-active label,
+.field[data-pc-part].is-field-hover label,
+.field[data-pc-part].is-field-active label,
 .field[data-pc-part]:hover label{
   color:#e7ffef;
 }
+.field[data-pc-part]:hover .field-click-cue,
+.field[data-pc-part].is-field-hover .field-click-cue,
+.field[data-pc-part].is-field-active .field-click-cue,
+.field[data-pc-part].is-active .field-click-cue,
+.field[data-pc-part]:focus-within .field-click-cue{
+  border-color:rgba(0,228,121,.54);
+  background:rgba(0,228,121,.12);
+  color:#baffd4;
+  box-shadow:0 0 16px rgba(0,228,121,.14);
+  transform:translateY(-1px);
+}
 .field[data-pc-part].is-active label::before,
+.field[data-pc-part].is-field-hover label::before,
+.field[data-pc-part].is-field-active label::before,
 .field[data-pc-part]:hover label::before{
   content:"";
   display:inline-block;

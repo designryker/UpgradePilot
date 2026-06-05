@@ -404,7 +404,8 @@
     <!-- Memory -->
 <div class="sec-label" data-i18n="secMemory">Memory</div>
 <div class="g2">
-  <div class="field">
+  <div class="field" data-pc-part="ram">
+    <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="ramCapacity">RAM Capacity</span><span class="field-help" tabindex="0">?<span class="field-popover">RAM is short-term memory. 8 GB can cause stutter in modern games; 16 GB is the practical baseline; 32 GB helps heavier games and multitasking.</span></span></label>
     <select id="ram" autocomplete="off">
       <option value="8">8 GB</option>
@@ -413,7 +414,8 @@
       <option value="64">64 GB+</option>
     </select>
   </div>
-  <div class="field">
+  <div class="field" data-pc-part="ram">
+    <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="memoryType">Memory Type</span><span class="field-help" tabindex="0">?<span class="field-popover">DDR4 and DDR5 are different RAM generations. They are not interchangeable; your motherboard decides which one you can use.</span></span></label>
     <select id="ram-type" data-action="update-ram-speeds" autocomplete="off">
       <option value="ddr4" selected>DDR4</option>
@@ -424,6 +426,7 @@
 </div>
 <div class="g2b">
   <div class="field advanced-field" data-pc-part="ram">
+    <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="memorySpeed">Memory Speed</span><span class="field-help" tabindex="0">?<span class="field-popover">RAM speed can affect CPU-heavy games and 1% lows. If your RAM is running slower than advertised, enabling XMP/EXPO in BIOS may fix it for free.</span></span></label>
     <select id="ram-speed" autocomplete="off">
       <option value="ddr4_2400">DDR4 2400</option>
@@ -435,6 +438,7 @@
     </select>
   </div>
   <div class="field advanced-field" data-pc-part="ram">
+    <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="channelMode">Memory Channel Mode</span><span class="field-help" tabindex="0">?<span class="field-popover">Dual channel means two matching RAM sticks work together. Single channel can reduce memory bandwidth and hurt FPS stability.</span></span></label>
     <select id="channel" autocomplete="off">
       <option value="dual" selected data-i18n="dualChannel">Dual Channel</option>
@@ -525,6 +529,33 @@
       <!-- 01 Final Decision -->
       <div class="r-sec final-decision-section">
         <div class="r-sec-label"><span class="r-num">01</span>&nbsp;<span data-i18n="resFinal">Final Decision</span></div>
+        <div class="diagnostic-summary" id="diagnostic-summary">
+          <div class="summary-card score-card">
+            <div class="summary-label" data-i18n="systemHealth">System Health</div>
+            <div class="score-line"><span id="system-score-value">--</span><span>/ 100</span></div>
+            <div class="summary-sub" id="system-score-note"></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" data-i18n="mainIssue">Main Issue</div>
+            <div class="summary-value" id="main-bottleneck-value">--</div>
+            <div class="summary-sub" id="main-bottleneck-note"></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" data-i18n="upgradePriority">Upgrade Priority</div>
+            <div class="summary-value" id="upgrade-priority-value">--</div>
+            <div class="summary-sub" id="upgrade-priority-note"></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" data-i18n="estimatedGain">Estimated Gain</div>
+            <div class="summary-value gain-value" id="estimated-gain-value">--</div>
+            <div class="summary-sub" id="estimated-gain-note"></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" data-i18n="confidence">Confidence</div>
+            <div class="summary-value" id="confidence-value">--</div>
+            <div class="summary-sub" id="confidence-note"></div>
+          </div>
+        </div>
         <div class="final-box" id="final-box">
           <span class="fi" id="fi"></span>
           <span class="ft" id="ft"></span>
@@ -545,7 +576,14 @@
             <div class="usub"  id="usub"></div>
           </div>
         </div>
-        <div class="why-box" id="why-box"></div>
+        <div class="why-card">
+          <div class="why-title" data-i18n="whyRecommendation">Why this recommendation?</div>
+          <div class="why-box" id="why-box"></div>
+        </div>
+        <div class="action-plan-card">
+          <div class="why-title" data-i18n="actionPlan">Action Plan</div>
+          <ol class="action-plan-list" id="action-plan-list"></ol>
+        </div>
         <div id="buying-action"></div>
         <div class="path-label">Upgrade Path</div>
         <div class="upgrade-path" id="upgrade-path"></div>
