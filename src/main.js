@@ -1,6 +1,7 @@
 import './styles.css';
 import {CPU_SCORE, GPU_SCORE, GPU_ENC, PRICE_TR, PRICE_USD, psuMaxGpu, ramSpeedTier} from './parts-data.js';
 import {I18N} from './i18n.js';
+import {buildPartSearchText, getBiosRecommendation} from './recommendation-helpers.js';
 
 // ── Helpers ──
 function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -176,22 +177,16 @@ function updateMemoryCompatibility() {
   updateQuickChips();
 }
 
-function normalizePartSearch(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-}
-
 function filterSelectOptions(selectId, query) {
   const select = el(selectId);
   if (!select) return;
   const q = query.trim().toLowerCase();
-  const nq = normalizePartSearch(q);
+  const nq = q.replace(/[^a-z0-9]/g, '');
   let firstMatch = null;
 
   select.querySelectorAll('option').forEach(option => {
     const label = option.textContent.toLowerCase();
-    const normalizedLabel = normalizePartSearch(label + ' ' + option.value);
+    const normalizedLabel = buildPartSearchText(selectId, option.value, option.textContent);
     const isMatch = !q || label.includes(q) || normalizedLabel.includes(nq);
     option.hidden = false;
     option.disabled = !isMatch;
@@ -336,8 +331,8 @@ function partLabel(part) {
 
 function setSummaryActivePart(part) {
   const safePart = ['cpu','gpu','ram','psu'].includes(part) ? part : '';
-  document.querySelectorAll('[data-summary-part],[data-status-part],[data-pc-part]').forEach(node => {
-    const targetPart = node.dataset.summaryPart || node.dataset.statusPart || node.dataset.pcPart;
+  document.querySelectorAll('[data-summary-part],[data-status-part]').forEach(node => {
+    const targetPart = node.dataset.summaryPart || node.dataset.statusPart;
     node.classList.toggle('is-active', safePart && targetPart === safePart);
   });
 }
@@ -380,6 +375,13 @@ function initClickableFields() {
     if (!control) return;
     field.dataset.fieldBound = 'true';
     field.classList.add('is-clickable-field');
+    if (control.tagName === 'SELECT' && !field.querySelector('.field-click-cue')) {
+      const cue = document.createElement('span');
+      cue.className = 'field-click-cue';
+      cue.dataset.i18n = 'clickToChange';
+      cue.textContent = I18N[currentLang].clickToChange || inTr('Click to edit', 'Tikla degistir');
+      field.prepend(cue);
+    }
 
     const setHover = on => field.classList.toggle('is-field-hover', on);
     const setActive = on => field.classList.toggle('is-field-active', on);
@@ -783,6 +785,14 @@ function analyze(skipLoading) {
   const strongCpu  = cpuSc >= 8;
   const hddGameDrive = gameDrive === 'hdd';
   const isModernIntelHybrid = cpuKey.startsWith('i5_12') || cpuKey.startsWith('i5_13') || cpuKey.startsWith('i5_14') || cpuKey.startsWith('i7_12') || cpuKey.startsWith('i7_13') || cpuKey.startsWith('i7_14') || cpuKey.startsWith('i9_12') || cpuKey.startsWith('i9_13') || cpuKey.startsWith('i9_14') || cpuKey.startsWith('ultra');
+  const oldIntelPlatform =
+    cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
+    cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
+    cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
+    cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9');
+  const oldAm4Platform =
+    cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') ||
+    cpuKey.startsWith('r5_3') || cpuKey.startsWith('r7_2') || cpuKey.startsWith('r7_3');
 
   // ── PSU readiness ──
   const psuMaxNow    = psuMaxGpu(psuW);
@@ -1230,7 +1240,7 @@ function analyze(skipLoading) {
   if (showCPU) {
     checks.push({g:'CPU', t:inTr('Update chipset drivers from AMD.com or Intel.com — not from Windows Update. These affect memory controller, PCIe, and CPU scheduling behaviour.','Chipset sürücülerini Windows Update yerine AMD.com veya Intel.com üzerinden güncelle. Bunlar bellek kontrolcüsü, PCIe ve CPU zamanlamasını etkiler.')});
     checks.push({g:'CPU', t:inTr('Check CPU temperature and throttling with HWiNFO64. Look for sustained core temperatures above 90°C (Intel) or 95°C (AMD Ryzen) during gaming load.','HWiNFO64 ile CPU sıcaklığı ve throttling durumunu kontrol et. Oyun yükünde Intel için 90°C, AMD Ryzen için 95°C üstü sürekli sıcaklıklara dikkat et.')});
-    checks.push({g:'CPU', t:inTr('CPU boost behaviour (Precision Boost Overdrive on AMD, Intel Turbo) can be affected by BIOS settings — this will be covered in a future BIOS Optimization section.','CPU boost davranışı (AMD Precision Boost Overdrive, Intel Turbo) BIOS ayarlarından etkilenebilir — bu konu ileride BIOS Optimizasyon bölümünde ele alınacak.')});
+    checks.push({g:'CPU', t:inTr('If boost clocks look wrong, load BIOS defaults and confirm chipset drivers before replacing the CPU.','Boost frekanslari hatali gorunuyorsa CPU degistirmeden once BIOS varsayilanlarini yukle ve chipset surucusunu dogrula.')});
   }
 
   // ── Memory ───────────────────────────────────────────────────
@@ -1242,10 +1252,10 @@ function analyze(skipLoading) {
     checks.push({g:'Memory', t:inTr('Verify your actual RAM speed and channel mode using CPU-Z (free). Open the Memory tab and confirm the speed matches what you selected above, and that dual-channel is active.','CPU-Z ile gerçek RAM hızını ve kanal modunu kontrol et. Memory sekmesinde hızın yukarıda seçtiğin değere yakın olduğunu ve çift kanalın aktif olduğunu doğrula.')});
     if (ramSpd === 0) {
       // Slow speed: mention XMP/EXPO as a free fix but don't force it
-      checks.push({g:'Memory', t:inTr('Your selected RAM speed is slow. Before buying new sticks, check whether XMP (Intel) or EXPO (AMD) is enabled in your BIOS — enabling it is free and may bring your RAM to its rated speed. Full XMP/EXPO guidance will be in a future BIOS Optimization section.','Seçtiğin RAM hızı düşük. Yeni RAM almadan önce BIOS’ta XMP (Intel) veya EXPO (AMD) açık mı kontrol et — açmak ücretsizdir ve RAM’i kendi hızına getirebilir. Detaylı XMP/EXPO rehberi ileride BIOS Optimizasyon bölümünde olacak.')});
+      checks.push({g:'Memory', t:inTr('Before buying RAM, check whether XMP or EXPO is enabled in BIOS and verify the result in CPU-Z.','RAM almadan once BIOS icinde XMP veya EXPO acik mi kontrol et ve sonucu CPU-Z ile dogrula.')});
     } else {
       // Normal/good speed: soft XMP reminder without pressure
-      checks.push({g:'Memory', t:inTr('XMP / EXPO profile verification will be covered in a future BIOS Optimization section. For now, confirm your RAM speed looks correct in CPU-Z before buying any new sticks.','XMP / EXPO profil doğrulaması ileride BIOS Optimizasyon bölümünde olacak. Şimdilik yeni RAM almadan önce CPU-Z’de RAM hızının doğru göründüğünü kontrol et.')});
+      checks.push({g:'Memory', t:inTr('Confirm the RAM speed looks correct in CPU-Z before buying new sticks.','Yeni RAM almadan once CPU-Z icinde RAM hizinin dogru gorundugunu kontrol et.')});
     }
   }
 
@@ -1429,6 +1439,7 @@ function analyze(skipLoading) {
   }
 
   function buildUpgradePath() {
+    if (isLaptop) return [];
     const cards = [];
     const oldIntelPlatform =
       cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
@@ -1793,6 +1804,13 @@ function analyze(skipLoading) {
     finalIco  = FINAL_ICO[best.key] || '&#126;';
   }
 
+  if (isLaptop && best.score <= 2 && finalCls === 'fb-hold') {
+    finalSent = inTr('Optimize the laptop first. Check cooling, throttling, and power mode before considering RAM or SSD.', 'Once laptopu optimize et. RAM veya SSD dusunmeden once sogutma, throttling ve guc modunu kontrol et.');
+    finalIco = '&#8594;';
+  } else if (best.score <= 2 && finalCls === 'fb-hold') {
+    finalIco = '&#8594;';
+  }
+
   const bandDesc = priceKey ? PRICE_USD[priceKey] : null;
 
   function marketplaceUrl(query) {
@@ -1867,8 +1885,91 @@ function analyze(skipLoading) {
   }
 
   const diagnostics = buildResultDiagnostics();
-  const diagnosticWhyText = buildDiagnosticWhy(diagnostics);
+  diagnostics.issueNote = {
+    cpu: inTr('Frame consistency risk.', 'Kare tutarliligi riski.'),
+    gpu: inTr('Graphics limit likely.', 'Grafik siniri olasi.'),
+    ram: inTr('Capacity, speed, or channel issue.', 'Kapasite, hiz veya kanal sorunu.'),
+    psu: inTr('Power may block GPU upgrades.', 'Guc GPU yukseltmesini sinirlayabilir.'),
+    storage: inTr('Stutter or streaming risk.', 'Stutter veya asset akisi riski.'),
+    cooling: inTr('Thermals may hide the real limit.', 'Sicaklik gercek siniri saklayabilir.'),
+    none: inTr('No clear paid upgrade yet.', 'Henuz net ucretli yukseltme yok.'),
+  }[diagnostics.bottleneckKey];
+  diagnostics.priorityNote = diagnostics.priorityKey === 'high'
+    ? inTr('Act before buying.', 'Almadan once aksiyon al.')
+    : diagnostics.priorityKey === 'medium'
+      ? inTr('Check after free fixes.', 'Ucretsiz duzeltmelerden sonra kontrol et.')
+      : inTr('Buying can wait.', 'Satin alma bekleyebilir.');
+  diagnostics.confidenceNote = diagnostics.limitedInfo
+    ? inTr('Validate before spending.', 'Para harcamadan once dogrula.')
+    : inTr('Good input confidence.', 'Girdi guveni iyi.');
+  let diagnosticWhyText = buildDiagnosticWhy(diagnostics);
+  diagnosticWhyText = {
+    gpu: inTr('Your target leans GPU-heavy. Update drivers, check temperatures, then compare GPU options.', 'Hedefin GPU agirlikli. Surucuyu guncelle, sicakligi kontrol et, sonra GPU seceneklerini karsilastir.'),
+    cpu: inTr('Your CPU may be limiting frame consistency. Check chipset drivers, clocks, and temperatures first.', 'CPU kare tutarliligini sinirlayabilir. Once chipset surucusu, frekans ve sicakliklari kontrol et.'),
+    ram: inTr('RAM can cause stutter before average FPS looks bad. Verify speed, capacity, and channel mode first.', 'RAM, ortalama FPS dusmeden stutter yaratabilir. Once hiz, kapasite ve kanal modunu dogrula.'),
+    psu: inTr('Power readiness comes before a stronger GPU. Confirm PSU wattage and quality before buying.', 'Daha guclu GPUdan once guc hazirligi gelir. Almadan once PSU watt ve kalitesini dogrula.'),
+    storage: inTr('Storage can cause loading hitches and stutter. Move the game to SSD/NVMe before replacing CPU or GPU.', 'Depolama yukleme takilmasi ve stutter yaratabilir. CPU/GPU degistirmeden once oyunu SSD/NVMe diske tasi.'),
+    cooling: inTr('Thermals can make good parts behave weak. Check load temperatures before replacing hardware.', 'Sicaklik iyi parcalari zayif gibi gosterebilir. Donanim degistirmeden once yuk sicakliklarini kontrol et.'),
+    none: inTr('No paid upgrade clearly wins yet. Optimize, measure, then rerun with better evidence.', 'Henuz net kazanan ucretli yukseltme yok. Optimize et, olc, daha iyi veriyle tekrar calistir.'),
+  }[diagnostics.bottleneckKey] || diagnosticWhyText;
   const actionPlan = buildActionPlan(diagnostics);
+
+  function buildPolishedFreeChecks() {
+    const items = [];
+    const add = (g, t) => {
+      if (items.length < 8 && !items.some(item => item.t === t)) items.push({g, t});
+    };
+
+    add('Windows', inTr('Set Windows power mode to Balanced or Best Performance.', 'Windows guc modunu Dengeli veya En Iyi Performans yap.'));
+    add('Display / Monitor', inTr('Confirm the monitor refresh rate in Windows Display Settings.', 'Windows ekran ayarlarinda monitor yenileme hizini dogrula.'));
+
+    if (showCPU || diagKey === 'opt' || diagKey === 'bal') {
+      add('Windows', inTr('Close heavy background apps before testing.', 'Testten once agir arka plan uygulamalarini kapat.'));
+      add('CPU', inTr('Update AMD or Intel chipset drivers.', 'AMD veya Intel chipset surucusunu guncelle.'));
+    }
+
+    if (showGPU) {
+      add('GPU', inTr('Update GPU drivers with NVIDIA App, GeForce Experience, or AMD Adrenalin.', 'GPU surucusunu NVIDIA App, GeForce Experience veya AMD Adrenalin ile guncelle.'));
+      add('GPU', inTr('Check GPU usage and temperature during a real game.', 'Gercek oyunda GPU kullanimini ve sicakligini kontrol et.'));
+    }
+
+    if (showMemory) {
+      if (isSingleCh) add('Memory', inTr('Fix single-channel RAM slot placement before buying parts.', 'Parca almadan once tek kanal RAM slot yerlesimini duzelt.'));
+      add('Memory', inTr('Verify RAM speed and channel mode in CPU-Z.', 'CPU-Z ile RAM hizi ve kanal modunu dogrula.'));
+    }
+
+    const bios = getBiosRecommendation({
+      cpuKey,
+      bestKey: best.key,
+      ramSpeedTier: ramSpd,
+      isSingleChannel: isSingleCh,
+      oldIntelPlatform,
+      oldAm4Platform,
+      isModernIntelHybrid,
+      unknownCooler,
+      weakCooler,
+    });
+    if (bios) add(bios.group, currentLang === 'tr'
+      ? bios.text
+        .replace('Check XMP/EXPO in BIOS, then confirm the actual RAM speed in CPU-Z.', 'BIOS icinde XMP/EXPO durumunu kontrol et, sonra CPU-Z ile RAM hizini dogrula.')
+        .replace('Before an AM4 CPU upgrade, confirm motherboard BIOS support for the target CPU.', 'AM4 CPU yukseltmesinden once anakart BIOS destegini dogrula.')
+        .replace('For hybrid Intel CPUs, keep BIOS and chipset drivers current before judging CPU scheduling.', 'Hibrit Intel CPUlarda CPU zamanlamasini yorumlamadan once BIOS ve chipset surucusunu guncel tut.')
+        .replace('If temperatures and boost clocks look wrong, check BIOS defaults before replacing the CPU.', 'Sicaklik ve boost frekansi hatali gorunuyorsa CPU degistirmeden once BIOS varsayilanlarini kontrol et.')
+        .replace('Older Intel platforms rarely have a clean CPU drop-in path; verify board support before buying.', 'Eski Intel platformlarda temiz CPU tak-cikar rotasi nadirdir; almadan once anakart destegini dogrula.')
+      : bios.text);
+
+    if (showStutter || hddGameDrive) {
+      add('Storage / Stutter', hddGameDrive
+        ? inTr('Move the game from HDD to SSD/NVMe.', 'Oyunu HDDden SSD/NVMe diske tasi.')
+        : inTr('Keep the game drive below 85% full and check storage health.', 'Oyun diskini %85 altinda tut ve disk sagligini kontrol et.'));
+    }
+
+    if (isLaptop || throttleLoss.show || weakCooler || unknownCooler) {
+      add(isLaptop ? 'Laptop Cooling' : 'Cooling / Thermals', inTr('Check CPU/GPU temperatures under load.', 'Yuk altinda CPU/GPU sicakliklarini kontrol et.'));
+    }
+
+    return items;
+  }
 
   /* ============================================================
      RENDER TO DOM
@@ -1896,7 +1997,8 @@ function analyze(skipLoading) {
 
   // 02 Free Fixes
   let lastGrp='', clHTML='';
-  checks.forEach((c,i) => {
+  const freeChecks = buildPolishedFreeChecks();
+  freeChecks.forEach((c,i) => {
     if (c.g !== lastGrp) {
       clHTML += '<div class="cl-grp">' + groupLabel(c.g) + '</div>';
       lastGrp = c.g;
@@ -1936,7 +2038,12 @@ function analyze(skipLoading) {
   ).join('');
   const buyingActionEl = el('buying-action');
   if (buyingActionEl) buyingActionEl.innerHTML = buildBuyingAction();
-  el('upgrade-path').innerHTML = buildUpgradePath().map(card =>
+  const upgradePathCards = buildUpgradePath();
+  const upgradePathEl = el('upgrade-path');
+  const upgradePathLabel = document.querySelector('.result-upgrade-section .path-label');
+  if (upgradePathLabel) upgradePathLabel.classList.toggle('is-hidden', upgradePathCards.length === 0);
+  if (upgradePathEl) upgradePathEl.classList.toggle('is-hidden', upgradePathCards.length === 0);
+  if (upgradePathEl) upgradePathEl.innerHTML = upgradePathCards.map(card =>
     '<div class="path-card">' +
       '<div class="path-kicker">' + card.k + '</div>' +
       '<div class="path-title">' + card.t + '</div>' +
@@ -2131,17 +2238,31 @@ function analyze(skipLoading) {
     if (!cards.length) return '';
     const focusPart = best.key === 'ramcap' || best.key === 'ramspd' ? 'ram' : best.key;
     const focusLabel = best.key === 'gpu' ? 'GPU examples' : best.key === 'cpu' ? 'CPU examples' : best.key === 'psu' ? 'Power examples' : 'Memory examples';
+    const shortCopy = index => {
+      if (focusPart === 'gpu') return [
+        inTr('Low-cost comparison lane.', 'Dusuk maliyetli karsilastirma araligi.'),
+        inTr('Start comparisons here.', 'Karsilastirmaya buradan basla.'),
+        inTr('Only after CPU and PSU checks.', 'Sadece CPU ve PSU kontrolunden sonra.'),
+      ][index] || '';
+      if (focusPart === 'cpu') return index === 0
+        ? inTr('Check motherboard support first.', 'Once anakart destegini kontrol et.')
+        : inTr('Use when the old platform blocks progress.', 'Eski platform ilerlemeyi engelliyorsa kullan.');
+      if (focusPart === 'ram') return inTr('Capacity and dual-channel come first.', 'Once kapasite ve cift kanal.');
+      if (focusPart === 'psu') return inTr('Stability and GPU headroom first.', 'Once stabilite ve GPU payi.');
+      return '';
+    };
     return '<div class="example-block">' +
       '<div class="discovery-head">' + inTr('Example part tiers','Ornek parca siniflari') + '</div>' +
-      '<div class="example-grid">' + cards.map(card =>
+      '<div class="example-grid">' + cards.map((card, index) =>
         '<div class="example-card" data-focus-part="' + focusPart + '" data-focus-label="' + focusLabel + '">' +
           '<div class="path-kicker">' + card.k + '</div>' +
           '<div class="example-title">' + card.t + '</div>' +
           '<div class="example-price">' + card.p + '</div>' +
-          '<div class="path-copy">' + card.c + '</div>' +
+          '<div class="path-copy">' + shortCopy(index) + '</div>' +
           (card.q ? '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor(focusPart) + '</a>' : '<span class="link-slot link-slot-disabled">' + inTr('No purchase needed','Satin alma gerekmez') + '</span>') +
         '</div>'
       ).join('') + '</div>' +
+      '<div class="info-note">' + inTr('Examples are buying tiers, not final shopping carts. Verify compatibility and prices before buying.', 'Ornekler satin alma katmanidir, kesin sepet degildir. Almadan once uyumluluk ve fiyati dogrula.') + '</div>' +
     '</div>';
   }
   function buildLaptopSuggestionCards() {
