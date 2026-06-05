@@ -1865,3 +1865,88 @@ h1{
     width:100%;
   }
 }
+
+/* === Virtual PC interaction map === */
+.field[data-pc-part]{
+  position:relative;
+  cursor:pointer;
+}
+.field[data-pc-part]::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border:1px solid transparent;
+  border-radius:inherit;
+  pointer-events:none;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.field[data-pc-part]:hover,
+.field[data-pc-part].is-active,
+.field[data-pc-part]:focus-within{
+  border-color:rgba(0,228,121,.32);
+  background:
+    linear-gradient(180deg,rgba(0,228,121,.08),rgba(255,255,255,.018)),
+    rgba(28,29,36,.82);
+}
+.field[data-pc-part]:hover::after,
+.field[data-pc-part].is-active::after,
+.field[data-pc-part]:focus-within::after{
+  border-color:rgba(0,228,121,.45);
+  box-shadow:0 0 0 1px rgba(0,228,121,.08),0 0 22px rgba(0,228,121,.10);
+}
+.field[data-pc-part].is-active label,
+.field[data-pc-part]:hover label{
+  color:#e7ffef;
+}
+.field[data-pc-part].is-active label::before,
+.field[data-pc-part]:hover label::before{
+  content:"";
+  display:inline-block;
+  width:6px;
+  height:6px;
+  margin-right:.42rem;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 12px rgba(0,228,121,.5);
+  vertical-align:middle;
+}
+.pc-part{
+  cursor:pointer;
+}
+.pc-part:hover{
+  border-color:rgba(0,228,121,.55);
+  color:#ecfff5;
+}
+.pc-summary div{
+  cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.pc-summary div:hover,
+.pc-summary div.is-active{
+  border-color:rgba(0,228,121,.55);
+  background:rgba(0,228,121,.085);
+  box-shadow:0 0 0 1px rgba(0,228,121,.08),0 0 18px rgba(0,228,121,.12);
+  transform:translateX(2px);
+}
+.pc-summary div:hover span,
+.pc-summary div.is-active span,
+.pc-summary div:hover strong,
+.pc-summary div.is-active strong{
+  color:#ecfff5;
+}
+.pc-status-strip span{
+  transition:border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease;
+}
+.pc-status-strip span.is-active{
+  border-color:rgba(0,228,121,.5);
+  background:rgba(0,228,121,.10);
+  color:var(--accent);
+  box-shadow:0 0 16px rgba(0,228,121,.12);
+}
+.pc-visual[data-active-part="ram"] .pc-ram span{
+  background:#6cffad;
+  box-shadow:0 0 12px rgba(0,228,121,.55);
+}
+.pc-visual[data-active-part="psu"] .pc-psu{
+  color:#ecfff5;
+}

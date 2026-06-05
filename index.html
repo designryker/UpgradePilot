@@ -35,10 +35,10 @@
       <small>Live input map</small>
     </div>
     <div class="pc-status-strip">
-      <span>CPU</span>
-      <span>GPU</span>
-      <span>RAM</span>
-      <span>PSU</span>
+      <span data-status-part="cpu">CPU</span>
+      <span data-status-part="gpu">GPU</span>
+      <span data-status-part="ram">RAM</span>
+      <span data-status-part="psu">PSU</span>
     </div>
     <div class="pc-case">
       <div class="pc-board">
@@ -52,10 +52,10 @@
       </div>
     </div>
     <div class="pc-summary" id="pc-summary">
-      <div><span>CPU</span><strong id="pc-summary-cpu">Not selected</strong></div>
-      <div><span>GPU</span><strong id="pc-summary-gpu">Not selected</strong></div>
-      <div><span>RAM</span><strong id="pc-summary-ram">Not selected</strong></div>
-      <div><span>Power</span><strong id="pc-summary-power">Not selected</strong></div>
+      <div data-summary-part="cpu"><span>CPU</span><strong id="pc-summary-cpu">Not selected</strong></div>
+      <div data-summary-part="gpu"><span>GPU</span><strong id="pc-summary-gpu">Not selected</strong></div>
+      <div data-summary-part="ram"><span>RAM</span><strong id="pc-summary-ram">Not selected</strong></div>
+      <div data-summary-part="psu"><span>Power</span><strong id="pc-summary-power">Not selected</strong></div>
     </div>
   </div>
 </header>
@@ -73,7 +73,7 @@
     <!-- System, Cooling & Storage -->
 <div class="sec-label" data-i18n="secSystemCooling">System, Cooling &amp; Storage</div>
 <div class="g3">
-  <div class="field">
+  <div class="field" data-pc-part="cpu">
     <label data-i18n="systemType">System Type</label>
     <select id="system-type" autocomplete="off">
       <option value="desktop" selected data-i18n="desktopPc">Desktop PC</option>
@@ -93,7 +93,7 @@
     </select>
     <div class="field-hint" data-i18n="coolingHint">Strong CPUs need enough cooling to hold boost clocks.</div>
   </div>
-  <div class="field">
+  <div class="field" data-pc-part="gpu">
     <label><span data-i18n="gameDrive">Game Drive</span><span class="field-help" tabindex="0">?<span class="field-popover">SSD games usually load faster and stutter less than HDD installs. NVMe is the faster SSD type, but SATA SSD is already a big jump from HDD.</span></span></label>
     <select id="game-drive" autocomplete="off">
       <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
@@ -117,7 +117,7 @@
 
 <div class="sec-label" data-i18n="secondaryGoal">Current Problem</div>
 <div class="g1">
-  <div class="field">
+  <div class="field" data-pc-part="ram">
     <label data-i18n="secondaryGoal">Current Problem</label>
     <select id="goal" autocomplete="off">
       <option value="none" data-i18n="goalNone">No specific problem</option>
@@ -135,7 +135,7 @@
     <!-- Display & Gaming -->
 <div class="sec-label" data-i18n="secDisplay">Display &amp; Gaming Profile</div>
 <div class="g3">
-  <div class="field">
+  <div class="field" data-pc-part="ram">
     <label data-i18n="gameFocus">Primary Game Focus</label>
     <select id="game" autocomplete="off">
       <option value="compfps" data-i18n="gameCompfps">Competitive FPS (CS2, Valorant)</option>
@@ -423,7 +423,7 @@
   </div>
 </div>
 <div class="g2b">
-  <div class="field advanced-field">
+  <div class="field advanced-field" data-pc-part="ram">
     <label><span data-i18n="memorySpeed">Memory Speed</span><span class="field-help" tabindex="0">?<span class="field-popover">RAM speed can affect CPU-heavy games and 1% lows. If your RAM is running slower than advertised, enabling XMP/EXPO in BIOS may fix it for free.</span></span></label>
     <select id="ram-speed" autocomplete="off">
       <option value="ddr4_2400">DDR4 2400</option>
@@ -434,7 +434,7 @@
       <option value="ddr4_4000">DDR4 4000+</option>
     </select>
   </div>
-  <div class="field advanced-field">
+  <div class="field advanced-field" data-pc-part="ram">
     <label><span data-i18n="channelMode">Memory Channel Mode</span><span class="field-help" tabindex="0">?<span class="field-popover">Dual channel means two matching RAM sticks work together. Single channel can reduce memory bandwidth and hurt FPS stability.</span></span></label>
     <select id="channel" autocomplete="off">
       <option value="dual" selected data-i18n="dualChannel">Dual Channel</option>
@@ -456,7 +456,7 @@
 <div id="desktop-power-fields" class="desktop-only">
 <div class="sec-label" data-i18n="secPower">Power Supply</div>
 <div class="g1">
-  <div class="field">
+  <div class="field" data-pc-part="psu">
     <label><span data-i18n="psuWattage">PSU Wattage</span><span class="field-help" tabindex="0">?<span class="field-popover">PSU means Power Supply Unit. It feeds power to the PC. A weak or low-quality PSU can cause crashes or block a GPU upgrade.</span></span></label>
     <div class="psu-readout">
       <span class="field-hint" data-i18n="psuBarHint">Pick the watt value written on your PSU label.</span>

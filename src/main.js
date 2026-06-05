@@ -311,6 +311,7 @@ function setVirtualPcPart(part, label) {
   if (!visual) return;
   const safePart = ['cpu','gpu','ram','psu','system'].includes(part) ? part : 'system';
   visual.dataset.activePart = safePart;
+  setSummaryActivePart(safePart);
   updateVirtualPcRamMode();
   updateVirtualPcSummary();
   const labelNode = el('pc-visual-label');
@@ -321,6 +322,55 @@ function setVirtualPcPart(part, label) {
     psu:'Power focus',
     system: currentLang === 'tr' ? 'Mevcut sistem' : 'Current rig'
   }[safePart];
+}
+
+function partLabel(part) {
+  return {
+    cpu: currentLang === 'tr' ? 'İşlemci odağı' : 'CPU focus',
+    gpu: currentLang === 'tr' ? 'Ekran kartı odağı' : 'GPU focus',
+    ram: currentLang === 'tr' ? 'Bellek odağı' : 'Memory focus',
+    psu: currentLang === 'tr' ? 'Güç kaynağı odağı' : 'Power focus',
+    system: currentLang === 'tr' ? 'Mevcut sistem' : 'Current rig'
+  }[part] || part;
+}
+
+function setSummaryActivePart(part) {
+  const safePart = ['cpu','gpu','ram','psu'].includes(part) ? part : '';
+  document.querySelectorAll('[data-summary-part],[data-status-part],[data-pc-part]').forEach(node => {
+    const targetPart = node.dataset.summaryPart || node.dataset.statusPart || node.dataset.pcPart;
+    node.classList.toggle('is-active', safePart && targetPart === safePart);
+  });
+}
+
+function initVirtualPcMap() {
+  const wirePartTarget = (node, part, label) => {
+    if (!node || node.dataset.pcMapBound === 'true') return;
+    node.dataset.pcMapBound = 'true';
+    const activate = () => setVirtualPcPart(part, label || partLabel(part));
+    const clear = () => {
+      window.setTimeout(() => {
+        if (!node.matches(':hover') && !node.contains(document.activeElement)) setVirtualPcPart('system');
+      }, 40);
+    };
+    node.addEventListener('mouseenter', activate);
+    node.addEventListener('focusin', activate);
+    node.addEventListener('click', activate);
+    node.addEventListener('mouseleave', clear);
+    node.addEventListener('focusout', clear);
+  };
+
+  document.querySelectorAll('[data-pc-part]').forEach(node => {
+    const part = node.dataset.pcPart;
+    wirePartTarget(node, part, node.dataset.pcLabel || partLabel(part));
+  });
+  document.querySelectorAll('[data-summary-part]').forEach(node => {
+    const part = node.dataset.summaryPart;
+    wirePartTarget(node, part, node.dataset.pcLabel || partLabel(part));
+  });
+  document.querySelectorAll('.pc-part[data-part]').forEach(node => {
+    const part = node.dataset.part;
+    wirePartTarget(node, part, node.dataset.pcLabel || partLabel(part));
+  });
 }
 
 function updateVirtualPcRamMode() {
@@ -586,6 +636,7 @@ window.addEventListener('DOMContentLoaded', () => {
   bindEvents();
   initWizard();
   initAccordion();
+  initVirtualPcMap();
   updateMemoryCompatibility();
   updatePsuReadout();
   updateSystemTypeFields();
@@ -601,6 +652,7 @@ window.addEventListener('pageshow', event => {
   if (!event.persisted) return;
   resetInputsToDefaults();
   initAccordion();
+  initVirtualPcMap();
   goToWizardStep(0, false);
   updateMemoryCompatibility();
   updatePsuReadout();
