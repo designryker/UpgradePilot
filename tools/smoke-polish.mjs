@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
+  ANALYSIS_SEQUENCE_MS,
   buildPartSearchText,
+  getAnalysisMessages,
   getBiosRecommendation,
   normalizePartSearch,
 } from '../src/recommendation-helpers.js';
@@ -87,5 +89,17 @@ assert.ok(
   /function buildUpgradePath\(\) \{\s+if \(isLaptop\) return \[\];/.test(mainSource),
   'laptop mode should not render desktop upgrade-path cards'
 );
+assert.ok(
+  ANALYSIS_SEQUENCE_MS >= 1500 && ANALYSIS_SEQUENCE_MS <= 3000,
+  'analysis sequence should feel brief, between 1.5s and 3s'
+);
+const enAnalysisMessages = getAnalysisMessages('en');
+const trAnalysisMessages = getAnalysisMessages('tr');
+assert.ok(enAnalysisMessages.length >= 6, 'English analysis sequence should have enough message variety');
+assert.ok(trAnalysisMessages.length >= 6, 'Turkish analysis sequence should have enough message variety');
+assert.ok(enAnalysisMessages.includes('Checking CPU/GPU bottlenecks...'));
+assert.ok(trAnalysisMessages.includes('CPU/GPU darboğazı kontrol ediliyor...'));
+assert.equal(enAnalysisMessages.some(message => /^loading/i.test(message)), false);
+assert.ok(indexSource.includes('id="analysis-message"'), 'loading card should expose a dynamic analysis message node');
 
 console.log('polish smoke checks passed');

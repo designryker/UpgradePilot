@@ -1,7 +1,7 @@
 import './styles.css';
 import {CPU_SCORE, GPU_SCORE, GPU_ENC, PRICE_TR, PRICE_USD, psuMaxGpu, ramSpeedTier} from './parts-data.js';
 import {I18N} from './i18n.js';
-import {buildPartSearchText, getBiosRecommendation} from './recommendation-helpers.js';
+import {ANALYSIS_SEQUENCE_MS, buildPartSearchText, getAnalysisMessages, getBiosRecommendation} from './recommendation-helpers.js';
 
 // ── Helpers ──
 function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -18,6 +18,8 @@ function toggleCheck(id){
 let currentLang = 'en';
 let hasTouchedSpecs = false;
 let latestResultSummary = '';
+let analysisSequenceTimer = null;
+let analysisMessageTimer = null;
 function setLanguage(lang){
   currentLang = lang === 'tr' ? 'tr' : 'en';
   document.documentElement.lang = currentLang;
@@ -46,6 +48,45 @@ function setLanguage(lang){
 }
 
 function inTr(en, tr){ return currentLang === 'tr' ? tr : en; }
+function clearAnalysisSequence() {
+  window.clearTimeout(analysisSequenceTimer);
+  window.clearInterval(analysisMessageTimer);
+  analysisSequenceTimer = null;
+  analysisMessageTimer = null;
+}
+function startAnalysisSequence(onComplete) {
+  clearAnalysisSequence();
+  const loader = el('loading-card');
+  const messageNode = el('analysis-message');
+  const progressNode = el('analysis-progress');
+  const messages = getAnalysisMessages(currentLang);
+  let index = 0;
+
+  if (loader) loader.classList.add('show', 'is-analyzing');
+  if (progressNode) {
+    progressNode.style.animation = 'none';
+    void progressNode.offsetWidth;
+    progressNode.style.animation = 'analysisProgress ' + ANALYSIS_SEQUENCE_MS + 'ms cubic-bezier(.2,.8,.2,1) forwards';
+  }
+  if (messageNode) messageNode.textContent = messages[index];
+
+  const intervalMs = Math.max(320, Math.floor(ANALYSIS_SEQUENCE_MS / 5));
+  analysisMessageTimer = window.setInterval(() => {
+    index = Math.min(index + 1, messages.length - 1);
+    if (messageNode) {
+      messageNode.classList.remove('is-swapping');
+      void messageNode.offsetWidth;
+      messageNode.textContent = messages[index];
+      messageNode.classList.add('is-swapping');
+    }
+    if (index >= messages.length - 1) window.clearInterval(analysisMessageTimer);
+  }, intervalMs);
+
+  analysisSequenceTimer = window.setTimeout(() => {
+    clearAnalysisSequence();
+    onComplete();
+  }, ANALYSIS_SEQUENCE_MS);
+}
 function setCopyButtonState(copied) {
   const button = el('result-copy');
   if (!button) return;
@@ -296,6 +337,7 @@ function resetInputsToDefaults() {
     node.textContent = '';
   });
 
+  clearAnalysisSequence();
   el('loading-card')?.classList.remove('show');
   el('result')?.classList.remove('show');
   setCopyButtonState(false);
@@ -732,12 +774,13 @@ function analyze(skipLoading) {
     const loader = el('loading-card');
     const result = el('result');
     if (result) result.classList.remove('show');
-    if (loader) loader.classList.add('show');
-    setTimeout(() => analyze(true), 750);
+    if (loader) loader.classList.remove('show');
+    startAnalysisSequence(() => analyze(true));
     return;
   }
+  clearAnalysisSequence();
   const loader = el('loading-card');
-  if (loader) loader.classList.remove('show');
+  if (loader) loader.classList.remove('show', 'is-analyzing');
 
   // ── Read inputs ──
   const cpuKey   = el('cpu').value;

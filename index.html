@@ -503,9 +503,10 @@
 </div>
 
     <div class="loading-card" id="loading-card">
-  <div class="load-title" data-i18n="loadingTitle">Finding Best Value Parts</div>
-  <div class="load-line"><span></span></div>
-  <div class="load-copy" data-i18n="loadingCopy">Checking the cheapest meaningful upgrades, free fixes, and parts that are not worth buying for this setup.</div>
+  <div class="load-kicker" data-i18n="loadingKicker">Diagnostic pass</div>
+  <div class="load-title" data-i18n="loadingTitle">Evaluating your upgrade path</div>
+  <div class="load-line"><span id="analysis-progress"></span></div>
+  <div class="load-copy" id="analysis-message" data-i18n="analysisInitialMessage">Analyzing your system balance...</div>
 </div>
 
 
@@ -514,8 +515,8 @@
   <section class="wizard-step" data-step="result">
     <div class="step-copy result-ready-copy">
       <div class="step-kicker" data-i18n="resultStepKicker">04 / Result</div>
-      <h2 data-i18n="resultStepTitle">Your upgrade path is ready.</h2>
-      <p data-i18n="resultStepCopy">Start with the likely blocker, then run the quick checks.</p>
+      <h2 data-i18n="resultStepTitle">Upgrade Decision</h2>
+      <p data-i18n="resultStepCopy">Here’s what to fix before spending money.</p>
     </div>
     <!-- =================== RESULT =================== -->
 <div id="result">

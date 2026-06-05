@@ -460,6 +460,9 @@ h1 .dim{color:#6c6d75}
   line-height:1.18;
   text-wrap:balance;
 }
+.result-ready-copy h2{
+  font-size:clamp(1.18rem,2.2vw,1.55rem);
+}
 .step-copy p{max-width:680px;color:#b5b8c0;font-size:.98rem;line-height:1.7}
 
 .sec-label{
@@ -606,12 +609,58 @@ h1 .dim{color:#6c6d75}
 .loading-card{
   border-radius:8px;
   border-color:rgba(255,255,255,.07);
-  background:rgba(21,21,28,.78);
+  background:
+    radial-gradient(circle at 0% 0%,rgba(0,228,121,.10),transparent 12rem),
+    linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018)),
+    rgba(21,21,28,.82);
   box-shadow:var(--shadow-soft);
+  overflow:hidden;
+}
+.loading-card.is-analyzing{
+  animation:fadeUp .25s ease both, diagnosticPulse 1.2s ease-in-out infinite alternate;
+}
+.load-kicker{
+  margin-bottom:.28rem;
+  color:#9da0a9;
+  font-family:'Space Mono',monospace;
+  font-size:.62rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
 }
 .load-title{color:var(--accent)}
-.load-line{height:8px;background:rgba(255,255,255,.08)}
-.load-line span{background:linear-gradient(90deg,var(--accent),#f1ffef)}
+.load-line{
+  height:8px;
+  margin:.72rem 0 .68rem;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+}
+.load-line span{
+  display:block;
+  width:0%;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--accent),rgba(143,233,255,.95),#f1ffef);
+}
+.load-copy{
+  min-height:1.45em;
+  color:#c7c9d1;
+}
+.load-copy.is-swapping{
+  animation:messageSwap .22s ease both;
+}
+@keyframes analysisProgress{
+  from{width:0%}
+  to{width:100%}
+}
+@keyframes diagnosticPulse{
+  from{border-color:rgba(0,228,121,.12)}
+  to{border-color:rgba(143,233,255,.22)}
+}
+@keyframes messageSwap{
+  from{opacity:.45;transform:translateY(3px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
 #result{margin-top:1rem}
 .r-card{border-radius:12px}

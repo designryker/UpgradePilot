@@ -4,6 +4,31 @@ export function normalizePartSearch(value) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+export const ANALYSIS_SEQUENCE_MS = 2100;
+
+const ANALYSIS_MESSAGES = {
+  en: [
+    'Analyzing your system balance...',
+    'Checking CPU/GPU bottlenecks...',
+    'Reviewing RAM, storage, and cooling...',
+    'Looking for free optimizations first...',
+    'Estimating upgrade value...',
+    'Building your upgrade plan...',
+  ],
+  tr: [
+    'Sistem dengesi analiz ediliyor...',
+    'CPU/GPU darboğazı kontrol ediliyor...',
+    'RAM, depolama ve soğutma gözden geçiriliyor...',
+    'Önce ücretsiz optimizasyonlar aranıyor...',
+    'Yükseltme değeri tahmin ediliyor...',
+    'Upgrade planın hazırlanıyor...',
+  ],
+};
+
+export function getAnalysisMessages(lang) {
+  return ANALYSIS_MESSAGES[lang === 'tr' ? 'tr' : 'en'];
+}
+
 const GPU_ALIASES = {
   gtx970: ['970', 'geforce gtx 970'],
   gtx980ti: ['980ti', '980 ti', 'geforce gtx 980 ti'],
