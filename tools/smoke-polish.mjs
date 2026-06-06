@@ -68,15 +68,51 @@ assert.equal(
   'memory'
 );
 
-const mainSource = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
+const analyzeSource = readFileSync(new URL('../src/analyze.js', import.meta.url), 'utf8');
+const wizardSource = readFileSync(new URL('../src/wizard.js', import.meta.url), 'utf8');
+const systemTypeSource = readFileSync(new URL('../src/system-type.js', import.meta.url), 'utf8');
+const uiPartsSource = readFileSync(new URL('../src/ui-parts.js', import.meta.url), 'utf8');
+const mainSource = [appSource, analyzeSource, wizardSource, systemTypeSource, uiPartsSource].join('\n');
 const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const styleSource = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+const finalAccentToken = [...styleSource.matchAll(/--accent:([^;]+);/g)].at(-1)?.[1].trim();
 const htmlStepOrder = [...indexSource.matchAll(/<section class="wizard-step" data-step="([^"]+)"/g)].map(match => match[1]);
 assert.deepEqual(htmlStepOrder, ['goal', 'specs', 'budget', 'result'], 'HTML wizard sections should keep system type first and Analyze before result');
+assert.ok(styleSource.includes('UpgradePilot visual refresh layer'), 'visual refresh CSS layer should be present');
+assert.equal(finalAccentToken, '#69a7ff', 'final primary accent should be calm blue, not neon green');
+assert.ok(styleSource.includes('--success:#35d07f'), 'success green should be a dedicated semantic token');
+assert.ok(styleSource.includes('--success-soft'), 'success states should have their own soft token');
 assert.ok(
-  /const WIZARD_STEPS = \[\s+\{id:'goal', labelKey:'stepGoal'\},\s+\{id:'specs', labelKey:'stepSpecs'\},\s+\{id:'budget', labelKey:'stepBudget'\},\s+\{id:'result', labelKey:'stepResult'\},\s+\];/.test(mainSource),
+  styleSource.includes('background:linear-gradient(180deg,#83bdff 0%,var(--accent) 100%)'),
+  'primary CTA should use the blue accent'
+);
+const finalVisualLayer = styleSource.slice(styleSource.indexOf('/* === UpgradePilot visual refresh layer === */'));
+assert.equal(
+  /0,228,121|54,242,197|00e479|36f2c5|6cffad|baffd4|ecfff5|e7ffef|83ffbd|8dffd8|f1ffef/.test(finalVisualLayer),
+  false,
+  'final visual layer should not reintroduce neon green as a generic UI color'
+);
+assert.ok(styleSource.includes('Virtual PC blue polish'), 'virtual PC should have a dedicated blue polish override');
+assert.ok(indexSource.includes('family=DM+Sans'), 'main app should load DM Sans for the warmer UI direction');
+assert.ok(indexSource.includes('family=IBM+Plex+Mono'), 'main app should load IBM Plex Mono for restrained technical values');
+assert.equal(indexSource.includes('Space+Mono'), false, 'main app should not import Space Mono after the typography refresh');
+assert.ok(styleSource.includes("--font-ui:'DM Sans'"), 'CSS should expose DM Sans as the UI font token');
+assert.ok(styleSource.includes("--font-tech:'IBM Plex Mono'"), 'CSS should expose IBM Plex Mono as the technical font token');
+assert.ok(styleSource.includes('Readability scale pass'), 'CSS should include the final readability scale pass');
+assert.ok(styleSource.includes('.wizard-pill{\n  font-size:.82rem;'), 'wizard step labels should be enlarged for readability');
+assert.ok(styleSource.includes('.field label,\n.sec-label,'), 'small form and section labels should be covered by the readability scale');
+assert.ok(styleSource.includes('Current PC intro blue correction'), 'Current PC intro should override old green active styling');
+assert.ok(styleSource.includes('.specs-intro .step-kicker{\n  border-color:rgba(105,167,255,.30);'), 'Current PC step badge should use blue, not green');
+assert.ok(styleSource.includes('.step-proof-row span::after{\n  background:var(--accent2);'), 'Current PC proof dots should use blue/cyan, not green');
+assert.ok(
+  /const WIZARD_STEPS = \[\s+\{ id: 'goal',\s+labelKey: 'stepGoal' \},\s+\{ id: 'specs',\s+labelKey: 'stepSpecs' \},\s+\{ id: 'budget', labelKey: 'stepBudget' \},\s+\{ id: 'result', labelKey: 'stepResult' \},\s+\];/.test(wizardSource),
   'JS wizard step order should match the HTML order so Analyze is reachable predictably'
 );
+assert.ok(indexSource.includes('src="/src/app.js"'), 'index should use the modular app entry');
+assert.equal(indexSource.includes('src="/src/main.js"'), false, 'index should not load the old monolithic main.js');
+assert.ok(appSource.includes('function restoreFromPageCache()'), 'page-cache restore should have a dedicated state-only path');
+assert.equal(/if \(event\.persisted\) boot\(/.test(appSource), false, 'page-cache restore should not bind all event listeners again');
 assert.ok(
   mainSource.includes("wizard.dataset.currentStep = String(currentWizardStep);"),
   'wizard should expose the current step state for reliable UI/debugging'
@@ -146,8 +182,8 @@ assert.ok(
   'analyze button should be a non-submit button for reliable repeated runs'
 );
 assert.ok(
-  /el\('result-rerun'\)\?\.addEventListener\('click', \(\) => analyze\(\)\);/.test(mainSource),
-  'result rerun should use the normal loading sequence so repeated analysis works'
+  appSource.includes('onRerun: () => analyze()'),
+  'result rerun should use the normal loading sequence through the modular app entry'
 );
 assert.ok(
   /if \(!skipLoading\) \{[\s\S]*goToWizardStep\(WIZARD_STEPS\.length - 2, false\);[\s\S]*startAnalysisSequence\(\(\) => analyze\(true\)\);/.test(mainSource),

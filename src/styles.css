@@ -2280,3 +2280,620 @@ h1{
 .pc-visual[data-active-part="psu"] .pc-psu{
   color:#ecfff5;
 }
+
+/* === UpgradePilot visual refresh layer === */
+:root{
+  --bg:#0b0f16;
+  --surface:#141922;
+  --surface2:#1b2230;
+  --surface3:#232c3a;
+  --border:#303a48;
+  --border-soft:rgba(255,255,255,.07);
+  --accent:#69a7ff;
+  --accent2:#8ed8ff;
+  --success:#35d07f;
+  --text:#eef2f7;
+  --muted:#a1a8b3;
+  --danger:#ef6461;
+  --warn:#f2a93b;
+  --info:#8ed8ff;
+  --accent-soft:rgba(105,167,255,.11);
+  --accent-border:rgba(105,167,255,.30);
+  --accent2-soft:rgba(142,216,255,.10);
+  --accent2-border:rgba(142,216,255,.26);
+  --success-soft:rgba(53,208,127,.10);
+  --success-border:rgba(53,208,127,.28);
+  --shadow:0 24px 70px rgba(0,0,0,.34);
+  --shadow-soft:0 14px 42px rgba(0,0,0,.24);
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% -16%,rgba(105,167,255,.11),transparent 34rem),
+    radial-gradient(circle at 92% 18%,rgba(142,216,255,.055),transparent 24rem),
+    linear-gradient(180deg,#0d1118 0%,#0b0f16 48%,#090c12 100%);
+}
+body::before{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.03),transparent 34%),
+    radial-gradient(circle at 18% 8%,rgba(105,167,255,.065),transparent 28rem);
+}
+
+.wizard,
+.r-card,
+.pc-visual,
+.loading-card,
+.diag-block,
+.upgrade-hero,
+.why-box,
+.action-plan-card,
+.price-block,
+.example-block,
+.metric,
+.psu-rec-card,
+.path-card,
+.discovery-card{
+  border-color:var(--border-soft);
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),rgba(20,25,34,.88);
+  box-shadow:0 18px 54px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.eyebrow,
+.wizard-pill.active,
+.quick-chip:hover,
+.quick-chip.active,
+.mini-btn:hover,
+.field-help:hover,
+.field-help:focus,
+.price-market-row-soft,
+.link-slot{
+  border-color:var(--accent-border);
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+
+.wizard-btn-primary,
+.btn,
+.route-btn-primary{
+  background:linear-gradient(180deg,#83bdff 0%,var(--accent) 100%);
+  border-color:rgba(105,167,255,.62);
+  color:#07111f;
+  box-shadow:0 12px 30px rgba(105,167,255,.18);
+}
+.wizard-btn-primary:hover,
+.btn:hover,
+.route-btn-primary:hover{
+  box-shadow:0 16px 38px rgba(105,167,255,.22);
+}
+.wizard-btn.is-copied{
+  border-color:var(--success-border);
+  background:var(--success-soft);
+  color:var(--success);
+}
+
+.r-topbar{
+  background:linear-gradient(90deg,rgba(105,167,255,.10),rgba(142,216,255,.045)),rgba(27,34,48,.76);
+}
+.summary-card{
+  border-color:rgba(255,255,255,.075);
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.014)),rgba(24,30,40,.78);
+}
+.diagnostic-summary[data-priority="high"] .summary-card::after{background:linear-gradient(90deg,var(--danger),var(--warn))}
+.diagnostic-summary[data-priority="medium"] .summary-card::after{background:linear-gradient(90deg,var(--warn),var(--accent))}
+.diagnostic-summary[data-priority="low"] .summary-card::after{background:linear-gradient(90deg,var(--success),var(--accent2))}
+.score-card{
+  border-color:var(--success-border);
+  background:
+    radial-gradient(circle at 18% 0%,rgba(53,208,127,.14),transparent 9rem),
+    linear-gradient(180deg,rgba(53,208,127,.055),rgba(255,255,255,.018)),
+    rgba(20,25,34,.88);
+}
+.score-line,
+.c-hi,
+.c-wlo,
+.c-byes,
+.gain-value{
+  color:var(--success);
+}
+
+.vb-upgrade,
+.fb-upgrade,
+.pv-ok,
+.cbox.on{
+  background:var(--success-soft);
+  border-color:var(--success-border);
+  color:var(--success);
+}
+.vb-upgrade .fi,
+.fb-upgrade .fi,
+.pv-ok .pvi{
+  color:var(--success);
+}
+.vb-maybe,
+.fb-maybe,
+.pv-warn,
+.dp-ram{
+  background:rgba(242,169,59,.10);
+  border-color:rgba(242,169,59,.30);
+  color:var(--warn);
+}
+.vb-hold,
+.pv-bad,
+.dp-psu{
+  background:rgba(239,100,97,.10);
+  border-color:rgba(239,100,97,.30);
+  color:var(--danger);
+}
+.fb-hold{
+  border-color:rgba(142,216,255,.20);
+  background:rgba(142,216,255,.055);
+}
+.fb-hold::before{
+  background:linear-gradient(180deg,var(--accent),rgba(142,216,255,.85));
+}
+.fb-hold .fi{
+  color:var(--accent);
+  border-color:var(--accent-border);
+  background:var(--accent-soft);
+}
+
+.dp-gpu,
+.dp-cpu,
+.dp-opt,
+.dp-bal{
+  background:var(--accent2-soft);
+  color:var(--info);
+  border-color:var(--accent2-border);
+}
+.action-step-num,
+.bdot,
+.path-kicker,
+.discovery-head,
+.example-price{
+  color:var(--accent);
+}
+.action-step-num{
+  border-color:var(--accent-border);
+  background:var(--accent-soft);
+}
+
+.load-title{color:var(--accent)}
+.load-line span,
+#free-boost-progress{
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+
+.field[data-pc-part]:hover,
+.field[data-pc-part].is-field-hover,
+.field[data-pc-part].is-field-active,
+.field[data-pc-part].is-active,
+.field[data-pc-part]:focus-within{
+  border-color:rgba(105,167,255,.36);
+  background:
+    radial-gradient(circle at calc(100% - 52px) 1.1rem,rgba(105,167,255,.12),transparent 7rem),
+    linear-gradient(180deg,rgba(105,167,255,.07),rgba(255,255,255,.018)),
+    rgba(28,32,41,.86);
+}
+.field[data-pc-part]:hover::after,
+.field[data-pc-part].is-field-hover::after,
+.field[data-pc-part].is-field-active::after,
+.field[data-pc-part].is-active::after,
+.field[data-pc-part]:focus-within::after{
+  border-color:rgba(105,167,255,.46);
+  box-shadow:0 0 0 1px rgba(105,167,255,.08),0 0 20px rgba(105,167,255,.10);
+}
+.field[data-pc-part].is-active label,
+.field[data-pc-part].is-field-hover label,
+.field[data-pc-part].is-field-active label,
+.field[data-pc-part]:hover label{
+  color:#dbeaff;
+}
+.field[data-pc-part]:hover .field-click-cue,
+.field[data-pc-part].is-field-hover .field-click-cue,
+.field[data-pc-part].is-field-active .field-click-cue,
+.field[data-pc-part].is-active .field-click-cue,
+.field[data-pc-part]:focus-within .field-click-cue{
+  border-color:rgba(105,167,255,.54);
+  background:rgba(105,167,255,.12);
+  color:#dbeaff;
+  box-shadow:0 0 14px rgba(105,167,255,.12);
+}
+.field[data-pc-part].is-active label::before,
+.field[data-pc-part].is-field-hover label::before,
+.field[data-pc-part].is-field-active label::before,
+.field[data-pc-part]:hover label::before{
+  background:var(--accent);
+  box-shadow:0 0 10px rgba(105,167,255,.40);
+}
+
+.pc-visual[data-active-part="cpu"] .pc-cpu,
+.pc-visual[data-active-part="gpu"] .pc-gpu,
+.pc-visual[data-active-part="ram"] .pc-ram,
+.pc-visual[data-active-part="psu"] .pc-psu,
+.pc-visual[data-active-part="system"] .pc-case{
+  border-color:rgba(105,167,255,.56);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px rgba(105,167,255,.10),0 0 22px rgba(105,167,255,.12);
+  color:#eef6ff;
+}
+.pc-part:hover,
+.pc-summary div:hover,
+.pc-summary div.is-active,
+.pc-status-strip span.is-active{
+  border-color:rgba(105,167,255,.50);
+  background:rgba(105,167,255,.09);
+  color:#eef6ff;
+  box-shadow:0 0 0 1px rgba(105,167,255,.08),0 0 16px rgba(105,167,255,.10);
+}
+.pc-summary div:hover span,
+.pc-summary div.is-active span,
+.pc-summary div:hover strong,
+.pc-summary div.is-active strong{
+  color:#eef6ff;
+}
+.pc-visual[data-active-part="ram"] .pc-ram span{
+  background:var(--accent2);
+  box-shadow:0 0 10px rgba(142,216,255,.40);
+}
+.pc-fan{
+  background:radial-gradient(circle,rgba(142,216,255,.13) 0 18%,transparent 19% 100%);
+}
+
+/* Virtual PC blue polish: remove remaining non-semantic green from the rig preview. */
+.pc-visual::before{
+  background:linear-gradient(120deg,rgba(105,167,255,.16),transparent 30%,rgba(142,216,255,.08) 72%,transparent);
+}
+.pc-visual-top small{
+  border-color:rgba(105,167,255,.24);
+  background:rgba(105,167,255,.08);
+  color:var(--accent2);
+}
+.pc-case{
+  background:
+    radial-gradient(circle at 18% 16%,rgba(105,167,255,.11),transparent 7rem),
+    linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.015) 46%,rgba(142,216,255,.05)),
+    rgba(8,10,15,.72);
+}
+.pc-case::after{
+  background:linear-gradient(90deg,transparent,rgba(105,167,255,.12),transparent);
+}
+.pc-board{
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(255,255,255,.023) 1px,transparent 1px),
+    radial-gradient(circle at 32% 30%,rgba(105,167,255,.075),transparent 7rem),
+    rgba(8,10,15,.84);
+  background-size:26px 26px,26px 26px,auto,auto;
+}
+.pc-board::before{
+  background:linear-gradient(90deg,transparent,rgba(105,167,255,.30),rgba(142,216,255,.20),transparent);
+}
+.pc-board::after{
+  background:linear-gradient(180deg,transparent,rgba(105,167,255,.24),transparent);
+}
+.pc-cpu::before{
+  border-color:rgba(105,167,255,.16);
+}
+.pc-ram{
+  background:linear-gradient(180deg,rgba(105,167,255,.16),rgba(255,255,255,.035));
+}
+.pc-ram span{
+  background:rgba(142,216,255,.24);
+}
+.pc-gpu::before{
+  background:linear-gradient(90deg,rgba(105,167,255,.34),rgba(142,216,255,.14));
+}
+.pc-fan{
+  background:
+    radial-gradient(circle,rgba(142,216,255,.16) 0 15%,transparent 16% 100%),
+    rgba(255,255,255,.035);
+}
+.pc-visual[data-active-part="cpu"] .pc-cpu,
+.pc-visual[data-active-part="gpu"] .pc-gpu,
+.pc-visual[data-active-part="ram"] .pc-ram,
+.pc-visual[data-active-part="psu"] .pc-psu{
+  border-color:rgba(105,167,255,.58);
+  background:
+    linear-gradient(180deg,rgba(105,167,255,.18),rgba(105,167,255,.055)),
+    rgba(18,22,30,.96);
+  box-shadow:0 0 0 1px rgba(105,167,255,.12),0 0 26px rgba(105,167,255,.14),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.pc-visual[data-active-part="system"] .pc-case{
+  border-color:rgba(105,167,255,.42);
+  box-shadow:0 0 0 1px rgba(105,167,255,.10),0 0 24px rgba(105,167,255,.12),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.pc-visual[data-active-part="system"] .pc-board{
+  border-color:rgba(142,216,255,.24);
+  background:
+    linear-gradient(180deg,rgba(105,167,255,.07),rgba(8,13,18,.82)),
+    rgba(13,16,22,.86);
+}
+.pc-status-strip span.is-active{
+  color:var(--accent2);
+}
+
+/* Hover blue hardening: keep generic interactivity out of success green. */
+.field:hover,
+.field.is-field-hover,
+.field:focus-within,
+.field.is-field-active{
+  border-color:rgba(105,167,255,.36);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(105,167,255,.10),transparent 8rem),
+    linear-gradient(180deg,rgba(105,167,255,.055),rgba(255,255,255,.02)),
+    rgba(28,32,41,.84);
+  box-shadow:0 0 0 1px rgba(105,167,255,.08),0 16px 38px rgba(0,0,0,.18);
+}
+.pc-visual:hover{
+  border-color:rgba(105,167,255,.24);
+  box-shadow:0 28px 82px rgba(0,0,0,.42),0 0 0 1px rgba(105,167,255,.06),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.route-btn:hover,
+.mini-action-btn:hover,
+.route-btn-secondary:hover,
+.buying-action-btn:hover,
+.link-slot:hover{
+  border-color:rgba(105,167,255,.34);
+  background:rgba(105,167,255,.08);
+  color:#eef6ff;
+  box-shadow:0 12px 30px rgba(105,167,255,.12);
+}
+.wizard-pill:hover:not(:disabled),
+.quick-chip:hover,
+.quick-chip.active,
+.money-chip:hover,
+.mini-btn:hover{
+  border-color:var(--accent-border);
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+.ci:hover .cbox{
+  border-color:var(--accent-border);
+}
+
+/* Typography refresh: DM Sans warmth with restrained technical mono. */
+:root{
+  --font-ui:'DM Sans',Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-tech:'IBM Plex Mono','SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+body,
+button,
+input,
+select,
+textarea{
+  font-family:var(--font-ui);
+}
+h1,
+.step-copy h2,
+.sample-title,
+.utext .uname,
+.summary-value,
+.diag-text,
+.ft{
+  font-family:var(--font-ui);
+  letter-spacing:0;
+}
+h1{
+  font-weight:700;
+  line-height:.9;
+}
+.subtitle,
+.step-copy p,
+.load-copy,
+.summary-sub,
+.diag-text,
+.ft,
+.why-box,
+.info-note{
+  font-weight:400;
+}
+.eyebrow,
+.tagline,
+.sec-label,
+.field label,
+.lang-switch label,
+.wizard-pill,
+.wizard-pill span,
+.step-kicker,
+.mini-btn,
+.quick-chip,
+.money-chip,
+.wizard-btn,
+.btn,
+.load-title,
+.r-product,
+.vbadge,
+.r-sec-label,
+.diag-pill,
+.cl-grp,
+.bench-grp-lbl,
+.path-label,
+.path-kicker,
+.psu-rc-lbl,
+.mlabel,
+.discovery-head,
+.link-slot,
+.pc-visual-top span,
+.pc-visual-top small,
+.pc-part,
+.pc-summary span,
+.pc-status-strip span,
+.route-btn,
+.mini-action-btn,
+.buying-action-btn{
+  font-family:var(--font-ui);
+  letter-spacing:.04em;
+}
+.eyebrow,
+.tagline,
+.sec-label,
+.field label,
+.lang-switch label,
+.step-kicker,
+.load-title,
+.r-product,
+.r-sec-label,
+.cl-grp,
+.bench-grp-lbl,
+.path-label,
+.path-kicker,
+.psu-rc-lbl,
+.mlabel,
+.discovery-head,
+.pc-visual-top span,
+.pc-summary span,
+.pc-status-strip span{
+  text-transform:uppercase;
+  font-weight:700;
+  letter-spacing:.075em;
+}
+.wizard-btn,
+.btn,
+.route-btn,
+.mini-action-btn,
+.buying-action-btn{
+  text-transform:none;
+  letter-spacing:0;
+  font-weight:700;
+}
+.wizard-pill,
+.quick-chip,
+.money-chip,
+.mini-btn,
+.link-slot{
+  text-transform:none;
+  letter-spacing:0;
+  font-weight:700;
+}
+.psu-value,
+.score-line,
+.gain-value,
+.action-step-num,
+.mval,
+.pvi,
+.fi,
+.example-price,
+.price-market-row strong,
+.summary-value strong,
+#system-score-value,
+.pc-summary strong,
+.pc-visual-top strong{
+  font-family:var(--font-tech);
+}
+.score-line{
+  letter-spacing:-.02em;
+}
+.pc-part,
+.pc-summary span,
+.pc-status-strip span{
+  font-size:.62rem;
+}
+
+/* Readability scale pass: larger non-header UI text without changing layout structure. */
+body{
+  font-size:17px;
+}
+.wizard-pill{
+  font-size:.82rem;
+  line-height:1.25;
+  min-height:64px;
+}
+.wizard-pill span{
+  font-size:.72rem;
+  line-height:1.2;
+  margin-bottom:.28rem;
+}
+.field label,
+.sec-label,
+.step-kicker,
+.load-title,
+.r-product,
+.r-sec-label,
+.cl-grp,
+.bench-grp-lbl,
+.path-label,
+.path-kicker,
+.psu-rc-lbl,
+.mlabel,
+.discovery-head,
+.pc-visual-top span,
+.pc-summary span,
+.pc-status-strip span{
+  font-size:.72rem;
+}
+.field select,
+.field input[type="number"],
+.search-box{
+  font-size:1.08rem;
+}
+.step-copy p,
+.subtitle,
+.load-copy,
+.summary-sub,
+.diag-text,
+.ctxt,
+.ci,
+.bench-item,
+.why-box,
+.info-note,
+.dnu-intro,
+.ft,
+.path-copy,
+.price-note,
+.compat-note,
+.field-hint{
+  font-size:1.06em;
+  line-height:1.62;
+}
+.wizard-btn,
+.btn,
+.route-btn,
+.mini-action-btn,
+.buying-action-btn{
+  font-size:.98rem;
+}
+.quick-chip,
+.money-chip,
+.mini-btn,
+.link-slot,
+.dnu-tag{
+  font-size:.9rem;
+}
+.pc-part{
+  font-size:.72rem;
+}
+.pc-summary strong,
+.pc-visual-top strong{
+  font-size:.88rem;
+}
+.vbadge,
+.diag-pill{
+  font-size:.82rem;
+}
+
+/* Current PC intro blue correction: active guidance is not a success state. */
+.specs-intro{
+  border-left-color:rgba(105,167,255,.58);
+  background:
+    radial-gradient(circle at 0% 0%,rgba(105,167,255,.10),transparent 16rem),
+    linear-gradient(135deg,rgba(35,38,48,.82),rgba(21,24,33,.72) 56%,rgba(18,21,29,.62)),
+    rgba(22,25,34,.76);
+}
+.specs-intro::after{
+  background:linear-gradient(90deg,rgba(105,167,255,.42),rgba(255,255,255,.08),transparent);
+}
+.specs-intro .step-kicker{
+  border-color:rgba(105,167,255,.30);
+  background:rgba(105,167,255,.10);
+  color:#b9d8ff;
+}
+.step-proof-row span{
+  font-family:var(--font-ui);
+}
+.step-proof-row span::after{
+  background:var(--accent2);
+  box-shadow:0 0 12px rgba(142,216,255,.34);
+}
+.wizard[data-layout="one-screen"] .wizard-step.active{
+  scrollbar-color:rgba(105,167,255,.38) rgba(255,255,255,.05);
+}
