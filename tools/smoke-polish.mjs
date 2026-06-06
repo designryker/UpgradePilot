@@ -161,18 +161,21 @@ assert.ok(
   ANALYSIS_SEQUENCE_MS >= 2000 && ANALYSIS_SEQUENCE_MS <= 3000,
   'analysis sequence should feel brief, between 2s and 3s'
 );
+assert.ok(ANALYSIS_SEQUENCE_MS >= 2800, 'analysis should remain visible long enough to feel deliberate');
 const enAnalysisMessages = getAnalysisMessages('en');
 const trAnalysisMessages = getAnalysisMessages('tr');
 assert.ok(enAnalysisMessages.length >= 6, 'English analysis sequence should have enough message variety');
 assert.ok(trAnalysisMessages.length >= 6, 'Turkish analysis sequence should have enough message variety');
-assert.ok(enAnalysisMessages.includes('Analyzing your system...'));
-assert.ok(enAnalysisMessages.includes('Checking CPU and GPU balance...'));
-assert.ok(enAnalysisMessages.includes('Looking for performance bottlenecks...'));
-assert.ok(enAnalysisMessages.includes('Searching for free optimizations...'));
-assert.ok(enAnalysisMessages.includes('Building your upgrade decision...'));
-assert.ok(trAnalysisMessages.includes('Sisteminiz analiz ediliyor...'));
-assert.ok(trAnalysisMessages.includes('CPU ve GPU dengesi kontrol ediliyor...'));
-assert.ok(trAnalysisMessages.includes('Yükseltme kararınız hazırlanıyor...'));
+assert.ok(enAnalysisMessages.includes('Reading your system profile and performance goals...'));
+assert.ok(enAnalysisMessages.includes('Comparing CPU and GPU balance for your target...'));
+assert.ok(enAnalysisMessages.includes('Checking memory, storage, cooling, and power limits...'));
+assert.ok(enAnalysisMessages.includes('Looking for practical free optimizations before buying...'));
+assert.ok(enAnalysisMessages.includes('Building your prioritized upgrade decision...'));
+assert.ok(trAnalysisMessages.includes('Sistem profiliniz ve performans hedefleriniz okunuyor...'));
+assert.ok(trAnalysisMessages.includes('Hedefiniz icin CPU ve GPU dengesi karsilastiriliyor...'));
+assert.ok(enAnalysisMessages.every(message => message.length >= 44), 'English analysis messages should explain meaningful diagnostic work');
+assert.ok(trAnalysisMessages.includes('Önceliklendirilmiş yükseltme kararınız hazırlanıyor...'));
+assert.ok(trAnalysisMessages.every(message => message.length >= 44), 'Turkish analysis messages should explain meaningful diagnostic work');
 assert.equal(enAnalysisMessages.some(message => /^loading/i.test(message)), false);
 assert.equal(enAnalysisMessages.some(message => /parts|shopping/i.test(message)), false);
 assert.ok(indexSource.includes('id="analysis-message"'), 'loading card should expose a dynamic analysis message node');
@@ -185,6 +188,16 @@ assert.ok(
   appSource.includes('onRerun: () => analyze()'),
   'result rerun should use the normal loading sequence through the modular app entry'
 );
+assert.equal(
+  /(?:^|\n)\s*latestResultSummary\s*=/.test(analyzeSource),
+  false,
+  'modular analyze should not assign imported result state directly'
+);
+assert.ok(
+  analyzeSource.includes('setLatestResultSummary(['),
+  'modular analyze should save the result summary through the state setter'
+);
+assert.ok(styleSource.includes('Analysis sequence stability for longer diagnostic messages'), 'longer analysis messages should have stable layout styling');
 assert.ok(
   /if \(!skipLoading\) \{[\s\S]*goToWizardStep\(WIZARD_STEPS\.length - 2, false\);[\s\S]*startAnalysisSequence\(\(\) => analyze\(true\)\);/.test(mainSource),
   'normal analysis should move back to the budget/loading step before showing the loader'

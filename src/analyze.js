@@ -1769,7 +1769,7 @@ export function analyze(skipLoading) {
   el('final-box').className = 'final-box ' + finalCls;
   el('fi').innerHTML        = finalIco;
   el('ft').textContent      = finalSent;
-  latestResultSummary = [
+  setLatestResultSummary([
     'UpgradePilot Result',
     'System health: ' + diagnostics.systemScore + '/100',
     'Main issue: ' + diagnostics.bottleneckLabel,
@@ -1788,7 +1788,7 @@ export function analyze(skipLoading) {
     'RAM: ' + ramGB + 'GB ' + ramType.toUpperCase(),
     'Target: ' + resLabel + ' / ' + hz + 'Hz / ' + gameLabel,
     'Use UpgradePilot to validate before spending.'
-  ].join('\n');
+  ].join('\n'));
   setCopyButtonState(false);
 
   // Reset accordion: sec 03 open, 04-08 closed each run

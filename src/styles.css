@@ -2897,3 +2897,17 @@ body{
 .wizard[data-layout="one-screen"] .wizard-step.active{
   scrollbar-color:rgba(105,167,255,.38) rgba(255,255,255,.05);
 }
+
+/* Analysis sequence stability for longer diagnostic messages. */
+.loading-card{
+  min-height:150px;
+}
+.load-copy{
+  min-height:3.25em;
+  max-width:64ch;
+  text-wrap:pretty;
+}
+@keyframes diagnosticPulse{
+  from{border-color:rgba(105,167,255,.16)}
+  to{border-color:rgba(142,216,255,.28)}
+}
