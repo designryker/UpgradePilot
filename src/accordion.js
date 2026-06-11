@@ -13,9 +13,9 @@ export function initAccordion() {
   resultCard.dataset.accordionBound = 'true';
 
   resultCard.addEventListener('click', event => {
-    const toggle = event.target.closest('.r-sec-toggle');
+    const toggle = event.target.closest('.r-sec-toggle, .rs-label-toggle, .rc-toggle');
     if (!toggle) return;
-    const sec = toggle.closest('.r-sec-collapsible');
+    const sec = toggle.closest('.r-sec-collapsible, .rc-accordion');
     if (!sec) return;
     sec.dataset.accordion = sec.dataset.accordion === 'open' ? 'closed' : 'open';
   });
@@ -39,9 +39,13 @@ export function openResultSection(number) {
  * Section 03 opens; all others close.
  */
 export function resetAccordionState() {
+  // rc-accordion — tümü kapalı başlar
+  document.querySelectorAll('.rc-accordion').forEach(sec => {
+    sec.dataset.accordion = 'closed';
+  });
+  // r-sec-collapsible — tümü kapalı
   document.querySelectorAll('.r-sec-collapsible').forEach(sec => {
-    const num = sec.querySelector('.r-num')?.textContent?.trim();
-    sec.dataset.accordion = (num === '03') ? 'open' : 'closed';
+    sec.dataset.accordion = 'closed';
   });
 }
 

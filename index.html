@@ -8,23 +8,42 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* FOUC prevention — hide until CSS loads */
+      html { background: #0b0f16; }
+      body { opacity: 0; transition: opacity .18s ease; }
+      body.ready { opacity: 1; }
+    </style>
   </head>
   <body autocomplete="off">
 <div class="container app-shell">
 
 <header>
   <div class="hero-copy">
-  <div class="lang-switch">
-    <label for="lang" data-i18n="languageLabel">Language</label>
-    <select id="lang" data-action="set-language" autocomplete="off">
-      <option value="en" selected>English</option>
-      <option value="tr">Türkçe</option>
-    </select>
-  </div>
-  <div class="eyebrow" data-i18n="eyebrow">// v0.4.0 — PC Upgrade Advisor</div>
-  <h1>Upgrade<span class="accent">Pilot</span><span class="dim">.</span></h1>
-  <div class="tagline" data-i18n="tagline">Know what to upgrade before you spend.</div>
-  <p class="subtitle" data-i18n-html="subtitle">Enter your current PC. UpgradePilot helps you decide what to optimize for free, what is worth upgrading, and what not to buy.</p>
+
+    <div class="hero-topbar">
+      <div class="lang-switch">
+        <label for="lang" data-i18n="languageLabel">Language</label>
+        <select id="lang" data-action="set-language" autocomplete="off">
+          <option value="en" selected>English</option>
+          <option value="tr">Türkçe</option>
+        </select>
+      </div>
+      <div class="hero-version-badge" data-i18n="versionBadge">PC Upgrade Advisor</div>
+    </div>
+
+    <h1 class="hero-h1" data-i18n-html="heroH1">Stop guessing which <span class="accent">upgrade</span> matters.</h1>
+
+    <p class="hero-sub" data-i18n="heroSub">Enter your CPU, GPU, and settings. Get a bottleneck diagnosis, free fixes, and a ranked upgrade priority — in 60 seconds.</p>
+
+    <a href="#wizard" class="hero-cta" data-i18n="heroCta">Diagnose My PC →</a>
+
+    <div class="hero-trust">
+      <span data-i18n="trustFree">✓ Free</span>
+      <span data-i18n="trustNoAccount">✓ No account</span>
+      <span data-i18n="trustNoInstall">✓ No install</span>
+    </div>
+
   </div>
   <div class="pc-visual" id="pc-visual" data-active-part="system" aria-hidden="true">
     <div class="pc-visual-top">
@@ -75,28 +94,43 @@
 <div class="g3">
   <div class="field" data-pc-part="system" data-pc-label="System type">
     <label data-i18n="systemType">System Type</label>
-    <select id="system-type" autocomplete="off">
-      <option value="desktop" selected data-i18n="desktopPc">Desktop PC</option>
+    <div class="tg-group" data-tg-id="system-type">
+        <button type="button" class="tg-btn" data-tg-target="system-type" data-tg-val="desktop">Desktop PC</button>
+        <button type="button" class="tg-btn" data-tg-target="system-type" data-tg-val="laptop">Gaming Laptop</button>
+      </div>
+      <select id="system-type" autocomplete="off" style="display:none">
+      <option value="" disabled selected>— Select —</option>
+      <option value="desktop" data-i18n="desktopPc">Desktop PC</option>
       <option value="laptop" data-i18n="gamingLaptop">Gaming Laptop</option>
     </select>
   </div>
-  <div class="field advanced-field desktop-only">
-    <label data-i18n="cpuCooling">CPU Cooling</label>
-    <select id="cpu-cooler" autocomplete="off">
+  <div class="field advanced-field" data-pc-part="system" data-pc-label="Windows settings">
+    <label data-i18n="windowsVersion">Windows Version</label>
+    <div class="tg-group" data-tg-id="os-version">
+        <button type="button" class="tg-btn" data-tg-target="os-version" data-tg-val="unknown">I don't know</button>
+        <button type="button" class="tg-btn" data-tg-target="os-version" data-tg-val="win10">Windows 10</button>
+        <button type="button" class="tg-btn" data-tg-target="os-version" data-tg-val="win11">Windows 11</button>
+        <button type="button" class="tg-btn" data-tg-target="os-version" data-tg-val="other">Linux / Other</button>
+      </div>
+      <select id="os-version" autocomplete="off" style="display:none">
+      <option value="" disabled selected>— Select —</option>
       <option value="unknown" data-i18n="dontKnow">I don't know</option>
-      <option value="stock" data-i18n="stockCooler">Stock / boxed cooler</option>
-      <option value="basic_air" data-i18n="basicAir">Basic air cooler</option>
-      <option value="tower_air" selected data-i18n="towerAir">Tower air cooler</option>
-      <option value="aio_120" data-i18n="aio120">120mm liquid cooler</option>
-      <option value="aio_240" data-i18n="aio240">240mm liquid cooler</option>
-      <option value="aio_360" data-i18n="aio360">360mm liquid cooler</option>
+      <option value="win10">Windows 10</option>
+      <option value="win11">Windows 11</option>
+      <option value="other" data-i18n="otherOs">Other / Linux</option>
     </select>
-    <div class="field-hint" data-i18n="coolingHint">Strong CPUs need enough cooling to hold boost clocks.</div>
   </div>
   <div class="field" data-pc-part="system" data-pc-label="Storage focus">
     <label><span data-i18n="gameDrive">Game Drive</span><span class="field-help" tabindex="0">?<span class="field-popover">HDD installs can cause longer loads and stutter. SSD/NVMe is safer for modern games.</span></span></label>
-    <select id="game-drive" autocomplete="off">
-      <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
+    <div class="tg-group" data-tg-id="game-drive">
+        <button type="button" class="tg-btn" data-tg-target="game-drive" data-tg-val="unknown">I don't know</button>
+        <button type="button" class="tg-btn" data-tg-target="game-drive" data-tg-val="hdd">HDD</button>
+        <button type="button" class="tg-btn" data-tg-target="game-drive" data-tg-val="sata_ssd">SATA SSD</button>
+        <button type="button" class="tg-btn" data-tg-target="game-drive" data-tg-val="nvme">NVMe SSD</button>
+      </div>
+      <select id="game-drive" autocomplete="off" style="display:none">
+      <option value="" disabled selected>— Select —</option>
+      <option value="unknown" data-i18n="dontKnow">I don't know</option>
       <option value="hdd">HDD</option>
       <option value="sata_ssd">SATA SSD</option>
       <option value="nvme">NVMe SSD</option>
@@ -104,14 +138,18 @@
   </div>
 </div>
 <div class="g2b">
-  <div class="field advanced-field" data-pc-part="system" data-pc-label="Windows settings">
-    <label data-i18n="windowsVersion">Windows Version</label>
-    <select id="os-version" autocomplete="off">
+  <div class="field advanced-field desktop-only" data-pc-part="system" data-pc-label="CPU cooling">
+    <label data-i18n="cpuCooling">CPU Cooling</label>
+    <select id="cpu-cooler" autocomplete="off">
       <option value="unknown" selected data-i18n="dontKnow">I don't know</option>
-      <option value="win10">Windows 10</option>
-      <option value="win11">Windows 11</option>
-      <option value="other" data-i18n="otherOs">Other / Linux</option>
+      <option value="stock" data-i18n="stockCooler">Stock / boxed cooler</option>
+      <option value="basic_air" data-i18n="basicAir">Basic air cooler</option>
+      <option value="tower_air" data-i18n="towerAir">Tower air cooler</option>
+      <option value="aio_120" data-i18n="aio120">120mm liquid cooler</option>
+      <option value="aio_240" data-i18n="aio240">240mm liquid cooler</option>
+      <option value="aio_360" data-i18n="aio360">360mm liquid cooler</option>
     </select>
+    <div class="field-hint" data-i18n="coolingHint">Strong CPUs need enough cooling to hold boost clocks.</div>
   </div>
 </div>
 
@@ -120,9 +158,10 @@
   <div class="field" data-pc-part="system" data-pc-label="Performance goal">
     <label data-i18n="secondaryGoal">Current Problem</label>
     <select id="goal" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectGoal">— What's your main issue? —</option>
       <option value="none" data-i18n="goalNone">No specific problem</option>
       <option value="fps" data-i18n="goalFps">I cannot hold 60 FPS at 4K/1440p</option>
-      <option value="visuals" selected data-i18n="goalVisuals">I want higher graphics without big FPS drops</option>
+      <option value="visuals" data-i18n="goalVisuals">I want higher graphics without big FPS drops</option>
       <option value="smooth" data-i18n="goalSmooth">Stutter / FPS drops / 1% lows</option>
       <option value="latency" data-i18n="goalLatency">Input delay feels high</option>
       <option value="stream" data-i18n="goalStream">Streaming or recording hurts performance</option>
@@ -138,9 +177,10 @@
   <div class="field" data-pc-part="system" data-pc-label="Game profile">
     <label data-i18n="gameFocus">Primary Game Focus</label>
     <select id="game" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectGame">— Select game type —</option>
       <option value="compfps" data-i18n="gameCompfps">Competitive FPS (CS2, Valorant)</option>
       <option value="mmorpg" data-i18n="gameMmorpg">MMORPG</option>
-      <option value="aaa" selected data-i18n="gameAaa">AAA / Open World</option>
+      <option value="aaa" data-i18n="gameAaa">AAA / Open World</option>
       <option value="battle" data-i18n="gameBattle">Battle Royale (Warzone, Fortnite)</option>
       <option value="sim" data-i18n="gameSim">Simulation / Strategy</option>
       <option value="racing" data-i18n="gameRacing">Racing / Flight Sim</option>
@@ -149,10 +189,16 @@
       <option value="mixed" data-i18n="gameMixed">General Mixed Gaming</option>
     </select>
   </div>
-  <div class="field">
+  <div class="field" data-pc-part="system" data-pc-label="Resolution">
     <label data-i18n="resolution">Resolution</label>
-    <select id="res" autocomplete="off">
-      <option value="1080" selected>1080p</option>
+    <div class="tg-group" data-tg-id="res">
+        <button type="button" class="tg-btn" data-tg-target="res" data-tg-val="1080">1080p</button>
+        <button type="button" class="tg-btn" data-tg-target="res" data-tg-val="1440">1440p</button>
+        <button type="button" class="tg-btn" data-tg-target="res" data-tg-val="4k">4K</button>
+      </div>
+      <select id="res" autocomplete="off" style="display:none">
+      <option value="" disabled selected>— Select —</option>
+      <option value="1080">1080p</option>
       <option value="1440">1440p</option>
       <option value="4k">4K</option>
     </select>
@@ -160,11 +206,18 @@
       <button type="button" class="mini-btn" data-action="detect-display" data-i18n="detectDisplay">Apply Browser Resolution</button>
     </div>
   </div>
-  <div class="field">
-    <label data-i18n="refreshRate">Refresh Rate</label>
-    <select id="hz" autocomplete="off">
+  <div class="field" data-pc-part="system" data-pc-label="Refresh rate">
+    <label data-i18n="refreshRate">Expected Refresh Rate</label>
+    <div class="tg-group" data-tg-id="hz">
+        <button type="button" class="tg-btn" data-tg-target="hz" data-tg-val="60">60 Hz</button>
+        <button type="button" class="tg-btn" data-tg-target="hz" data-tg-val="144">144 Hz</button>
+        <button type="button" class="tg-btn" data-tg-target="hz" data-tg-val="165">165–240 Hz</button>
+        <button type="button" class="tg-btn" data-tg-target="hz" data-tg-val="360">240 Hz+</button>
+      </div>
+      <select id="hz" autocomplete="off" style="display:none">
+      <option value="" disabled selected>— Select —</option>
       <option value="60">60 Hz</option>
-      <option value="144" selected>144 Hz</option>
+      <option value="144">144 Hz</option>
       <option value="165">165 – 240 Hz</option>
       <option value="360">240 Hz+</option>
     </select>
@@ -200,6 +253,7 @@
       <button type="button" class="quick-chip" data-quick-pick="cpu" data-value="i5_10400f">i5-10400F</button>
     </div>
     <select id="cpu" data-action="update-memory-compatibility" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectCpu">— Select your CPU —</option>
       <optgroup label="AMD Ryzen 3000 / 5000 (AM4)">
         <option value="r5_1600">Ryzen 5 1600</option>
         <option value="r5_2600">Ryzen 5 2600</option>
@@ -252,7 +306,7 @@
         <option value="i5_8600k">Intel i5-8600K</option>
         <option value="i7_8700">Intel i7-8700</option>
         <option value="i7_8700k">Intel i7-8700K</option>
-        <option value="i5_9400f" selected>Intel i5-9400F</option>
+        <option value="i5_9400f">Intel i5-9400F</option>
         <option value="i5_9600k">Intel i5-9600K</option>
         <option value="i7_9700k">Intel i7-9700K</option>
         <option value="i9_9900k">Intel i9-9900K</option>
@@ -312,10 +366,15 @@
         <option value="r9_7940hs">Ryzen 9 7940HS Laptop</option>
       </optgroup>
     </select>
+    <div id="cpu-tier-badge" class="part-tier-badge" hidden></div>
   </div>
   <div class="field">
     <label data-i18n="currentGpu">Current GPU</label>
-    <input class="search-box" id="gpu-search" type="search" data-i18n-placeholder="gpuSearchPlaceholder" data-filter-select="gpu" placeholder="Search GPU, e.g. RTX 3060" autocomplete="off">
+    <div class="gpu-detect-row">
+      <input class="search-box" id="gpu-search" type="search" data-i18n-placeholder="gpuSearchPlaceholder" data-filter-select="gpu" placeholder="Search GPU, e.g. RTX 3060" autocomplete="off">
+      <button type="button" id="gpu-detect-btn" class="gpu-detect-btn" data-i18n="detectGpu">⚡ Detect</button>
+    </div>
+    <div id="gpu-detect-feedback" class="gpu-detect-feedback" hidden></div>
     <div class="quick-grid" id="gpu-popular">
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1050ti">GTX 1050 Ti</button>
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="gtx1060_6gb">GTX 1060</button>
@@ -325,6 +384,7 @@
       <button type="button" class="quick-chip" data-quick-pick="gpu" data-value="rtx2060">RTX 2060</button>
     </div>
     <select id="gpu" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectGpu">— Select your GPU —</option>
       <optgroup label="NVIDIA GeForce GTX / RTX 20">
         <option value="gtx970">GTX 970</option>
         <option value="gtx980ti">GTX 980 Ti</option>
@@ -338,7 +398,7 @@
         <option value="gtx1650">GTX 1650</option>
         <option value="gtx1650s">GTX 1650 Super</option>
         <option value="gtx1660">GTX 1660</option>
-        <option value="gtx1660s" selected>GTX 1660 Super</option>
+        <option value="gtx1660s">GTX 1660 Super</option>
         <option value="gtx1660ti">GTX 1660 Ti</option>
         <option value="rtx2060">RTX 2060</option>
         <option value="rtx2060s">RTX 2060 Super</option>
@@ -433,6 +493,7 @@
         <option value="rx7600s">Radeon RX 7600S Laptop</option>
       </optgroup>
     </select>
+    <div id="gpu-tier-badge" class="part-tier-badge" hidden></div>
   </div>
 </div>
 
@@ -444,8 +505,9 @@
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="ramCapacity">RAM Capacity</span><span class="field-help" tabindex="0">?<span class="field-popover">16 GB is the practical baseline. 32 GB helps heavier games and multitasking.</span></span></label>
     <select id="ram" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectRam">— Select —</option>
       <option value="8">8 GB</option>
-      <option value="16" selected>16 GB</option>
+      <option value="16">16 GB</option>
       <option value="32">32 GB</option>
       <option value="64">64 GB+</option>
     </select>
@@ -453,8 +515,13 @@
   <div class="field" data-pc-part="ram">
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="memoryType">Memory Type</span><span class="field-help" tabindex="0">?<span class="field-popover">DDR4 and DDR5 are not interchangeable. Pick what your motherboard uses.</span></span></label>
-    <select id="ram-type" data-action="update-ram-speeds" autocomplete="off">
-      <option value="ddr4" selected>DDR4</option>
+    <div class="tg-group" data-tg-id="ram-type">
+        <button type="button" class="tg-btn" data-tg-target="ram-type" data-tg-val="ddr4">DDR4</button>
+        <button type="button" class="tg-btn" data-tg-target="ram-type" data-tg-val="ddr5">DDR5</button>
+      </div>
+      <select id="ram-type" data-action="update-ram-speeds" autocomplete="off" style="display:none">
+      <option value="" disabled selected data-i18n="selectRamType">— Select —</option>
+      <option value="ddr4">DDR4</option>
       <option value="ddr5">DDR5</option>
     </select>
     <div class="compat-note" id="memory-compat-note"></div>
@@ -465,10 +532,11 @@
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="memorySpeed">Memory Speed</span><span class="field-help" tabindex="0">?<span class="field-popover">Slow RAM can hurt 1% lows. XMP/EXPO may fix rated speed for free.</span></span></label>
     <select id="ram-speed" autocomplete="off">
+      <option value="" disabled selected data-i18n="selectRamSpeed">— Select —</option>
       <option value="ddr4_2400">DDR4 2400</option>
       <option value="ddr4_2666">DDR4 2666</option>
       <option value="ddr4_3000">DDR4 3000</option>
-      <option value="ddr4_3200" selected>DDR4 3200</option>
+      <option value="ddr4_3200">DDR4 3200</option>
       <option value="ddr4_3600">DDR4 3600</option>
       <option value="ddr4_4000">DDR4 4000+</option>
     </select>
@@ -476,8 +544,13 @@
   <div class="field advanced-field" data-pc-part="ram">
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="channelMode">Memory Channel Mode</span><span class="field-help" tabindex="0">?<span class="field-popover">Dual channel improves memory bandwidth. Single channel can hurt FPS stability.</span></span></label>
-    <select id="channel" autocomplete="off">
-      <option value="dual" selected data-i18n="dualChannel">Dual Channel</option>
+    <div class="tg-group" data-tg-id="channel">
+        <button type="button" class="tg-btn" data-tg-target="channel" data-tg-val="dual">Dual channel</button>
+        <button type="button" class="tg-btn" data-tg-target="channel" data-tg-val="single">Single channel</button>
+      </div>
+      <select id="channel" autocomplete="off" style="display:none">
+      <option value="" disabled selected data-i18n="selectChannel">— Select —</option>
+      <option value="dual" data-i18n="dualChannel">Dual Channel</option>
       <option value="single" data-i18n="singleChannel">Single Channel</option>
     </select>
   </div>
@@ -498,11 +571,18 @@
 <div class="g1">
   <div class="field" data-pc-part="psu">
     <label><span data-i18n="psuWattage">PSU Wattage</span><span class="field-help" tabindex="0">?<span class="field-popover">A weak PSU can cause crashes or block a GPU upgrade.</span></span></label>
-    <div class="psu-readout">
-      <span class="field-hint" data-i18n="psuBarHint">Pick the watt value written on your PSU label.</span>
-      <span class="psu-value"><span id="psu-readout">650</span>W</span>
+    <div class="psu-unknown-row">
+      <input type="checkbox" id="psu-unknown-check" style="margin-right:.4rem;cursor:pointer">
+      <label for="psu-unknown-check" style="font-size:.8rem;color:var(--muted);cursor:pointer;text-transform:none;letter-spacing:0;margin-bottom:0" data-i18n="psuDontKnow">I don't know my PSU wattage — skip this</label>
     </div>
-    <input class="psu-bar" type="range" id="psu-watts" min="300" max="1200" step="50" value="650" data-action="update-psu-readout" autocomplete="off">
+    <div id="psu-slider-wrap">
+      <div class="psu-readout">
+        <span class="field-hint" data-i18n="psuBarHint">Pick the watt value written on your PSU label.</span>
+        <span class="psu-value"><span id="psu-readout">650</span>W</span>
+      </div>
+      <input class="psu-bar" type="range" id="psu-watts" min="300" max="1200" step="50" value="650" data-action="update-psu-readout" autocomplete="off">
+    </div>
+    <div id="psu-unknown-note" style="display:none;font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:.4rem" data-i18n="psuUnknownNote">PSU skipped — upgrade path confidence will be lower. You can still run the analysis.</div>
   </div>
 </div>
 </div>
@@ -549,147 +629,140 @@
   </section>
 
   <section class="wizard-step" data-step="result">
-    <div class="step-copy result-ready-copy">
-      <div class="step-kicker" data-i18n="resultStepKicker">04 / Result</div>
-      <h2 data-i18n="resultStepTitle">Upgrade Decision</h2>
-      <p data-i18n="resultStepCopy">Here’s what to fix before spending money.</p>
-    </div>
-    <!-- =================== RESULT =================== -->
 <div id="result">
-  <div class="r-card">
-    <div class="r-topbar">
-      <span class="r-product" data-i18n="resultProduct">UpgradePilot &middot; Analysis</span>
-      <span class="vbadge" id="vbadge"></span>
-    </div>
-    <div class="r-body">
 
-      <!-- 01 Final Decision -->
-      <div class="r-sec final-decision-section">
-        <div class="r-sec-label"><span class="r-num">01</span>&nbsp;<span data-i18n="resFinal">Final Decision</span></div>
-        <div class="diagnostic-summary" id="diagnostic-summary">
-          <div class="summary-card score-card">
-            <div class="summary-label" data-i18n="systemHealth">System Health</div>
-            <div class="score-line"><span id="system-score-value">--</span><span>/ 100</span></div>
-            <div class="summary-sub" id="system-score-note"></div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label" data-i18n="mainIssue">Main Issue</div>
-            <div class="summary-value" id="main-bottleneck-value">--</div>
-            <div class="summary-sub" id="main-bottleneck-note"></div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label" data-i18n="upgradePriority">Upgrade Priority</div>
-            <div class="summary-value" id="upgrade-priority-value">--</div>
-            <div class="summary-sub" id="upgrade-priority-note"></div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label" data-i18n="estimatedGain">Estimated Gain</div>
-            <div class="summary-value gain-value" id="estimated-gain-value">--</div>
-            <div class="summary-sub" id="estimated-gain-note"></div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label" data-i18n="confidence">Confidence</div>
-            <div class="summary-value" id="confidence-value">--</div>
-            <div class="summary-sub" id="confidence-note"></div>
-          </div>
-        </div>
-        <div class="final-box" id="final-box">
-          <span class="fi" id="fi"></span>
-          <span class="ft" id="ft"></span>
-        </div>
-        <div class="result-route">
-          <button type="button" class="route-btn route-btn-primary" id="result-free-boost" data-i18n="freeBoostStart">Start Free Boost Path</button>
-          <button type="button" class="route-btn route-btn-secondary" id="result-upgrade-jump" data-i18n="upgradeJump">Review Upgrade Options</button>
-        </div>
+  <!-- ═══ MAIN RESULT LAYOUT ══════════════════════════════════════════ -->
+  <div class="res-layout">
+
+    <!-- LEFT: Recommendation hero -->
+    <div class="res-main">
+
+      <!-- Recommended badge -->
+      <div class="res-rec-badge" id="res-rec-badge">
+        <span class="res-rec-dot"></span>
+        <span data-i18n="resRecommended">RECOMMENDED UPGRADE</span>
       </div>
 
-      <!-- 02 Best Next Upgrade + Upgrade Picks (specific part suggestions at the top) -->
-      <div class="r-sec result-upgrade-section">
-        <div class="r-sec-label"><span class="r-num">02</span>&nbsp;<span data-i18n="resBest">Best Next Upgrade</span></div>
-        <div class="upgrade-hero">
-          <div class="uicon" id="uicon"></div>
-          <div class="utext">
-            <div class="uname" id="uname"></div>
-            <div class="usub"  id="usub"></div>
-          </div>
+      <!-- Big product name -->
+      <h2 class="res-product-name" id="res-product-name">—</h2>
+
+      <!-- Description -->
+      <p class="res-product-desc" id="res-product-desc"></p>
+
+      <!-- Price -->
+      <div class="res-price-row">
+        <span class="res-price-label" data-i18n="resStartingAt">STARTING AT</span>
+        <span class="res-price" id="res-price">—</span>
+      </div>
+
+      <!-- Primary CTA -->
+      <div id="buying-action"></div>
+
+      <!-- Performance Delta -->
+      <div class="res-perf-delta" id="res-perf-delta"></div>
+
+      <!-- Tier cards: Used / Best Value / Stretch -->
+      <div class="res-tier-section">
+        <div class="res-tier-label" data-i18n="resValidatedPaths">VALIDATED UPGRADE PATHS</div>
+        <div class="res-tier-grid" id="upgrade-picks"></div>
+      </div>
+
+      <!-- Deep Technical Analysis accordion -->
+      <div class="rc-accordion res-deep-accordion" data-accordion="closed">
+        <div class="rc-toggle">
+          <span>⊞</span>
+          <span data-i18n="resDetailed">DEEP TECHNICAL ANALYSIS</span>
+          <span class="rc-chevron">&#8964;</span>
         </div>
-        <div class="why-card">
-          <div class="why-title" data-i18n="whyRecommendation">Why this recommendation?</div>
+        <div class="rc-body">
+          <div class="diagnostic-summary" id="diagnostic-summary">
+            <div class="summary-card score-card">
+              <div class="summary-label" data-i18n="systemHealth">System Health</div>
+              <div class="score-line"><span id="system-score-value">--</span><span>/ 100</span></div>
+              <div class="summary-sub" id="system-score-note"></div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label" data-i18n="mainIssue">Main Issue</div>
+              <div class="summary-value" id="main-bottleneck-value">--</div>
+              <div class="summary-sub" id="main-bottleneck-note"></div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label" data-i18n="upgradePriority">Upgrade Priority</div>
+              <div class="summary-value" id="upgrade-priority-value">--</div>
+              <div class="summary-sub" id="upgrade-priority-note"></div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label" data-i18n="estimatedGain">Estimated Gain</div>
+              <div class="summary-value gain-value" id="estimated-gain-value">--</div>
+              <div class="summary-sub" id="estimated-gain-note"></div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label" data-i18n="confidence">Confidence</div>
+              <div class="summary-value" id="confidence-value">--</div>
+              <div class="summary-sub" id="confidence-note"></div>
+            </div>
+          </div>
+          <div class="final-box" id="final-box"><span class="fi" id="fi"></span><span class="ft" id="ft"></span></div>
+          <div class="upgrade-hero"><div class="uicon" id="uicon"></div><div class="utext"><div class="uname" id="uname"></div><div class="usub" id="usub"></div></div></div>
           <div class="why-box" id="why-box"></div>
-        </div>
-        <div class="action-plan-card">
-          <div class="why-title" data-i18n="actionPlan">Action Plan</div>
           <ol class="action-plan-list" id="action-plan-list"></ol>
+          <div class="dnu-row" id="dnu-row"></div>
+          <div class="upgrade-path" id="upgrade-path"></div>
+          <div class="bench-list" id="bench-list"></div>
+          <div id="psu-result-section"><div id="psu-rec-content"></div></div>
+          <div id="budget-content"></div>
+          <div class="diag-block"><div class="diag-pill" id="diag-pill"></div><div class="diag-text" id="diag-text"></div></div>
         </div>
-        <div id="buying-action"></div>
-        <div class="path-label">Upgrade Path</div>
-        <div class="upgrade-path" id="upgrade-path"></div>
-        <!-- Specific part/GPU cards rendered here at the top of results -->
-        <div id="upgrade-picks"></div>
       </div>
 
-      <!-- 03 Free Performance Fixes -->
-      <div class="r-sec r-sec-collapsible" data-accordion="open">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">03</span>&nbsp;<span data-i18n="resFreeFixes">Free Performance Fixes</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner">
-          <div class="free-boost-panel">
-            <div>
-              <div class="free-boost-kicker" data-i18n="freeBoostKicker">Optimize First</div>
-              <h3 data-i18n="freeBoostTitle">Quick checks before buying.</h3>
-              <p data-i18n="freeBoostCopy">Apply the relevant fixes, test again, then judge the upgrade.</p>
-            </div>
-            <div class="free-boost-meter" aria-live="polite">
-              <span id="free-boost-count">0/0</span>
-              <div class="free-boost-track"><div id="free-boost-progress"></div></div>
-            </div>
-          </div>
-          <div class="checklist" id="checklist"></div>
-          <div class="free-boost-footer">
-            <span data-i18n="freeBoostFooter">Finished the quick checks?</span>
-            <button type="button" class="mini-action-btn" id="free-boost-review" data-i18n="freeBoostReview">Review upgrade recommendation</button>
-          </div>
-        </div></div>
+    </div><!-- /res-main -->
+
+    <!-- RIGHT: Sidebar -->
+    <div class="res-sidebar">
+
+      <!-- Free performance boosts -->
+      <div class="res-sidebar-card res-boosts-card">
+        <div class="res-sidebar-header">
+          <span class="res-sidebar-icon">⚡</span>
+          <span data-i18n="resFreeBoosts">FREE PERFORMANCE BOOSTS</span>
+        </div>
+        <p class="res-boosts-desc" data-i18n="resFreeBoostsDesc">Immediate optimizations detected for your current setup. Apply these before purchasing any hardware.</p>
+        <div id="result-free-wins" class="result-free-wins"></div>
+        <div class="checklist" id="checklist"></div>
+        <div class="free-boost-meter">
+          <span id="free-boost-count">0/0</span>
+          <div class="free-boost-track"><div id="free-boost-progress"></div></div>
+        </div>
       </div>
 
-      <!-- 04 Before You Buy: Validate -->
-      <div class="r-sec r-sec-collapsible" data-accordion="closed">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">04</span>&nbsp;<span data-i18n="resValidate">Before You Buy: Validate the Bottleneck</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div class="bench-list" id="bench-list"></div></div></div>
+      <!-- Installation roadmap -->
+      <div class="res-sidebar-card res-roadmap-card">
+        <div class="res-sidebar-header">
+          <span data-i18n="resInstallRoadmap">INSTALLATION ROADMAP</span>
+        </div>
+        <div id="res-install-roadmap" class="res-install-roadmap"></div>
       </div>
 
-      <!-- 05 PSU -->
-      <div class="r-sec r-sec-collapsible" id="psu-result-section" data-accordion="closed">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">05</span>&nbsp;<span data-i18n="resPsu">Recommended PSU for Next GPU Tier</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div id="psu-rec-content"></div></div></div>
+      <!-- Diagnostic telemetry -->
+      <div class="res-sidebar-card res-telemetry-card">
+        <div class="res-sidebar-header">
+          <span data-i18n="resDiagTelemetry">DIAGNOSTIC TELEMETRY</span>
+        </div>
+        <div id="result-health-cards" class="result-health-cards res-telemetry-grid"></div>
       </div>
 
-      <!-- 06 Budget & Options -->
-      <div class="r-sec r-sec-collapsible" data-accordion="closed">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">06</span>&nbsp;<span data-i18n="resBudget">Budget Fit &amp; Estimated Price Range</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div id="budget-content"></div></div></div>
-      </div>
+    </div><!-- /res-sidebar -->
 
-      <!-- 07 Do Not Buy -->
-      <div class="r-sec r-sec-collapsible" data-accordion="closed">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">07</span>&nbsp;<span data-i18n="resDnu">Do Not Buy First</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div class="dnu-row" id="dnu-row"></div></div></div>
-      </div>
+  </div><!-- /res-layout -->
 
-      <!-- 08 Performance Diagnosis -->
-      <div class="r-sec r-sec-collapsible" data-accordion="closed">
-        <div class="r-sec-label r-sec-toggle"><span class="r-sec-label-inner"><span class="r-num">08</span>&nbsp;<span data-i18n="resPerformance">Performance Diagnosis</span></span><span class="r-chevron">&#8964;</span></div>
-        <div class="r-sec-body"><div class="r-sec-inner"><div class="diag-block"><div class="diag-pill" id="diag-pill"></div><div class="diag-text" id="diag-text"></div></div></div></div>
-      </div>
-
-    </div>
+  <!-- Result actions -->
+  <div class="result-actions">
+    <button type="button" class="wizard-btn wizard-btn-secondary" id="result-copy" data-i18n="copyResultBtn">Copy Result</button>
+    <button type="button" class="wizard-btn wizard-btn-secondary" id="result-adjust" data-i18n="changeInputsBtn">Change Inputs</button>
+    <button type="button" class="wizard-btn wizard-btn-primary" id="result-rerun" data-i18n="runAgainBtn">Run Again</button>
   </div>
-</div>
-    <div class="result-actions">
-      <button type="button" class="wizard-btn wizard-btn-secondary" id="result-copy" data-i18n="copyResultBtn">Copy Result</button>
-      <button type="button" class="wizard-btn wizard-btn-secondary" id="result-adjust" data-i18n="changeInputsBtn">Change Inputs</button>
-      <button type="button" class="wizard-btn wizard-btn-primary" id="result-rerun" data-i18n="runAgainBtn">Run Again</button>
-    </div>
 
+</div>
   </section>
 
   <div class="wizard-actions" id="wizard-actions">

@@ -5,16 +5,29 @@
 import { CPU_SCORE, GPU_SCORE, GPU_ENC, PRICE_TR, PRICE_USD, psuMaxGpu, ramSpeedTier } from './parts-data.js';
 import { I18N } from './i18n.js';
 import { getBiosRecommendation } from './recommendation-helpers.js';
-import { el, inTr, clamp, groupLabel } from './utils.js';
+import { el, inTr, clamp, groupLabel, safeEl, showAnalysisError } from './utils.js';
 import { currentLang, setLatestResultSummary } from './state.js';
-import { WIZARD_STEPS, goToWizardStep, showResultStep } from './wizard.js';
+import { WIZARD_STEPS, goToWizardStep } from './wizard.js';
 import { clearAnalysisSequence, startAnalysisSequence } from './analysis-loader.js';
 import { setVirtualPcPart } from './ui-parts.js';
 import { updateFreeBoostProgress } from './free-boost.js';
 import { resetAccordionState } from './accordion.js';
 import { setCopyButtonState } from './copy-result.js';
+import { showResultPage } from './result-page.js';
 
 export function analyze(skipLoading) {
+  try {
+    _analyze(skipLoading);
+  } catch (err) {
+    console.error('[UpgradePilot] analyze() threw an unhandled error:', err);
+    clearAnalysisSequence();
+    showAnalysisError(
+      'Something went wrong during analysis. Please refresh and try again.'
+    );
+  }
+}
+
+function _analyze(skipLoading) {
   if (!skipLoading) {
     const loader = el('loading-card');
     const result = el('result');
@@ -28,38 +41,74 @@ export function analyze(skipLoading) {
   const loader = el('loading-card');
   if (loader) loader.classList.remove('show', 'is-analyzing');
 
-  // ── Read inputs ──
-  const cpuKey   = el('cpu').value;
-  const gpuKey   = el('gpu').value;
-  const ramGB    = parseInt(el('ram').value);         // 8|16|32|64
-  const ramType  = el('ram-type').value;              // 'ddr4' | 'ddr5'
-  const ramSpVal = el('ram-speed').value;             // e.g. 'ddr4_3200', 'unknown', 'slow'
-  const channel  = el('channel').value;               // dual|single|unknown
-  const psuW     = parseInt(el('psu-watts').value)||0;
-  const psuEff   = el('psu-eff') ? el('psu-eff').value : 'unknown';
-  const systemType = el('system-type').value;
-  const cpuCooler  = el('cpu-cooler').value;
-  const gameDrive  = el('game-drive').value;
-  const osVersion  = el('os-version').value;
-  // XMP/EXPO and slot placement not in form this version — kept as placeholders for future logic
-  // const xmp   = 'unknown';  // future: re-enable if form field is added back
-  // const slots = 'unknown';  // future: re-enable if form field is added back
-  // PSU connector not in form — noted for future
-  // const psuConn = 'unknown';
-  const res      = el('res').value;
-  const hz       = parseInt(el('hz').value);
-  const game     = el('game').value;
-  const goal     = el('goal').value;
-  const budgetN  = parseFloat(el('budget').value)||0;
-  const currency = el('currency').value;
+  // ── Read inputs — guard all element accesses ──
+  const cpuEl = safeEl('cpu');
+  const gpuEl = safeEl('gpu');
+  const ramEl = safeEl('ram');
+  const resEl = safeEl('res');
+  const hzEl  = safeEl('hz');
+
+  if (!cpuEl || !gpuEl || !ramEl || !resEl || !hzEl) {
+    showAnalysisError('Required form elements are missing. Please refresh the page.');
+    return;
+  }
+
+  // ── Placeholder / empty selection guard ──
+  if (!cpuEl.value) {
+    showAnalysisError('Please select your CPU before running the analysis.');
+    return;
+  }
+  if (!gpuEl.value) {
+    showAnalysisError('Please select your GPU before running the analysis.');
+    return;
+  }
+  if (!ramEl.value) {
+    showAnalysisError('Please select your RAM capacity before running the analysis.');
+    return;
+  }
+
+  const cpuKey   = cpuEl.value;
+  const gpuKey   = gpuEl.value;
+  const ramGB    = parseInt(ramEl.value);
+  const ramType  = el('ram-type')?.value  || 'ddr4';
+  const ramSpVal = el('ram-speed')?.value || 'unknown';
+  const channel  = el('channel')?.value   || 'dual';
+  const psuW     = parseInt(el('psu-watts')?.value) || 0;
+  const psuEff   = el('psu-eff')?.value   || 'unknown';
+  const systemType = el('system-type')?.value  || 'desktop';
+  const cpuCooler  = el('cpu-cooler')?.value   || 'unknown';
+  const gameDrive  = el('game-drive')?.value   || 'unknown';
+  const osVersion  = el('os-version')?.value   || 'win11';
+  const res      = resEl.value;
+  const hz       = parseInt(hzEl.value) || 60;
+  const game     = el('game')?.value     || 'mixed';
+  const goal     = el('goal')?.value     || 'fps';
+  const budgetN  = parseFloat(el('budget')?.value) || 0;
+  const currency = el('currency')?.value || 'usd';
+
+  // ── Validate score lookups — unknown keys produce NaN everywhere ──
+  const cpuSc = CPU_SCORE[cpuKey];
+  const gpuSc = GPU_SCORE[gpuKey];
+
+  if (cpuSc === undefined) {
+    showAnalysisError(
+      'Unrecognized CPU selected (' + cpuKey + '). ' +
+      'Please choose a CPU from the dropdown list.'
+    );
+    return;
+  }
+  if (gpuSc === undefined) {
+    showAnalysisError(
+      'Unrecognized GPU selected (' + gpuKey + '). ' +
+      'Please choose a GPU from the dropdown list.'
+    );
+    return;
+  }
   const USD_TRY_ROUGH_RATE = 45.93;
   const TRY_RETAIL_BUFFER = 1.28;
   const TRY_VALUE_BUFFER = 0.92;
   const TRY_USED_FACTOR = 0.72;
 
-  // ── Derived values ──
-  const cpuSc     = CPU_SCORE[cpuKey];
-  const gpuSc     = GPU_SCORE[gpuKey];
   const enc       = GPU_ENC[gpuKey];
   const ramSpd    = ramSpeedTier(ramSpVal);  // 0 to 3
   const hiHz      = hz >= 144;
@@ -132,29 +181,57 @@ export function analyze(skipLoading) {
       };
     }
     if (best.key === 'gpu') {
-      const target = res === '4k' ? 9 : res === '1440' ? 8 : hz >= 165 ? 7 : 6;
+      // Estimate the impact of moving from the current GPU class to a sensible target class.
+      // The old logic capped even huge GPU jumps at +18% to +35%, which made upgrades like
+      // GTX 1060 -> high 1440p GPU look unrealistically weak.
+      let target = res === '4k' ? 9 : res === '1440' ? 8 : hz >= 165 ? 7 : 6;
+      if (budgetUSD >= 680) target = Math.max(target, 9);
+      else if (budgetUSD >= 420) target = Math.max(target, 8);
+      else if (budgetUSD >= 200) target = Math.max(target, 6);
+      if (goal === 'visuals' || goal === 'future') target = Math.min(10, target + 1);
+
       const gap = Math.max(1, target - gpuSc);
-      const large = gap >= 3 || (gpuSc <= 4 && (is1440 || is4k));
-      const medium = gap >= 2 || gpuSc <= 6 || goal === 'visuals';
-      const low = large ? 18 : medium ? 8 : 3;
-      const high = large ? 35 : medium ? 18 : 8;
+      let low, high;
+      if (gap >= 6)      { low = 150; high = 280; }
+      else if (gap === 5) { low = 120; high = 220; }
+      else if (gap === 4) { low = 90;  high = 170; }
+      else if (gap === 3) { low = 60;  high = 120; }
+      else if (gap === 2) { low = 35;  high = 70;  }
+      else                { low = 15;  high = 35;  }
+
+      // CPU-heavy sims/high-refresh targets can limit average FPS scaling, especially on older CPUs.
+      if ((game === 'sim' || game === 'racing' || hiHz) && cpuSc <= 4 && gap >= 4) {
+        low = Math.max(45, Math.round(low * 0.75));
+        high = Math.max(90, Math.round(high * 0.8));
+      }
+
+      const massive = gap >= 4;
       return {
         label: formatGainRange(low, high),
-        cls: large ? 'c-hi' : 'c-mid',
-        note: inTr('Rough estimate if the GPU is the confirmed limiter; validate with benchmarks first.', 'GPU gercek sinirlayiciysa yaklasik tahmin; once benchmark ile dogrula.')
+        cls: massive || gap >= 3 ? 'c-hi' : 'c-mid',
+        note: inTr(
+          'Potential gaming uplift versus the current GPU class. CPU-heavy games, settings, and the exact GPU choice can move this range.',
+          'Mevcut GPU sınıfına göre potansiyel oyun kazanımı. CPU ağırlıklı oyunlar, ayarlar ve seçilecek GPU bu aralığı değiştirebilir.'
+        )
       };
     }
     if (best.key === 'cpu') {
-      const target = (game === 'compfps' || goal === 'latency' || hz >= 165) ? 9 : 8;
+      let target = (game === 'compfps' || game === 'sim' || goal === 'latency' || hz >= 165) ? 9 : 8;
+      if (budgetUSD >= 500) target = Math.max(target, 9);
       const gap = Math.max(1, target - cpuSc);
-      const large = gap >= 3 || (cpuGpuGap >= 3 && hiHz);
-      const medium = gap >= 2 || hiHz || game === 'compfps' || goal === 'latency';
-      const low = large ? 18 : medium ? 8 : 3;
-      const high = large ? 35 : medium ? 18 : 8;
+      let low, high;
+      if (gap >= 5)      { low = 60; high = 130; }
+      else if (gap === 4) { low = 45; high = 95;  }
+      else if (gap === 3) { low = 30; high = 70;  }
+      else if (gap === 2) { low = 15; high = 40;  }
+      else                { low = 5;  high = 20;  }
       return {
         label: formatGainRange(low, high),
-        cls: large ? 'c-hi' : 'c-mid',
-        note: inTr('Rough estimate for CPU-limited games, high-Hz play, or 1% lows.', 'CPU sinirli oyunlarda, yuksek Hz hedefinde veya 1% low tarafinda yaklasik tahmin.')
+        cls: gap >= 3 ? 'c-hi' : 'c-mid',
+        note: inTr(
+          'Mostly affects CPU-limited games, high-Hz targets, frame pacing, and 1% lows; average FPS may scale less in GPU-limited games.',
+          'Daha çok CPU sınırlı oyunları, yüksek Hz hedefini, frame pacing ve 1% low değerlerini etkiler; GPU sınırlı oyunlarda ortalama FPS daha az artabilir.'
+        )
       };
     }
     if (best.key === 'ramcap') {
@@ -420,7 +497,7 @@ export function analyze(skipLoading) {
      01 — PERFORMANCE DIAGNOSIS
      ============================================================ */
   const isTr = currentLang === 'tr';
-  const resLabel  = {'1080':'1080p','1440':'1440p','4k':'4K'}[res];
+  const resLabel  = {'1080':'1080p','1440':'1440p','4k':'4K'}[res] || res || '1080p';
   const gameLabel = (isTr ? {
     compfps:'rekabetçi FPS', mmorpg:'MMORPG', aaa:'AAA / açık dünya',
     battle:'battle royale', sim:'simülasyon / strateji', racing:'yarış / uçuş simülasyonu',
@@ -429,7 +506,7 @@ export function analyze(skipLoading) {
     compfps:'competitive FPS', mmorpg:'MMORPG', aaa:'AAA / open-world',
     battle:'battle royale', sim:'simulation / strategy', racing:'racing / flight sim',
     modded:'modded games', stream:'streaming', mixed:'general gaming'
-  })[game];
+  })[game] || inTr('general gaming', 'genel oyun');
   const cpuName = el('cpu').selectedOptions[0].text;
   const gpuName = el('gpu').selectedOptions[0].text;
 
@@ -655,18 +732,27 @@ export function analyze(skipLoading) {
   }
 
 
-  function gpuTargetTierText() {
+  function recommendedGpuTier() {
     let target = res === '4k' ? 9 : res === '1440' ? 8 : hz >= 165 ? 7 : 6;
-    target = Math.max(target, Math.min(10, gpuSc + 1));
+    if (budgetUSD >= 680) target = Math.max(target, 9);
+    else if (budgetUSD >= 420) target = Math.max(target, 8);
+    else if (budgetUSD >= 200) target = Math.max(target, 6);
+    if (goal === 'visuals' || goal === 'future') target = Math.min(10, target + 1);
+    return clamp(Math.max(target, Math.min(10, gpuSc + 1)), 6, 10);
+  }
+
+  function gpuTargetTierText() {
+    const target = recommendedGpuTier();
     const tiers = {
-      6: 'RTX 3060 Ti / RX 6700 XT class',
-      7: 'RTX 3070 / RX 7700 XT class',
+      6: 'RX 6600 / RTX 3060 class',
+      7: 'RX 6700 XT / RTX 3060 Ti / RX 7700 XT class',
       8: 'RTX 4070 / RX 7800 XT class',
       9: 'RTX 4070 Super / RTX 5070 / RX 7900 GRE class',
-      10:'RTX 4080 / RX 7900 XTX+ class'
+      10:'RTX 4080 Super / RX 7900 XTX+ class'
     };
     return tiers[target] || tiers[8];
   }
+
   function cpuTargetTierText() {
     if (game === 'compfps' || goal === 'latency' || goal === 'fps') {
       return inTr('Ryzen X3D / recent i5-i7 gaming tier', 'Ryzen X3D / güncel i5-i7 oyun seviyesi');
@@ -926,11 +1012,36 @@ export function analyze(skipLoading) {
     };
 
     let confidenceRank = 3;
-    if (diagKey === 'bal' || diagKey === 'opt' || best.score <= 2) confidenceRank = Math.min(confidenceRank, 2);
-    if (psuW === 0 && (best.key === 'gpu' || best.key === 'psu' || psuBlockUpgr)) confidenceRank -= 1;
-    if (unknownCooler && (diagKey === 'cpu' || throttleLoss.show)) confidenceRank -= 1;
-    if (gameDrive === 'unknown' && showStutter) confidenceRank -= 1;
-    if (isLaptop && best.key !== 'ramcap' && best.key !== 'ramspd') confidenceRank = Math.min(confidenceRank, 2);
+    const confidenceReasons = [];
+
+    if (diagKey === 'bal' || diagKey === 'opt' || best.score <= 2) {
+      confidenceRank = Math.min(confidenceRank, 2);
+      confidenceReasons.push(inTr('no single paid upgrade clearly dominates', 'net sekilde one cikan tek ucretli yukseltme yok'));
+    }
+    if (budgetN === 0 && best.score > 2) {
+      confidenceRank = Math.min(confidenceRank, 2);
+      confidenceReasons.push(inTr('budget not entered', 'butce girilmedi'));
+    }
+    if (psuW === 0 && (best.key === 'gpu' || best.key === 'psu' || psuBlockUpgr)) {
+      confidenceRank -= 1;
+      confidenceReasons.push(inTr('PSU wattage unknown', 'PSU watt degeri bilinmiyor'));
+    }
+    if (unknownCooler && (diagKey === 'cpu' || throttleLoss.show || best.key === 'cpu')) {
+      confidenceRank -= 1;
+      confidenceReasons.push(inTr('CPU cooler unknown', 'CPU sogutucusu bilinmiyor'));
+    }
+    if (gameDrive === 'unknown' && showStutter) {
+      confidenceRank -= 1;
+      confidenceReasons.push(inTr('game drive type unknown', 'oyun diski turu bilinmiyor'));
+    }
+    if (isLaptop && best.key !== 'ramcap' && best.key !== 'ramspd') {
+      confidenceRank = Math.min(confidenceRank, 2);
+      confidenceReasons.push(inTr('laptop thermal and upgrade limits vary', 'laptop termal ve yukseltme sinirlari degisken'));
+    }
+    if (singleChannelPreBuyBlocker || psuDependencyActive) {
+      confidenceRank = Math.min(confidenceRank, 2);
+      confidenceReasons.push(inTr('pre-buy blocker must be fixed first', 'satin alma oncesi blokaj once cozulmeli'));
+    }
     confidenceRank = clamp(confidenceRank, 1, 3);
     const confidenceKey = confidenceRank === 3 ? 'high' : confidenceRank === 2 ? 'medium' : 'low';
     const confidenceLabels = {
@@ -940,9 +1051,15 @@ export function analyze(skipLoading) {
     };
 
     const limitedInfo = confidenceRank < 3;
-    const confidenceNote = limitedInfo
-      ? inTr('Based on limited or uncertain inputs. Validate before spending.', 'Bazi bilgiler sinirli veya belirsiz. Para harcamadan once dogrula.')
-      : inTr('Inputs are specific enough for a strong first diagnosis.', 'Girdiler ilk tani icin yeterince net.');
+
+    const confidenceNote = limitedInfo && confidenceReasons.length > 0
+      ? inTr(
+          'Limited by: ' + confidenceReasons.join(', ') + '. Fill these in for a stronger diagnosis.',
+          'Sınırlayan: ' + confidenceReasons.join(', ') + '. Daha güçlü tanı için bunları doldur.'
+        )
+      : limitedInfo
+        ? inTr('Some inputs are uncertain. Validate before spending.', 'Bazı girdiler belirsiz. Para harcamadan önce doğrula.')
+        : inTr('Inputs are specific enough for a strong first diagnosis.', 'Girdiler ilk tanı için yeterince net.');
 
     const issueNote = {
       cpu: inTr(cpuName + ' may limit frame consistency at ' + resLabel + ' / ' + hz + 'Hz.', cpuName + ', ' + resLabel + ' / ' + hz + 'Hz seviyesinde kare tutarliligini sinirlayabilir.'),
@@ -1098,8 +1215,8 @@ export function analyze(skipLoading) {
   else                      { verdictLabel=inTr('Optimize First','Önce Optimize Et');     verdictClass='vb-hold'; }
 
   const FINAL_SENT = {
-    gpu:    inTr('Upgrade your GPU first. Validate the bottleneck with benchmarks before purchasing.','Önce GPU yükselt. Satın almadan önce darboğazı benchmark ile doğrula.'),
-    cpu:    inTr('Upgrade your CPU next. Confirm with HWiNFO64 before buying.','Sonraki yükseltme CPU olmalı. Satın almadan önce HWiNFO64 ile doğrula.'),
+    gpu:    inTr('Upgrade your GPU first. Start around the ' + gpuTargetTierText() + ', then validate temperatures, PSU headroom, and benchmarks before buying.','Önce GPU yükselt. ' + gpuTargetTierText() + ' civarından başla; satın almadan önce sıcaklık, PSU payı ve benchmark ile doğrula.'),
+    cpu:    inTr('Upgrade your CPU next. Target the ' + cpuTargetTierText() + ', then confirm with HWiNFO64 before buying.','Sonraki yükseltme CPU olmalı. ' + cpuTargetTierText() + ' hedefle; satın almadan önce HWiNFO64 ile doğrula.'),
     ramcap: inTr('Upgrade your RAM capacity — one of the cheapest high-impact fixes.','RAM kapasitesini yükselt — genelde en ucuz ve etkili çözümlerden biri.'),
     ramspd: inTr('Verify RAM speed with CPU-Z first. If XMP/EXPO is off, enabling it is free.','Önce CPU-Z ile RAM hızını doğrula. XMP/EXPO kapalıysa açmak ücretsiz.'),
     psu:    inTr('Upgrade your PSU before anything else. Your upgrade path depends on it.','Her şeyden önce PSU yükselt. Yükseltme yolun buna bağlı.'),
@@ -1154,7 +1271,7 @@ export function analyze(skipLoading) {
       ramcap: inTr('Find matched RAM kits', 'Uyumlu RAM kitleri bul'),
       psu: inTr('Check safe PSU options', 'Guvenli PSU seceneklerine bak'),
       laptop: inTr('Compare laptop options', 'Laptop seceneklerini karsilastir'),
-      build: inTr('Compare full build parts', 'Komple kasa parcalarini karsilastir'),
+      build: inTr('View Example System', 'Örnek Sistemi Gör'),
       none: inTr('Do the free checks first', 'Once ucretsiz kontrolleri yap')
     }[kind] || inTr('Compare recommended options', 'Onerilen secenekleri karsilastir');
   }
@@ -1168,16 +1285,18 @@ export function analyze(skipLoading) {
       : inTr('Recommended next action', 'Onerilen sonraki adim');
     const focus = isBuyLaptop
       ? inTr('Laptop class for your budget', 'Butcene uygun laptop sinifi')
-      : meta.name;
+      : best.key === 'gpu'
+        ? meta.name + ' — ' + gpuTargetTierText()
+        : best.key === 'cpu'
+          ? meta.name + ' — ' + cpuTargetTierText()
+          : meta.name;
     const copy = isNoBuy
       ? inTr('UpgradePilot does not see a strong paid upgrade yet. Run the validation checks, apply the free fixes, then rerun this result with fresh observations.',
              'UpgradePilot su an guclu bir ucretli yukseltme gormuyor. Dogrulama kontrollerini yap, ucretsiz duzeltmeleri uygula, sonra yeni gozlemlerle tekrar calistir.')
       : inTr('Start with this comparison lane. It keeps the recommendation tied to your diagnosis instead of sending you into random product listings.',
              'Bu karsilastirma araligindan basla. Boylece rastgele urun listelerine girmek yerine tavsiye analiz sonucuna bagli kalir.');
     const queryByKind = {
-      gpu: best.key === 'gpu' && (res === '1080' || gpuSc <= 3)
-        ? 'RX 6600 RTX 2060 RTX 3060 graphics card'
-        : 'RX 6700 XT RTX 3060 Ti RTX 4060 Ti graphics card',
+      gpu: gpuTargetTierText().replace(/ \/ /g, ' ').replace('class', 'graphics card'),
       cpu: cpuKey.startsWith('r') ? 'Ryzen 5 5600 Ryzen 7 5700X3D processor' : 'i5 12400F Ryzen 5 5600 CPU motherboard',
       ramcap: '2x16GB DDR4 DDR5 RAM kit',
       psu: psuRecWatts + ' 80+ Gold power supply',
@@ -1231,12 +1350,10 @@ export function analyze(skipLoading) {
     : diagnostics.priorityKey === 'medium'
       ? inTr('Check after free fixes.', 'Ucretsiz duzeltmelerden sonra kontrol et.')
       : inTr('Buying can wait.', 'Satin alma bekleyebilir.');
-  diagnostics.confidenceNote = diagnostics.limitedInfo
-    ? inTr('Validate before spending.', 'Para harcamadan once dogrula.')
-    : inTr('Good input confidence.', 'Girdi guveni iyi.');
+  // confidenceNote is already set correctly during analysis above
   let diagnosticWhyText = buildDiagnosticWhy(diagnostics);
   diagnosticWhyText = {
-    gpu: inTr('Your target leans GPU-heavy. Update drivers, check temperatures, then compare GPU options.', 'Hedefin GPU agirlikli. Surucuyu guncelle, sicakligi kontrol et, sonra GPU seceneklerini karsilastir.'),
+    gpu: inTr('Your target leans GPU-heavy. Update drivers and check temperatures first, then compare the ' + gpuTargetTierText() + ' instead of random GPU listings.', 'Hedefin GPU agirlikli. Once surucuyu guncelle ve sicakligi kontrol et; sonra rastgele GPU listeleri yerine ' + gpuTargetTierText() + ' araligini karsilastir.'),
     cpu: inTr('Your CPU may be limiting frame consistency. Check chipset drivers, clocks, and temperatures first.', 'CPU kare tutarliligini sinirlayabilir. Once chipset surucusu, frekans ve sicakliklari kontrol et.'),
     ram: inTr('RAM can cause stutter before average FPS looks bad. Verify speed, capacity, and channel mode first.', 'RAM, ortalama FPS dusmeden stutter yaratabilir. Once hiz, kapasite ve kanal modunu dogrula.'),
     psu: inTr('Power readiness comes before a stronger GPU. Confirm PSU wattage and quality before buying.', 'Daha guclu GPUdan once guc hazirligi gelir. Almadan once PSU watt ve kalitesini dogrula.'),
@@ -1273,26 +1390,30 @@ export function analyze(skipLoading) {
   /* ============================================================
      RENDER TO DOM
      ============================================================ */
-  el('vbadge').textContent = verdictLabel;
-  el('vbadge').className   = 'vbadge ' + verdictClass;
+  const _s = (id, val) => { const e = el(id); if (e) e.textContent = val; };
+  const _h = (id, val) => { const e = el(id); if (e) e.innerHTML  = val; };
+  const _c = (id, cls)  => { const e = el(id); if (e) e.className  = cls; };
 
-  el('system-score-value').textContent = diagnostics.systemScore;
-  el('system-score-note').textContent = diagnostics.scoreNote;
-  el('main-bottleneck-value').textContent = diagnostics.bottleneckLabel;
-  el('main-bottleneck-note').textContent = diagnostics.issueNote;
-  el('upgrade-priority-value').textContent = diagnostics.priorityLabel;
-  el('upgrade-priority-note').textContent = diagnostics.priorityNote;
-  el('estimated-gain-value').textContent = gain.label;
-  el('estimated-gain-note').textContent = gain.note;
-  el('confidence-value').textContent = diagnostics.confidenceLabel;
-  el('confidence-note').textContent = diagnostics.confidenceNote;
+  _s('vbadge', verdictLabel);
+  _c('vbadge', 'vbadge ' + verdictClass);
+
+  _s('system-score-value', diagnostics.systemScore);
+  _s('system-score-note',  diagnostics.scoreNote);
+
+  _s('main-bottleneck-note',    diagnostics.issueNote);
+  _s('upgrade-priority-value',  diagnostics.priorityLabel);
+  _s('upgrade-priority-note',   diagnostics.priorityNote);
+  _s('estimated-gain-value',    gain.label);
+  _s('estimated-gain-note',     gain.note);
+  _s('confidence-value',        diagnostics.confidenceLabel);
+  _s('confidence-note',         diagnostics.confidenceNote);
   el('diagnostic-summary')?.setAttribute('data-priority', diagnostics.priorityKey);
   el('diagnostic-summary')?.setAttribute('data-confidence', diagnostics.confidenceKey);
 
   // 01 Diagnosis
-  el('diag-pill').textContent = diagLabel;
-  el('diag-pill').className   = 'diag-pill ' + diagClass;
-  el('diag-text').textContent = diagText;
+  _s('diag-pill', diagLabel);
+  _c('diag-pill', 'diag-pill ' + diagClass);
+  _s('diag-text', diagText);
 
   // 02 Free Fixes
   let lastGrp='', clHTML='';
@@ -1304,7 +1425,7 @@ export function analyze(skipLoading) {
     }
     clHTML += '<div class="ci" id="ci-' + i + '" data-check-id="' + i + '"><div class="cbox"></div><span class="ctxt">' + c.t + '</span></div>';
   });
-  el('checklist').innerHTML = clHTML;
+  _h('checklist', clHTML);
   updateFreeBoostProgress();
 
   // 03 Benchmarks
@@ -1321,20 +1442,20 @@ export function analyze(skipLoading) {
     }
     bHTML += '</div>';
   });
-  el('bench-list').innerHTML = bHTML;
+  _h('bench-list', bHTML);
 
   // 04 Best upgrade
   const meta = (best.score <= 1) ? PART_META.none : PART_META[best.key];
   const visualPart = best.key === 'ramcap' || best.key === 'ramspd' ? 'ram' : (best.key || 'system');
   setVirtualPcPart(best.score <= 1 ? 'system' : visualPart, best.score <= 1 ? inTr('Current rig','Mevcut sistem') : meta.name);
-  el('uicon').innerHTML    = meta.icon;
-  el('uicon').className    = 'uicon ' + meta.icls;
-  el('uname').textContent  = meta.name;
-  el('usub').textContent   = meta.sub;
-  el('why-box').textContent = diagnosticWhyText;
-  el('action-plan-list').innerHTML = actionPlan.map((step, index) =>
+  _h('uicon',   meta.icon);
+  _c('uicon',   'uicon ' + meta.icls);
+  _s('uname',   meta.name);
+  _s('usub',    meta.sub);
+  _s('why-box', diagnosticWhyText);
+  _h('action-plan-list', actionPlan.map((step, index) =>
     '<li><span class="action-step-num">' + (index + 1) + '</span><span>' + step + '</span></li>'
-  ).join('');
+  ).join(''));
   const buyingActionEl = el('buying-action');
   if (buyingActionEl) buyingActionEl.innerHTML = buildBuyingAction();
   const upgradePathCards = buildUpgradePath();
@@ -1350,25 +1471,156 @@ export function analyze(skipLoading) {
     '</div>'
   ).join('');
   // Render specific part/GPU recommendations at top of results (Section 02)
-  // These move here from the budget section to create the top-hook effect.
   const upgradePicksEl = el('upgrade-picks');
   if (upgradePicksEl) upgradePicksEl.innerHTML = buildExamplePartCards();
 
-  // 05 PSU Recommendation (desktop only — efficiency field removed for now)
+  // ── New result page renders ───────────────────────────────────────────
+
+  // Product name — big hero title
+  const productNameEl = el('res-product-name');
+  if (productNameEl) productNameEl.textContent = meta.name || '—';
+
+  // Product description
+  const productDescEl = el('res-product-desc');
+  if (productDescEl) productDescEl.textContent = diagnosticWhyText || '';
+
+  // Price from bandDesc
+  const priceEl = el('res-price');
+  if (priceEl) {
+    if (!bandDesc) {
+      priceEl.textContent = inTr('Price varies', 'Fiyat değişir');
+    } else if (currency === 'try') {
+      priceEl.textContent = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
+    } else {
+      priceEl.textContent = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
+    }
+  }
+
+  // Rec badge visibility
+  const recBadge = el('res-rec-badge');
+  if (recBadge) recBadge.style.display = best.score <= 1 ? 'none' : '';
+
+  // Performance delta bars
+  const perfDeltaEl = el('res-perf-delta');
+  if (perfDeltaEl && best.score > 1) {
+    const gainLow  = parseInt((gain.label || '0').replace(/[^0-9]/,'')) || 0;
+    const gainHigh = parseInt((gain.label || '0').split('–').pop()) || gainLow;
+    const gainMid  = Math.round((gainLow + gainHigh) / 2);
+    const currentPct = Math.round(100 / (1 + gainMid / 100));
+    const upgradePct = 100;
+    const resStr = res === '4k' ? '4K' : res === '1440' ? '1440p' : '1080p';
+    perfDeltaEl.innerHTML =
+      '<div class="rpd-title">' +
+        inTr('PERFORMANCE DELTA (' + resStr + ')', 'PERFORMANS FARKI (' + resStr + ')') +
+        '<span class="rpd-path">' + meta.name + ' upgrade</span>' +
+      '</div>' +
+      '<div class="rpd-row rpd-avg">' +
+        '<div class="rpd-row-header">' +
+          '<span class="rpd-row-label">' + inTr('AVERAGE FRAME RATE', 'ORTALAMA KARE HIZI') + '</span>' +
+          '<span class="rpd-gain rpd-gain-green">+' + gainMid + '% ' + inTr('UPLIFT', 'ARTIŞ') + '</span>' +
+        '</div>' +
+        '<div class="rpd-bar-row"><span class="rpd-bar-label">' + inTr('CURRENT', 'MEVCUT') + '</span>' +
+          '<div class="rpd-bar-wrap"><div class="rpd-bar rpd-bar-current" style="width:' + currentPct + '%"></div>' +
+          '<span class="rpd-bar-val">~' + Math.round(60 * (1 + gainMid/200)) + ' FPS</span></div></div>' +
+        '<div class="rpd-bar-row"><span class="rpd-bar-label">' + inTr('UPGRADE', 'YÜKSELTME') + '</span>' +
+          '<div class="rpd-bar-wrap"><div class="rpd-bar rpd-bar-upgrade" style="width:' + upgradePct + '%"></div>' +
+          '<span class="rpd-bar-val">~' + Math.round(60 * (1 + gainMid/100) * (1 + gainMid/200)) + ' FPS</span></div></div>' +
+      '</div>' +
+      '<div class="rpd-row rpd-lows">' +
+        '<div class="rpd-row-header">' +
+          '<span class="rpd-row-label">' + inTr('1% LOWS (STUTTER CONTROL)', '1% LOW (STUTTER KONTROLÜ)') + '</span>' +
+          '<span class="rpd-gain rpd-gain-blue">+' + Math.round(gainMid * 1.3) + '% ' + inTr('STABILITY', 'STAB.') + '</span>' +
+        '</div>' +
+        '<div class="rpd-bar-row"><span class="rpd-bar-label">' + inTr('CURRENT', 'MEVCUT') + '</span>' +
+          '<div class="rpd-bar-wrap"><div class="rpd-bar rpd-bar-current" style="width:' + Math.round(currentPct * 0.8) + '%"></div>' +
+          '<span class="rpd-bar-val">~' + Math.round(40 * (1 + gainMid/200)) + ' FPS</span></div></div>' +
+        '<div class="rpd-bar-row"><span class="rpd-bar-label">' + inTr('UPGRADE', 'YÜKSELTME') + '</span>' +
+          '<div class="rpd-bar-wrap"><div class="rpd-bar rpd-bar-upgrade" style="width:' + Math.round(upgradePct * 0.85) + '%"></div>' +
+          '<span class="rpd-bar-val">~' + Math.round(40 * (1 + gainMid/100)) + ' FPS</span></div></div>' +
+      '</div>';
+  } else if (perfDeltaEl) {
+    perfDeltaEl.innerHTML = '';
+  }
+
+  // Installation roadmap
+  const roadmapEl = el('res-install-roadmap');
+  if (roadmapEl) {
+    const steps = [];
+    if (best.key === 'gpu') {
+      steps.push({ n:'01', t: inTr('Acquire Hardware', 'Donanım Al'), d: inTr('Purchase ' + meta.name + ' through a validated vendor.', meta.name + ' al.') });
+      steps.push({ n:'02', t: inTr('PSU Verification', 'PSU Doğrulama'), d: inTr('Ensure your PSU has the required PCIe power leads.', 'PSU\'nun gerekli PCIe güç bağlantılarına sahip olduğunu doğrula.') });
+      steps.push({ n:'03', t: inTr('Clean Driver Install', 'Temiz Sürücü Kurulumu'), d: inTr('Use DDU to wipe old drivers before the physical swap.', 'Fiziksel değişimden önce eski sürücüleri DDU ile temizle.') });
+    } else if (best.key === 'cpu') {
+      steps.push({ n:'01', t: inTr('Check BIOS Support', 'BIOS Desteğini Kontrol Et'), d: inTr('Confirm your motherboard supports the target CPU.', 'Anakartının hedef CPU\'yu desteklediğini doğrula.') });
+      steps.push({ n:'02', t: inTr('Update BIOS', 'BIOS Güncelle'), d: inTr('Update BIOS before swapping the CPU.', 'CPU değişiminden önce BIOS\'u güncelle.') });
+      steps.push({ n:'03', t: inTr('Install & Test', 'Kur ve Test Et'), d: inTr('Boot, verify detection, run stability test.', 'Aç, algılamayı doğrula, stabilite testi yap.') });
+    } else {
+      steps.push({ n:'01', t: inTr('Apply Free Fixes First', 'Önce Ücretsiz Düzeltmeleri Uygula'), d: inTr('XMP/EXPO, driver updates, background app cleanup.', 'XMP/EXPO, sürücü güncellemeleri, arka plan uygulama temizliği.') });
+      steps.push({ n:'02', t: inTr('Retest', 'Yeniden Test Et'), d: inTr('Run your benchmark again before spending.', 'Para harcamadan önce testini tekrar çalıştır.') });
+    }
+    roadmapEl.innerHTML = steps.map(s =>
+      '<div class="rri-step">' +
+        '<span class="rri-num">' + s.n + '</span>' +
+        '<div><div class="rri-title">' + s.t + '</div>' +
+        '<div class="rri-desc">' + s.d + '</div></div>' +
+      '</div>'
+    ).join('');
+  }
+
+  // Telemetry / health cards
+  const healthEl = el('result-health-cards');
+  if (healthEl) {
+    const items = [
+      { label: inTr('CPU UTIL', 'CPU KULL.'), val: cpuSc >= 7 ? inTr('OK','İYİ') : cpuSc >= 5 ? inTr('WATCH','DİKKAT') : inTr('HIGH','YÜKSEK'), hi: cpuSc < 5 },
+      { label: inTr('GPU BOTL', 'GPU DAR.'), val: diagnostics.bottleneckKey==='gpu' ? inTr('HIGH','YÜKSEK') : inTr('OK','İYİ'), hi: diagnostics.bottleneckKey==='gpu' },
+      { label: inTr('LATENCY', 'GECİKME'), val: ramType==='ddr3' ? inTr('HIGH','YÜKSEK') : channel==='single' ? inTr('WATCH','DİKKAT') : inTr('OK','İYİ'), hi: ramType==='ddr3' },
+      { label: inTr('PSU RAIL', 'PSU HATTI'), val: psuDanger ? inTr('RISK','RİSK') : psuW===0 ? inTr('?','?') : inTr('STABLE','STABIL'), hi: psuDanger },
+    ];
+    healthEl.innerHTML = items.map(item =>
+      '<div class="rtg-cell' + (item.hi?' rtg-hi':'') + '">' +
+        '<span class="rtg-label">' + item.label + '</span>' +
+        '<span class="rtg-val' + (item.hi?' rtg-val-hi':'') + '">' + item.val + '</span>' +
+      '</div>'
+    ).join('');
+  }
+
+
+  const verdictHeroEl = el('result-verdict-hero');
+  if (verdictHeroEl) {
+    const priorityColor = diagnostics.priorityKey === 'high' ? 'var(--danger)' : diagnostics.priorityKey === 'medium' ? 'var(--warn)' : 'var(--accent)';
+    verdictHeroEl.innerHTML =
+      '<div class="rvh-priority" style="color:' + priorityColor + '">' +
+        inTr('Upgrade Priority: ', 'Yükseltme Önceliği: ') +
+        '<strong>' + diagnostics.priorityLabel.toUpperCase() + '</strong>' +
+      '</div>' +
+      '<div class="rvh-main">' +
+        '<span class="rvh-component">' + meta.name + '</span>' +
+        '<span class="rvh-is">' + inTr(' is currently the largest performance constraint.', ' şu an en büyük performans sınırı.') + '</span>' +
+      '</div>' +
+      '<div class="rvh-gain">' +
+        inTr('Estimated Gain: ', 'Tahmini Kazanım: ') + '<strong>' + gain.label + '</strong>' +
+      '</div>' +
+      '<div class="rvh-action">' +
+        inTr('→ Recommended first action: ', '→ Önerilen ilk adım: ') +
+        '<strong>' + inTr('Upgrade ' + meta.name + ' before any other component.', meta.name + '\'i diğer bileşenlerden önce yükseltin.') + '</strong>' +
+      '</div>';
+  }
+
+  // 05 PSU Recommendation (desktop only)
   if (isLaptop) {
     el('psu-result-section')?.classList.add('is-hidden');
-    el('psu-rec-content').innerHTML =
+    _h('psu-rec-content',
       '<div class="psu-verdict pv-warn"><span class="pvi">~</span><span>' +
       inTr('Laptop selected: desktop PSU and next-GPU-tier recommendations are not evaluated. Check power mode, charger connection, and thermal throttling instead.','Laptop seçildi: masaüstü PSU ve sonraki GPU seviyesi önerisi değerlendirilmez. Bunun yerine güç modu, adaptör bağlantısı ve thermal throttling kontrol edilmeli.') +
-      '</span></div>';
+      '</span></div>');
   } else {
     el('psu-result-section')?.classList.remove('is-hidden');
-    el('psu-rec-content').innerHTML =
+    _h('psu-rec-content',
       '<div class="psu-rec-grid">' +
         '<div class="psu-rec-card"><div class="psu-rc-lbl">' + inTr('Your Current PSU','Mevcut PSU') + '</div><div class="psu-rc-val">' + (psuW ? psuW + 'W' : inTr('Unknown','Bilinmiyor')) + '</div></div>' +
         '<div class="psu-rec-card"><div class="psu-rc-lbl">' + inTr('Recommended for Next GPU Tier','Sonraki GPU Seviyesi İçin Öneri') + '</div><div class="psu-rc-val">' + psuRecWatts + ' &middot; ' + psuRecEff + '</div></div>' +
       '</div>' +
-      '<div class="psu-verdict ' + psuVerdictCls + '"><span class="pvi">' + (psuVerdictCls==='pv-ok'?'&#10003;':psuVerdictCls==='pv-warn'?'~':'!') + '</span><span>' + psuVerdictText + '</span></div>';
+      '<div class="psu-verdict ' + psuVerdictCls + '"><span class="pvi">' + (psuVerdictCls==='pv-ok'?'&#10003;':psuVerdictCls==='pv-warn'?'~':'!') + '</span><span>' + psuVerdictText + '</span></div>');
   }
 
   // 06 Budget & Price
@@ -1390,15 +1642,17 @@ export function analyze(skipLoading) {
       '</span>' +
     '</span>';
   function formatRangeForCurrency(minUsd, maxUsd, mode) {
+    if (!isFinite(minUsd) || !isFinite(maxUsd)) return '—';
     if (currency === 'try') {
       const buffer = mode === 'retail' ? TRY_RETAIL_BUFFER : TRY_VALUE_BUFFER;
       const usedFactor = mode === 'value' ? TRY_USED_FACTOR : 1;
       const minTry = fmtTry(minUsd * USD_TRY_ROUGH_RATE * buffer * usedFactor);
       const maxTry = fmtTry(maxUsd * USD_TRY_ROUGH_RATE * buffer);
-      return '~TRY ' + minTry.toLocaleString('tr-TR') + ' - ' + maxTry.toLocaleString('tr-TR');
+      if (!isFinite(minTry) || !isFinite(maxTry)) return '—';
+      return '~₺' + minTry.toLocaleString('tr-TR') + ' - ₺' + maxTry.toLocaleString('tr-TR');
     }
     if (currency === 'eur') {
-      return '~EUR ' + Math.round(minUsd / 1.08) + ' - ' + Math.round(maxUsd / 1.08);
+      return '~€' + Math.round(minUsd / 1.08) + ' - €' + Math.round(maxUsd / 1.08);
     }
     return '$' + Math.round(minUsd) + ' - $' + Math.round(maxUsd);
   }
@@ -1440,129 +1694,161 @@ export function analyze(skipLoading) {
   }
   function buildExamplePartCards() {
     if (!bandDesc || best.score <= 1) return '';
-    const isAm4 =
-      cpuKey.startsWith('r3_3') || cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') ||
-      cpuKey.startsWith('r5_3') || cpuKey.startsWith('r5_5') || cpuKey.startsWith('r7_2') ||
-      cpuKey.startsWith('r7_5') || cpuKey.startsWith('r9_5');
-    const oldIntel =
-      cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
-      cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
-      cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
-      cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9');
-    const gpuLow = res === '1080' || gpuSc <= 3;
-    const gpuBestNames = gpuLow
-      ? 'RX 6600 / RTX 2060 / RTX 3060 class'
-      : 'RX 6700 XT / RTX 3060 Ti / RTX 4060 Ti class';
-    const gpuStretchNames = gpuLow
-      ? 'RX 6700 XT / RTX 3060 Ti class'
-      : 'RX 7800 XT / RTX 4070 class';
-    const cpuBestNames = isAm4
-      ? 'Ryzen 5 5600 / Ryzen 7 5700X3D class'
-      : oldIntel
-        ? 'i5-12400F / Ryzen 5 5600 platform class'
-        : 'modern 6-core gaming CPU class';
+
     const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
-    const marketplaceUrl = query => marketplaceHost + encodeURIComponent(query);
-    const cardsByKey = {
-      gpu: [
-        {
-          k: inTr('Used value GPU','Ikinci el value GPU'),
-          t: gpuLow ? 'GTX 1660 Super / RTX 2060 / RX 5600 XT' : 'RTX 3060 Ti / RX 6700 XT',
-          q: gpuLow ? 'GTX 1660 Super RTX 2060 RX 5600 XT ekran karti' : 'RTX 3060 Ti RX 6700 XT ekran karti',
-          p: formatRangeForCurrency(bandDesc[0] * .65, bandDesc[0] * 1.05, 'value'),
-          c: inTr('Best for low-cost upgrades. Avoid listings without clear photos, warranty info, or tested output.','Dusuk maliyetli yukseltme icin en mantikli yer. Net fotograf, garanti bilgisi veya test kaniti olmayan ilanlardan uzak dur.')
-        },
-        {
-          k: inTr('Best value GPU','En mantikli GPU sinifi'),
-          t: gpuBestNames,
-          q: gpuLow ? 'RX 6600 RTX 2060 RTX 3060 ekran karti' : 'RX 6700 XT RTX 3060 Ti RTX 4060 Ti ekran karti',
-          p: formatRangeForCurrency(bandDesc[0], bandDesc[1], 'value'),
-          c: inTr('Start comparisons here. This is the lane most likely to improve FPS without wasting money.','Karsilastirmaya buradan basla. FPS artisi ve para israfi dengesi en iyi olan aralik burasi.')
-        },
-        {
-          k: inTr('Stretch option','Stretch secenek'),
-          t: gpuStretchNames,
-          q: gpuLow ? 'RX 6700 XT RTX 3060 Ti ekran karti' : 'RX 7800 XT RTX 4070 ekran karti',
-          p: formatRangeForCurrency(bandDesc[1] * 1.05, bandDesc[1] * 1.35, 'retail'),
-          c: inTr('Only makes sense if PSU and CPU headroom are confirmed. Do not jump here just because it is newer.','Sadece PSU ve CPU payi dogrulandiysa mantikli. Sirf daha yeni diye buraya atlama.')
-        }
-      ],
-      cpu: [
-        {
-          k: inTr('Drop-in CPU target','Tak-cikar CPU hedefi'),
-          t: cpuBestNames,
-          q: isAm4 ? 'Ryzen 5 5600 Ryzen 7 5700X3D islemci' : 'i5 12400F Ryzen 5 5600 islemci anakart',
-          p: formatRangeForCurrency(bandDesc[0] * .75, bandDesc[1], 'value'),
-          c: isAm4
-            ? inTr('AM4 can be very efficient if BIOS support is confirmed before buying.','Satin almadan once BIOS destegi dogrulanirsa AM4 cok verimli olabilir.')
-            : inTr('Check motherboard compatibility first. Older platforms may need a board change.','Once anakart uyumunu kontrol et. Eski platformlarda anakart degisimi gerekebilir.')
-        },
-        {
-          k: inTr('Platform bundle','Platform paketi'),
-          t: inTr('CPU + motherboard + RAM if needed','Gerekirse CPU + anakart + RAM'),
-          q: 'CPU motherboard RAM bundle gaming',
-          p: formatRangeForCurrency(bandDesc[0] * 1.25, bandDesc[1] * 1.55, 'retail'),
-          c: inTr('Better if your current platform blocks a meaningful CPU jump. Compare this with a full build path.','Mevcut platform anlamli CPU sicramasini engelliyorsa daha iyi olabilir. Bunu full build rotasiyla karsilastir.')
-        }
-      ],
-      ramcap: [
-        {
-          k: inTr('RAM kit target','RAM kit hedefi'),
-          t: '2x16 GB DDR4/DDR5 dual-channel',
-          q: '2x16GB DDR4 DDR5 RAM kit',
-          p: formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail'),
-          c: inTr('Prefer a matched kit over mixing random sticks. Capacity and dual-channel matter first.','Rastgele RAM karistirmak yerine es kit tercih et. Once kapasite ve cift kanal onemli.')
-        }
-      ],
-      ramspd: [
-        {
-          k: inTr('Verify before buying','Almadan once dogrula'),
-          t: 'CPU-Z + XMP/EXPO check',
-          q: '',
-          p: inTr('Free first','Once ucretsiz'),
-          c: inTr('If XMP/EXPO is disabled, enabling it may solve the issue without buying RAM.','XMP/EXPO kapaliysa acmak RAM almadan sorunu cozebilir.')
-        }
-      ],
-      psu: [
-        {
-          k: inTr('PSU target','PSU hedefi'),
-          t: psuRecWatts + ' / ' + psuRecEff,
-          q: psuRecWatts + ' 80+ Gold power supply',
-          p: formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail'),
-          c: inTr('Choose known quality units. Do this before a GPU if power safety is the blocker.','Bilinen kaliteli modelleri sec. Guc guvenligi blokajsa GPUdan once bunu yap.')
-        }
-      ]
-    };
-    const cards = cardsByKey[best.key] || [];
-    if (!cards.length) return '';
-    const focusPart = best.key === 'ramcap' || best.key === 'ramspd' ? 'ram' : best.key;
-    const focusLabel = best.key === 'gpu' ? 'GPU examples' : best.key === 'cpu' ? 'CPU examples' : best.key === 'psu' ? 'Power examples' : 'Memory examples';
-    const shortCopy = index => {
-      if (focusPart === 'gpu') return [
-        inTr('Low-cost comparison lane.', 'Dusuk maliyetli karsilastirma araligi.'),
-        inTr('Start comparisons here.', 'Karsilastirmaya buradan basla.'),
-        inTr('Only after CPU and PSU checks.', 'Sadece CPU ve PSU kontrolunden sonra.'),
-      ][index] || '';
-      if (focusPart === 'cpu') return index === 0
-        ? inTr('Check motherboard support first.', 'Once anakart destegini kontrol et.')
-        : inTr('Use when the old platform blocks progress.', 'Eski platform ilerlemeyi engelliyorsa kullan.');
-      if (focusPart === 'ram') return inTr('Capacity and dual-channel come first.', 'Once kapasite ve cift kanal.');
-      if (focusPart === 'psu') return inTr('Stability and GPU headroom first.', 'Once stabilite ve GPU payi.');
-      return '';
-    };
-    return '<div class="example-block">' +
-      '<div class="discovery-head">' + inTr('Example part tiers','Ornek parca siniflari') + '</div>' +
-      '<div class="example-grid">' + cards.map((card, index) =>
-        '<div class="example-card" data-focus-part="' + focusPart + '" data-focus-label="' + focusLabel + '">' +
-          '<div class="path-kicker">' + card.k + '</div>' +
-          '<div class="example-title">' + card.t + '</div>' +
-          '<div class="example-price">' + card.p + '</div>' +
-          '<div class="path-copy">' + shortCopy(index) + '</div>' +
-          (card.q ? '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor(focusPart) + '</a>' : '<span class="link-slot link-slot-disabled">' + inTr('No purchase needed','Satin alma gerekmez') + '</span>') +
+    const marketplaceUrl  = q => marketplaceHost + encodeURIComponent(q);
+
+    // ── GPU: tek primary + AMD/NVIDIA muadili ────────────────────────
+    if (best.key === 'gpu') {
+      const gpuLow  = res === '1080' || gpuSc <= 3;
+      const gpuMid  = res === '1440' && gpuSc >= 4 && gpuSc <= 6;
+
+      // Primary pick ve AMD muadili
+      let primary, amdAlt, nvidiaAlt, priceNote, whyNote;
+
+      if (gpuLow) {
+        primary    = { brand:'NVIDIA', name:'RTX 3060 / RTX 4060', q:'RTX 3060 RTX 4060 ekran kart' };
+        amdAlt     = { brand:'AMD',    name:'RX 6600 XT / RX 7600', q:'RX 6600 XT RX 7600 ekran kart' };
+        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
+        whyNote    = inTr('Good 1080p cards with solid driver support and wide availability.', '1080p için iyi tercih, geniş sürücü desteği ve kolay bulunabilirlik.');
+      } else if (gpuMid) {
+        primary    = { brand:'NVIDIA', name:'RTX 4070 / RTX 4070 Super', q:'RTX 4070 Super ekran kart' };
+        amdAlt     = { brand:'AMD',    name:'RX 7800 XT / RX 7900 GRE', q:'RX 7800 XT RX 7900 GRE ekran kart' };
+        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
+        whyNote    = inTr('Strong 1440p performance. AMD alternative offers more VRAM at a similar price.', 'Güçlü 1440p performansı. AMD alternatifi benzer fiyata daha fazla VRAM sunar.');
+      } else {
+        primary    = { brand:'NVIDIA', name:'RTX 4070 Ti Super / RTX 4080 Super', q:'RTX 4070 Ti Super ekran kart' };
+        amdAlt     = { brand:'AMD',    name:'RX 7900 XT / RX 7900 XTX', q:'RX 7900 XT RX 7900 XTX ekran kart' };
+        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
+        whyNote    = inTr('High-end 1440p/4K. Verify PSU and CPU headroom before committing.', 'Üst segment 1440p/4K. Almadan önce PSU ve CPU kapasiteni doğrula.');
+      }
+
+      return (
+        '<div class="epc-wrap">' +
+          '<div class="epc-header">' + inTr('Recommended options', 'Önerilen seçenekler') + '</div>' +
+          '<div class="epc-pair">' +
+            // Primary
+            '<div class="epc-card epc-primary">' +
+              '<div class="epc-brand epc-nvidia">' + primary.brand + '</div>' +
+              '<div class="epc-name">' + primary.name + '</div>' +
+              '<div class="epc-price">' + priceNote + '</div>' +
+              '<div class="epc-why">' + whyNote + '</div>' +
+              '<a class="epc-cta" href="' + marketplaceUrl(primary.q) + '" target="_blank" rel="noopener noreferrer">' +
+                inTr('View listings', 'Listelemelere bak') +
+              '</a>' +
+            '</div>' +
+            // AMD alternative
+            '<div class="epc-card epc-alt">' +
+              '<div class="epc-brand epc-amd">' + amdAlt.brand + ' ' + inTr('alternative', 'alternatif') + '</div>' +
+              '<div class="epc-name">' + amdAlt.name + '</div>' +
+              '<div class="epc-why">' +
+                inTr('More VRAM, competitive rasterization. No DLSS but has FSR.', 'Daha fazla VRAM, rekabetçi rasterizasyon. DLSS yok ama FSR var.') +
+              '</div>' +
+              '<a class="epc-cta epc-cta-alt" href="' + marketplaceUrl(amdAlt.q) + '" target="_blank" rel="noopener noreferrer">' +
+                inTr('View listings', 'Listelemelere bak') +
+              '</a>' +
+            '</div>' +
+          '</div>' +
+          '<div class="epc-note">' +
+            inTr('⚠ Verify PSU wattage and PCIe connector before buying.', '⚠ Satın almadan önce PSU watt ve PCIe konnektörünü doğrula.') +
+          '</div>' +
         '</div>'
-      ).join('') + '</div>' +
-      '<div class="info-note">' + inTr('Examples are buying tiers, not final shopping carts. Verify compatibility and prices before buying.', 'Ornekler satin alma katmanidir, kesin sepet degildir. Almadan once uyumluluk ve fiyati dogrula.') + '</div>' +
-    '</div>';
+      );
+    }
+
+    // ── CPU: bütçeye göre drop-in veya platform upgrade ─────────────
+    if (best.key === 'cpu') {
+      const isAm4     = cpuKey.startsWith('r5_3') || cpuKey.startsWith('r5_5') ||
+                        cpuKey.startsWith('r7_5') || cpuKey.startsWith('r9_5') ||
+                        cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') || cpuKey.startsWith('r7_2');
+      const isOldIntel = cpuKey.startsWith('i5_6') || cpuKey.startsWith('i5_7') || cpuKey.startsWith('i5_8') ||
+                         cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_6') || cpuKey.startsWith('i7_7') ||
+                         cpuKey.startsWith('i7_8') || cpuKey.startsWith('i7_9');
+      const isModernIntel = cpuKey.startsWith('i5_10') || cpuKey.startsWith('i5_11') ||
+                            cpuKey.startsWith('i5_12') || cpuKey.startsWith('i7_12') ||
+                            cpuKey.startsWith('i5_13') || cpuKey.startsWith('i7_13');
+
+      // Bütçe eşiği: $600+ ise platform yükseltmesi göster
+      const canAffordPlatform = budgetUSD >= 600 || budgetN === 0;
+
+      // Drop-in hedef (her zaman göster)
+      const dropIn = isAm4
+        ? { name: 'Ryzen 5 5700X3D / Ryzen 7 5800X3D', note: inTr('Drop-in if BIOS supports it. Best gaming value on AM4 — no new motherboard needed.', 'BIOS destekliyorsa direkt tak. AM4\'te en iyi oyun değeri — yeni anakart gerekmez.'), q: 'Ryzen 5700X3D 5800X3D', price: formatRangeForCurrency(150, 280, 'retail') }
+        : isModernIntel
+        ? { name: 'i5-13600K / i7-13700KF', note: inTr('LGA1700 compatible. Verify your motherboard VRM quality before a high-power CPU.', 'LGA1700 uyumlu. Güçlü CPU için anakart VRM kalitesini doğrula.'), q: 'i5-13600K i7-13700KF', price: formatRangeForCurrency(200, 380, 'retail') }
+        : { name: 'i5-12400F / i5-13400F', note: inTr('Needs LGA1700 motherboard. Affordable platform jump with strong value.', 'LGA1700 anakart gerektirir. Güçlü değer sunan uygun fiyatlı platform geçişi.'), q: 'i5-12400F i5-13400F', price: formatRangeForCurrency(140, 220, 'retail') };
+
+      // Platform bundle (yüksek bütçede göster)
+      const platform = isAm4
+        ? { name: 'Ryzen 7 7800X3D + B650 + DDR5', items: ['Ryzen 7 7800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('AM5 with DDR5 — long upgrade runway. Reuse your current GPU temporarily if it scores 5+.', 'AM5 ve DDR5 — uzun vadeli platform. GPU puanı 5+ ise geçici olarak mevcut GPU\'nu kullan.'), q: 'Ryzen 7800X3D B650 DDR5 kit', price: formatRangeForCurrency(550, 900, 'retail') }
+        : { name: 'Ryzen 7 7800X3D + B650 + DDR5', items: ['Ryzen 7 7800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('Best gaming CPU on AM5. New platform means new motherboard + DDR5 RAM. Budget for all three.', 'AM5\'te en iyi oyun CPU\'su. Yeni platform = yeni anakart + DDR5 RAM. Üçü için bütçe ayır.'), q: 'Ryzen 7800X3D B650 DDR5', price: formatRangeForCurrency(550, 900, 'retail') };
+
+      if (canAffordPlatform) {
+        // İki kart: drop-in (sol) + platform upgrade (sağ)
+        return (
+          '<div class="epc-wrap">' +
+            '<div class="epc-header">' + inTr('CPU upgrade options', 'CPU yükseltme seçenekleri') + '</div>' +
+            '<div class="epc-pair">' +
+              // Drop-in
+              '<div class="epc-card">' +
+                '<div class="epc-brand" style="color:rgba(105,167,255,.8)">' + inTr('DROP-IN OPTION', 'DIREKT TAK') + '</div>' +
+                '<div class="epc-name">' + dropIn.name + '</div>' +
+                '<div class="epc-price">' + dropIn.price + '</div>' +
+                '<div class="epc-why">' + dropIn.note + '</div>' +
+                '<a class="epc-cta" href="' + marketplaceUrl(dropIn.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('View listings', 'Listelemelere bak') + '</a>' +
+              '</div>' +
+              // Platform bundle
+              '<div class="epc-card epc-primary">' +
+                '<div class="epc-brand" style="color:rgba(74,222,128,.85)">' + inTr('PLATFORM UPGRADE', 'PLATFORM YÜKSELTMESİ') + '</div>' +
+                '<div class="epc-name">' + platform.name + '</div>' +
+                '<div class="epc-price">' + platform.price + '</div>' +
+                '<div class="epc-items">' + platform.items.map(i => '<span class="epc-item">+ ' + i + '</span>').join('') + '</div>' +
+                '<div class="epc-why">' + platform.note + '</div>' +
+                '<a class="epc-cta" href="' + marketplaceUrl(platform.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('View listings', 'Listelemelere bak') + '</a>' +
+              '</div>' +
+            '</div>' +
+            '<div class="epc-note">' +
+              inTr('⚠ Platform upgrade = new motherboard + RAM + CPU. Budget for all three.', '⚠ Platform yükseltmesi = yeni anakart + RAM + CPU. Üçü için bütçe ayır.') +
+            '</div>' +
+          '</div>'
+        );
+      } else {
+        // Sadece drop-in
+        return (
+          '<div class="epc-wrap">' +
+            '<div class="epc-header">' + inTr('Recommended CPU target', 'Önerilen CPU hedefi') + '</div>' +
+            '<div class="epc-single">' +
+              '<div class="epc-name">' + dropIn.name + '</div>' +
+              '<div class="epc-price">' + dropIn.price + '</div>' +
+              '<div class="epc-why">' + dropIn.note + '</div>' +
+              '<a class="epc-cta" href="' + marketplaceUrl(dropIn.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('View listings', 'Listelemelere bak') + '</a>' +
+            '</div>' +
+            '<div class="epc-note">' +
+              inTr('💡 With $600+ budget a full platform upgrade (CPU + motherboard + DDR5) is worth considering.', '💡 $600+ bütçeyle tam platform yükseltmesi (CPU + anakart + DDR5) değerlendirilebilir.') +
+            '</div>' +
+          '</div>'
+        );
+      }
+    }
+
+    // ── RAM / PSU: tek hedef ─────────────────────────────────────────
+    const simpleMap = {
+      ramcap: { name: '2×16 GB DDR4/DDR5 dual-channel kit', note: inTr('Matched kit, not mixed sticks. Dual-channel matters.', 'Eşleştirilmiş kit, karışık değil. Dual-channel önemli.'), q: '2x16GB DDR4 DDR5 dual channel kit' },
+      ramspd: { name: 'XMP/EXPO enable first', note: inTr('Check CPU-Z. If running below rated speed, enable XMP in BIOS — free fix.', 'CPU-Z\'yi kontrol et. Eğer nominal hızın altındaysa BIOS\'ta XMP\'yi aç — ücretsiz.'), q: '' },
+      psu:    { name: psuRecWatts + ' 80+ Gold', note: inTr('Choose a reputable brand. Do this before GPU if PSU is the blocker.', 'Güvenilir marka seç. PSU blokajsa GPU\'dan önce bunu yap.'), q: psuRecWatts + ' 80+ Gold power supply' }
+    };
+    const simple = simpleMap[best.key];
+    if (!simple) return '';
+    return (
+      '<div class="epc-wrap">' +
+        '<div class="epc-header">' + inTr('Recommended target', 'Önerilen hedef') + '</div>' +
+        '<div class="epc-single">' +
+          '<div class="epc-name">' + simple.name + '</div>' +
+          '<div class="epc-why">' + simple.note + '</div>' +
+          (simple.q ? '<a class="epc-cta" href="' + marketplaceUrl(simple.q) + '" target="_blank" rel="noopener noreferrer">' + inTr('View listings', 'Listelemelere bak') + '</a>' : '') +
+        '</div>' +
+      '</div>'
+    );
   }
   function buildLaptopSuggestionCards() {
     if (!isLaptop) return '';
@@ -1641,82 +1927,222 @@ export function analyze(skipLoading) {
   }
   function buildCompleteBuildCards() {
     if (isLaptop) return '';
-    const oldIntel =
-      cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
-      cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
-      cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
-      cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9');
-    const oldAm4 =
-      cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') ||
-      cpuKey.startsWith('r5_3') || cpuKey.startsWith('r7_2') || cpuKey.startsWith('r7_3');
-    const weakWholeSystem = cpuSc <= 5 && gpuSc <= 5;
-    const shouldShow = budgetN === 0 || budgetUSD >= 650 || oldIntel || weakWholeSystem;
-    if (!shouldShow) return '';
 
-    const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
-    const marketplaceUrl = query => marketplaceHost + encodeURIComponent(query);
-    const cards = [];
+    // ── Rebuild candidate detection ──────────────────────────────────
+    // A user is a rebuild candidate only if their platform is genuinely
+    // at end-of-life AND incremental upgrades no longer make financial sense.
 
-    if (oldIntel || (oldAm4 && cpuSc <= 5)) {
-      cards.push({
-        k: inTr('Compatible platform bundle','Uyumlu platform paketi'),
-        t: oldIntel
-          ? 'Ryzen 5 5600 + B550 + 2x16 GB DDR4'
-          : 'Ryzen 7 5700X3D + BIOS check + keep DDR4',
-        p: oldIntel
-          ? formatRangeForCurrency(260, 430, 'retail')
-          : formatRangeForCurrency(180, 320, 'retail'),
-        specs: oldIntel
-          ? ['AM4/B550', 'DDR4 3200-3600', 'keep GPU first']
-          : ['AM4 drop-in', 'DDR4 stays', 'BIOS required'],
-        q: oldIntel ? 'Ryzen 5 5600 B550 motherboard 32GB DDR4 bundle' : 'Ryzen 7 5700X3D',
-        c: oldIntel
-          ? inTr('Older Intel usually needs CPU + motherboard, and RAM may move with the platform. This is safer than buying a random old i7.',
-                 'Eski Intel tarafinda genelde CPU + anakart gerekir; RAM platforma gore degisebilir. Rastgele eski i7 almaktan daha guvenli bir rota.')
-          : inTr('AM4 can be upgraded cheaply if the motherboard supports the CPU. Confirm BIOS support before buying.',
-                 'AM4, anakart CPUyu destekliyorsa ucuza guclenebilir. Satin almadan once BIOS destegini dogrula.')
-      });
+    const oldIntelGen = (
+      cpuKey.startsWith('i3_6') || cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
+      cpuKey.startsWith('i3_7') || cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
+      cpuKey.startsWith('i3_8') || cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
+      // 9th gen is borderline — only if GPU is also weak
+      ((cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9')) && gpuSc <= 4)
+    );
+
+    // Ryzen 1000 / 2000 only — NOT 3000 (R5 3600 still valid)
+    const oldAmdGen = (
+      cpuKey.startsWith('r3_1') || cpuKey.startsWith('r5_1') || cpuKey.startsWith('r7_1') ||
+      cpuKey.startsWith('r3_2') || cpuKey.startsWith('r5_2') || cpuKey.startsWith('r7_2')
+    );
+
+    // GPU generation check — GTX 970/980, RTX 2060 and older
+    const oldGpu = (
+      cpuKey.startsWith('gtx9') ||
+      gpuKey === 'gtx970' || gpuKey === 'gtx980' || gpuKey === 'gtx980ti' ||
+      gpuKey === 'rtx2060' || gpuKey === 'rtx2060s' ||
+      gpuKey === 'rtx2070' || gpuKey === 'rtx2070s' ||
+      gpuKey === 'gtx1060_3gb' || gpuKey === 'gtx1060_6gb' ||
+      gpuKey === 'gtx1070' || gpuKey === 'gtx1070ti' ||
+      gpuKey === 'gtx1050ti' || gpuKey === 'gtx1080' || gpuKey === 'gtx1080ti'
+    );
+
+    const isDdr3 = ramType === 'ddr3';
+    const weakPsuAndOldPlatform = (psuW > 0 && psuW < 500) && (oldIntelGen || oldAmdGen);
+    const bothVeryWeak = cpuSc <= 4 && gpuSc <= 4;
+
+    // True rebuild candidate: old platform + at least one more weak signal
+    const isRebuildCandidate = (oldIntelGen || oldAmdGen || isDdr3) &&
+      (oldGpu || weakPsuAndOldPlatform || bothVeryWeak || isDdr3);
+
+    // Never show rebuild if user has a modern capable system
+    // A user with cpuSc >= 7 OR gpuSc >= 7 has a sensible upgrade path
+    const hasStrongComponent = cpuSc >= 7 || gpuSc >= 7;
+    if (hasStrongComponent) return buildPlatformExtensionPath();
+    if (!isRebuildCandidate) return buildPlatformExtensionPath();
+
+    // ── Budget gate — don't show rebuild without serious budget intent ─
+    if (budgetN > 0 && budgetUSD < 500) return '';
+
+    // ── REBUILD CANDIDATE: Show "Complete System Alternatives" ────────
+    const storeLinks = currentLang === 'tr'
+      ? [
+          { name: 'İncehesap',   url: 'https://www.incehesap.com/arama/?q=' },
+          { name: 'Gaming.Gen',  url: 'https://www.gaming.gen.tr/ara/?q=' },
+          { name: 'Sinerji',     url: 'https://www.sinerjibilisim.com.tr/arama?q=' },
+          { name: 'İtopya',      url: 'https://www.itopya.com/arama?kelime=' }
+        ]
+      : [
+          { name: 'Amazon',      url: 'https://www.amazon.com/s?k=' },
+          { name: 'Newegg',      url: 'https://www.newegg.com/p/pl?d=' }
+        ];
+
+    const storeLink = (query) => {
+      const s = storeLinks[0];
+      return s.url + encodeURIComponent(query);
+    };
+
+    const builds = [
+      {
+        tier: inTr('Budget Build', 'Ekonomik Kasa'),
+        tierCls: 'build-tier-budget',
+        cpu: 'Ryzen 5 5600 / i5-12400F',
+        gpu: 'RX 6600 / RTX 3060',
+        ram: '2×8 GB DDR4-3200',
+        perfTier: inTr('1080p High', '1080p Yüksek'),
+        note: inTr(
+          'Enough for 1080p at high settings in most titles. Good value if your current build is under 4/10 on both CPU and GPU.',
+          'Çoğu oyunda 1080p yüksek ayar için yeterli. Mevcut kasanız CPU ve GPU olarak 4/10 altındaysa iyi değer sunar.'
+        ),
+        query: 'Ryzen 5 5600 RX 6600 gaming pc'
+      },
+      {
+        tier: inTr('Balanced Build', 'Dengeli Kasa'),
+        tierCls: 'build-tier-balanced',
+        cpu: 'Ryzen 5 7600 / Ryzen 7 7700X',
+        gpu: 'RX 7800 XT / RTX 4070',
+        ram: '2×16 GB DDR5-6000',
+        perfTier: inTr('1440p High', '1440p Yüksek'),
+        note: inTr(
+          'AM5 platform with DDR5. Reuse your GPU temporarily if it scores 5+. Long upgrade runway.',
+          'AM5 ve DDR5 platformu. GPU puanınız 5 veya üstüyse geçici olarak mevcut GPU\'yu kullanabilirsiniz. Uzun vadeli yükseltme payı var.'
+        ),
+        query: 'Ryzen 5 7600 B650 DDR5 gaming pc'
+      },
+      {
+        tier: inTr('Performance Build', 'Performans Kasası'),
+        tierCls: 'build-tier-perf',
+        cpu: 'Ryzen 7 7800X3D / i7-13700KF',
+        gpu: 'RTX 4070 Ti / RX 7900 XT',
+        ram: '2×16 GB DDR5-6000',
+        perfTier: inTr('1440p / 4K Ultra', '1440p / 4K Ultra'),
+        note: inTr(
+          'Only makes sense if budget allows and current system scores below 4 on both components. Otherwise upgrade GPU alone first.',
+          'Yalnızca bütçe yeterliyse ve mevcut sistem her iki bileşende 4\'ün altındaysa mantıklı. Aksi hâlde önce sadece GPU yükseltin.'
+        ),
+        query: 'Ryzen 7 7800X3D RTX 4070 Ti gaming pc build'
+      }
+    ];
+
+    const visibleBuilds = budgetN > 0 && budgetUSD < 900
+      ? builds.slice(0, 1)
+      : budgetN > 0 && budgetUSD < 1400
+      ? builds.slice(0, 2)
+      : builds;
+
+    return (
+      '<div class="example-block build-block">' +
+        '<div class="discovery-head">' +
+          inTr('Complete System Alternatives', 'Komple Sistem Alternatifleri') +
+        '</div>' +
+        '<div class="build-trust-note">' +
+          inTr(
+            'Shown because your current platform has limited upgrade headroom. Upgrade-first is still recommended — a single GPU or CPU swap may deliver better value than a full rebuild.',
+            'Mevcut platformunuzun yükseltme alanı sınırlı olduğu için gösteriliyor. Önce yükseltme hâlâ önerilir — tek bir GPU veya CPU değişimi komple yeniden yapıma göre daha iyi değer sunabilir.'
+          ) +
+        '</div>' +
+        '<div class="example-grid build-grid">' +
+          visibleBuilds.map(b =>
+            '<div class="example-card build-card">' +
+              '<div class="path-kicker ' + b.tierCls + '">' + b.tier + '</div>' +
+              '<div class="build-specs-list">' +
+                '<div class="build-spec-row"><span>' + inTr('CPU', 'İşlemci') + '</span><strong>' + b.cpu + '</strong></div>' +
+                '<div class="build-spec-row"><span>' + inTr('GPU', 'Ekran Kartı') + '</span><strong>' + b.gpu + '</strong></div>' +
+                '<div class="build-spec-row"><span>' + inTr('RAM', 'RAM') + '</span><strong>' + b.ram + '</strong></div>' +
+                '<div class="build-spec-row"><span>' + inTr('Target', 'Hedef') + '</span><strong>' + b.perfTier + '</strong></div>' +
+              '</div>' +
+              '<div class="path-copy">' + b.note + '</div>' +
+              '<div class="build-store-links">' +
+                storeLinks.slice(0, 2).map(s =>
+                  '<a class="link-slot build-link" href="' + s.url + encodeURIComponent(b.query) + '" target="_blank" rel="noopener noreferrer">' +
+                    inTr('View on', 'Bak:') + ' ' + s.name +
+                  '</a>'
+                ).join('') +
+              '</div>' +
+            '</div>'
+          ).join('') +
+        '</div>' +
+        '<div class="info-note">' +
+          inTr(
+            'These are example system tiers, not a shopping cart. Verify socket compatibility, BIOS support, RAM type, PSU capacity, and case clearance before buying.',
+            'Bunlar örnek sistem seviyeleridir, hazır sepet değildir. Satın almadan önce soket uyumluluğunu, BIOS desteğini, RAM türünü, PSU kapasitesini ve kasa uyumunu doğrulayın.'
+          ) +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // ── Platform extension path — for users who do NOT need a full rebuild ─
+  function buildPlatformExtensionPath() {
+    // Don't show if there's nothing meaningful to suggest
+    if (cpuSc < 5 && gpuSc < 5) return ''; // both weak — rebuild path handles this
+
+    const isAm4 = cpuKey.includes('r5_5') || cpuKey.includes('r7_5') || cpuKey.includes('r5_3') ||
+                  cpuKey.includes('r7_3') || cpuKey.includes('r7_5700') || cpuKey.includes('r9_5');
+    const isAm5 = cpuKey.includes('r5_7') || cpuKey.includes('r7_7') || cpuKey.includes('r9_7') ||
+                  cpuKey.includes('r5_9') || cpuKey.includes('r7_9') || cpuKey.includes('r9_9');
+    const isIntel12Plus = cpuKey.includes('i5_12') || cpuKey.includes('i7_12') || cpuKey.includes('i5_13') ||
+                          cpuKey.includes('i7_13') || cpuKey.includes('i9_13') || cpuKey.includes('i5_14') || cpuKey.includes('i7_14');
+
+    let pathTitle = '', steps = [];
+
+    if (isAm4) {
+      pathTitle = inTr('AM4 Platform Extension', 'AM4 Platform Genişletme');
+      steps = [
+        { label: inTr('CPU upgrade within AM4', 'AM4 içi CPU yükseltme'), val: 'Ryzen 5 5700X3D / 5800X3D', note: inTr('Drop-in if BIOS supports it. Best gaming value on AM4.', 'BIOS destekliyorsa direkt takıl. AM4\'te en iyi oyun değeri.') },
+        { label: inTr('RAM', 'RAM'), val: '2×16 GB DDR4-3600 CL16', note: inTr('If on 8 GB or single channel. Dual channel matters.', '8 GB veya single channel\'daysa. Dual channel önemli.') },
+        { label: inTr('Keep GPU', 'GPU\'yu koru'), val: inTr('Reuse your current GPU', 'Mevcut GPU\'nuzu kullanmaya devam edin'), note: inTr('GPU upgrade is separate — follow primary recommendation above.', 'GPU yükseltme ayrı — yukarıdaki ana öneriyi takip edin.') },
+        { label: inTr('Platform note', 'Platform notu'), val: inTr('AM4 upgrade runway ends here', 'AM4 yükseltme sonu'), note: inTr('After this CPU, next meaningful step is AM5.', 'Bu CPU\'dan sonra anlamlı adım AM5\'tir.') }
+      ];
+    } else if (isAm5) {
+      pathTitle = inTr('AM5 Platform Extension', 'AM5 Platform Genişletme');
+      steps = [
+        { label: inTr('CPU upgrade', 'CPU yükseltme'), val: 'Ryzen 7 7800X3D / 9800X3D', note: inTr('Same socket, large gaming gain. Worth it if GPU is strong.', 'Aynı soket, büyük oyun kazanımı. GPU güçlüyse değer.') },
+        { label: inTr('RAM', 'RAM'), val: '2×16 GB DDR5-6000 CL30', note: inTr('Sweet spot for AM5 gaming.', 'AM5 oyun için ideal nokta.') },
+        { label: inTr('GPU', 'GPU'), val: inTr('Follow primary recommendation', 'Ana öneriyi takip et'), note: '' }
+      ];
+    } else if (isIntel12Plus) {
+      pathTitle = inTr('Intel Platform Extension', 'Intel Platform Genişletme');
+      steps = [
+        { label: inTr('CPU upgrade', 'CPU yükseltme'), val: 'i7-13700KF / i9-13900K', note: inTr('LGA1700 is compatible if motherboard supports. Check VRM quality.', 'Anakart destekliyorsa LGA1700 uyumlu. VRM kalitesini kontrol et.') },
+        { label: inTr('RAM', 'RAM'), val: '2×16 GB DDR4-3600 / DDR5-5600', note: inTr('Depends on your motherboard generation.', 'Anakart nesline göre değişir.') },
+        { label: inTr('GPU', 'GPU'), val: inTr('Follow primary recommendation', 'Ana öneriyi takip et'), note: '' }
+      ];
+    } else {
+      // Generic: no clear platform suggestion
+      return '';
     }
 
-    cards.push({
-      k: inTr('Value complete build','Value komple kasa'),
-      t: 'Ryzen 5 5600 / i5-12400F + RX 6600 / RTX 3060',
-      p: formatRangeForCurrency(650, 900, 'retail'),
-      specs: ['6-core CPU', 'B550/B660', '2x16 GB DDR4', '650W PSU'],
-      q: 'Ryzen 5 5600 RX 6600 gaming pc build',
-      c: inTr('Best when both CPU and GPU are old. It keeps the build realistic instead of overspending on one shiny part.',
-              'CPU ve GPU birlikte eskiyse en mantikli rota. Tek parlak parcaya fazla para gommek yerine dengeli kasa kurar.')
-    });
-
-    cards.push({
-      k: inTr('Balanced modern build','Dengeli modern kasa'),
-      t: 'Ryzen 5 7500F / 7600 + B650 + 32 GB DDR5',
-      p: formatRangeForCurrency(950, 1500, 'retail'),
-      specs: ['AM5/B650', 'DDR5 6000', 'RX 7800 XT / RTX 4070', '750W PSU'],
-      q: 'Ryzen 5 7500F B650 DDR5 RX 7800 XT gaming pc build',
-      c: inTr('A cleaner long-term route if the budget allows. CPU, motherboard, RAM, GPU, and PSU are considered together.',
-              'Butce yetiyorsa daha temiz uzun vadeli rota. CPU, anakart, RAM, GPU ve PSU birlikte dusunulur.')
-    });
-
-    const visibleCards = budgetN > 0 && budgetUSD < 600 ? cards.slice(0, 1) : cards;
-
-    return '<div class="example-block build-block">' +
-      '<div class="discovery-head">' + inTr('Complete PC build path','Komple PC toplama rotasi') + '</div>' +
-      '<div class="example-grid build-grid">' + visibleCards.map(card =>
-        '<div class="example-card build-card" data-focus-part="system" data-focus-label="Full build path">' +
-          '<div class="path-kicker">' + card.k + '</div>' +
-          '<div class="example-title">' + card.t + '</div>' +
-          '<div class="example-price">' + card.p + '</div>' +
-          '<div class="laptop-specs">' + card.specs.map(spec => '<span>' + spec + '</span>').join('') + '</div>' +
-          '<div class="path-copy">' + card.c + '</div>' +
-          '<a class="link-slot" href="' + marketplaceUrl(card.q) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor('build') + '</a>' +
-        '</div>'
-      ).join('') + '</div>' +
-      '<div class="info-note">' +
-        inTr('These are compatibility-aware build directions, not final shopping carts. Always verify motherboard socket, chipset, BIOS support, RAM type, case fit, and PSU quality before buying.',
-             'Bunlar uyumluluk dusunen kasa rotalaridir, kesin sepet degildir. Satin almadan once anakart soketi, chipset, BIOS destegi, RAM turu, kasa uyumu ve PSU kalitesini dogrula.') +
-      '</div>' +
-    '</div>';
+    return (
+      '<div class="example-block extension-block">' +
+        '<div class="discovery-head">' + pathTitle + '</div>' +
+        '<div class="extension-note">' +
+          inTr(
+            'Your platform still has upgrade headroom. A full rebuild is not necessary.',
+            'Platformunuzun hâlâ yükseltme alanı var. Komple yeniden yapıma gerek yok.'
+          ) +
+        '</div>' +
+        '<div class="extension-steps">' +
+          steps.map(s =>
+            '<div class="extension-step">' +
+              '<div class="extension-step-label">' + s.label + '</div>' +
+              '<div class="extension-step-val">' + s.val + '</div>' +
+              (s.note ? '<div class="extension-step-note">' + s.note + '</div>' : '') +
+            '</div>'
+          ).join('') +
+        '</div>' +
+      '</div>'
+    );
   }
   let budHTML = '';
   if (bandDesc) {
@@ -1753,22 +2179,24 @@ export function analyze(skipLoading) {
   if (isLaptop) {
     budHTML += '<div class="info-note">' + inTr('Laptop mode: desktop PSU and internal CPU/GPU upgrade paths are hidden. Compare complete laptop classes only after checking temperatures, charger connection, performance mode, RAM, and SSD options.','Laptop modu: masaustu PSU ve dahili CPU/GPU yukseltme rotalari gizlenir. Komple laptop siniflarini ancak sicaklik, adaptor baglantisi, performans modu, RAM ve SSD seceneklerini kontrol ettikten sonra karsilastir.') + '</div>';
   }
-  el('budget-content').innerHTML = budHTML;
+  _h('budget-content', budHTML);
 
   // 07 DNU
   const dnuEl = el('dnu-row');
-  if (dnuSet.size) {
-    dnuEl.innerHTML =
-      '<div class="dnu-intro">' + inTr('For this setup, I would not buy these first:','Bu sistemde ilk olarak bunlara para harcama:') + '</div>' +
-      [...dnuSet].map(k => '<span class="dnu-tag">' + (PART_LABEL[k]||k) + '</span>').join('');
-  } else {
-    dnuEl.innerHTML = '<div class="dnu-intro">' + inTr('I do not see a clearly unnecessary category from the current inputs.','Mevcut bilgilere göre tamamen gereksiz görünen net bir kategori yok.') + '</div>';
+  if (dnuEl) {
+    if (dnuSet.size) {
+      dnuEl.innerHTML =
+        '<div class="dnu-intro">' + inTr('For this setup, I would not buy these first:','Bu sistemde ilk olarak bunlara para harcama:') + '</div>' +
+        [...dnuSet].map(k => '<span class="dnu-tag">' + (PART_LABEL[k]||k) + '</span>').join('');
+    } else {
+      dnuEl.innerHTML = '<div class="dnu-intro">' + inTr('I do not see a clearly unnecessary category from the current inputs.','Mevcut bilgilere göre tamamen gereksiz görünen net bir kategori yok.') + '</div>';
+    }
   }
 
   // 08 Final Decision
-  el('final-box').className = 'final-box ' + finalCls;
-  el('fi').innerHTML        = finalIco;
-  el('ft').textContent      = finalSent;
+  _c('final-box', 'final-box ' + finalCls);
+  _h('fi', finalIco);
+  _s('ft', finalSent);
   setLatestResultSummary([
     'UpgradePilot Result',
     'System health: ' + diagnostics.systemScore + '/100',
@@ -1791,18 +2219,6 @@ export function analyze(skipLoading) {
   ].join('\n'));
   setCopyButtonState(false);
 
-  // Reset accordion: sec 03 open, 04-08 closed each run
-  document.querySelectorAll('.r-sec-collapsible').forEach(sec => {
-    const num = sec.querySelector('.r-num')?.textContent?.trim();
-    sec.dataset.accordion = (num === '03') ? 'open' : 'closed';
-  });
-  updateFreeBoostProgress();
-  // Show result
-  const r = el('result');
-  r.classList.add('show');
-  showResultStep();
-  r.style.animation = 'none';
-  void r.offsetWidth;
-  r.style.animation = 'fadeUp .45s ease both';
-  setTimeout(() => r.scrollIntoView({behavior:'smooth',block:'start'}), 60);
+  // showResultPage handles accordion reset + free boost update
+  showResultPage();
 }

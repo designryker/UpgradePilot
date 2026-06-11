@@ -1,3 +1,10 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  DEPRECATED — NOT THE ACTIVE ENTRY POINT                        ║
+// ║  Active entry point: src/app.js (confirmed via index.html)      ║
+// ║  This file is kept as reference only. Do NOT edit.              ║
+// ║  Will be deleted after v0.5.0-stable is tagged.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 import './styles.css';
 import {CPU_SCORE, GPU_SCORE, GPU_ENC, PRICE_TR, PRICE_USD, psuMaxGpu, ramSpeedTier} from './parts-data.js';
 import {I18N} from './i18n.js';

@@ -1,14 +1,15 @@
 {
   "name": "upgradepilot",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node tools/smoke-polish.mjs",
-    "check": "npm run build && npm run smoke"
+    "check": "npm run build && npm run smoke",
+    "check-parts": "node tools/check-parts.mjs"
   },
   "devDependencies": {
     "vite": "^7.2.7"

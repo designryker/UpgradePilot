@@ -3,6 +3,49 @@ import { el, inTr, selectedOptionText } from './utils.js';
 import { currentLang, QUICK_PARTS, hasTouchedSpecs, setHasTouchedSpecs } from './state.js';
 import { buildPartSearchText } from './recommendation-helpers.js';
 import { I18N } from './i18n.js';
+import { CPU_TIER, GPU_TIER } from './parts-data.js';
+
+// ── Tier badge ────────────────────────────────────────────────────────
+
+const TIER_META = {
+  'entry':     { label_en: 'Entry',      label_tr: 'Giriş',           color: '#6b7280' },
+  'mid':       { label_en: 'Mid-range',  label_tr: 'Orta Seviye',     color: '#3b82f6' },
+  'upper-mid': { label_en: 'Upper-mid',  label_tr: 'Orta-Üst',        color: '#8b5cf6' },
+  'high-end':  { label_en: 'High-end',   label_tr: 'Üst Seviye',      color: '#f59e0b' },
+  'flagship':  { label_en: 'Flagship',   label_tr: 'Amiral Gemisi',   color: '#10b981' },
+};
+
+export function updatePartTierBadge(partId) {
+  const badgeWrap = document.getElementById(partId + '-tier-badge');
+  if (!badgeWrap) return;
+  const select = el(partId);
+  if (!select) return;
+  const val = select.value;
+  const map = partId === 'cpu' ? CPU_TIER : GPU_TIER;
+  const info = map[val];
+  if (!info) { badgeWrap.hidden = true; return; }
+  const meta = TIER_META[info.tier] || TIER_META['mid'];
+  const lang = currentLang === 'tr' ? 'tr' : 'en';
+  const tierLabel = meta['label_' + lang];
+  const desc = info['desc_' + lang];
+  badgeWrap.hidden = false;
+  badgeWrap.innerHTML =
+    '<span class="tier-dot" style="background:' + meta.color + '"></span>' +
+    '<span class="tier-label" style="color:' + meta.color + '">' + tierLabel + '</span>' +
+    '<span class="tier-desc">' + desc + '</span>';
+}
+
+export function initTierBadges() {
+  ['cpu', 'gpu'].forEach(id => {
+    const select = el(id);
+    if (!select) return;
+    updatePartTierBadge(id);
+    select.addEventListener('change', () => {
+      syncPartSearchWithSelection(id);
+      updatePartTierBadge(id);
+    });
+  });
+}
 
 let memoryCompatibilityUpdater = null;
 export function setMemoryCompatibilityUpdater(fn) { memoryCompatibilityUpdater = typeof fn === 'function' ? fn : null; }
@@ -83,16 +126,9 @@ function wirePartTarget(node, part, label) {
   if (!node || node.dataset.pcMapBound === 'true') return;
   node.dataset.pcMapBound = 'true';
   const activate = () => setVirtualPcPart(part, label || partLabel(part));
-  const clear = () => {
-    window.setTimeout(() => {
-      if (!node.matches(':hover') && !node.contains(document.activeElement)) setVirtualPcPart('system');
-    }, 40);
-  };
-  node.addEventListener('mouseenter', activate);
-  node.addEventListener('focusin', activate);
+  // Keep the Virtual PC neon state click-driven. Hover used to auto-light
+  // parts and made the UI feel jumpy, especially on the result/form page.
   node.addEventListener('click', activate);
-  node.addEventListener('mouseleave', clear);
-  node.addEventListener('focusout', clear);
 }
 
 export function initVirtualPcMap() {
@@ -112,10 +148,29 @@ export function initVirtualPcMap() {
 export function initClickableFields() {
   document.querySelectorAll('.field').forEach(field => {
     if (field.dataset.fieldBound === 'true') return;
-    const control = field.querySelector('select,input:not([type="hidden"]),textarea');
+    const control = field.querySelector('select, input[type="range"], input[type="number"], input[type="text"], input[type="search"], textarea');
     if (!control) return;
     field.dataset.fieldBound = 'true';
     field.classList.add('is-clickable-field');
+
+    // Track native select dropdown open state
+    // mousedown opens it, change/blur/click-outside closes it
+    if (control.tagName === 'SELECT') {
+      control._dropdownOpen = false;
+      control.addEventListener('mousedown', () => {
+        control._dropdownOpen = !control._dropdownOpen;
+      });
+      control.addEventListener('change', () => {
+        control._dropdownOpen = false;
+      });
+      control.addEventListener('blur', () => {
+        control._dropdownOpen = false;
+      });
+      // Escape key closes dropdown
+      control.addEventListener('keydown', e => {
+        if (e.key === 'Escape' || e.key === 'Enter') control._dropdownOpen = false;
+      });
+    }
 
     if (control.tagName === 'SELECT' && !field.querySelector('.field-click-cue')) {
       const cue = document.createElement('span');
@@ -135,14 +190,16 @@ export function initClickableFields() {
       }, 520);
     };
 
-    field.addEventListener('mouseenter', () => setHover(true));
+    // Do not turn on the neon state on hover; only focus/click/input should do it.
     field.addEventListener('mouseleave', () => {
+      if (control.tagName === 'SELECT') return; // SELECT dropdown yönetir
       setHover(false);
       if (!field.contains(document.activeElement)) setActive(false);
     });
-    field.addEventListener('focusin',  () => { setHover(true); setActive(true); });
+    field.addEventListener('focusin',  () => { setActive(true); });
     field.addEventListener('focusout', () => {
       window.setTimeout(() => {
+        if (control.tagName === 'SELECT') return; // SELECT kendi blur'unu yönetir
         if (!field.contains(document.activeElement) && !field.matches(':hover')) {
           setHover(false); setActive(false);
         }
@@ -153,13 +210,20 @@ export function initClickableFields() {
 
     field.addEventListener('click', event => {
       if (event.target.closest('button,a,.field-help,.inline-tools')) return;
+      if (event.target.type === 'checkbox' || event.target.type === 'radio') return;
+      if (event.target.tagName === 'LABEL' && event.target.htmlFor) return;
+      // CPU/GPU fields contain both a search input and a native select.
+      // If the click lands on the select, never bounce focus back to the
+      // search input — that was closing the native dropdown immediately.
+      if (event.target.closest('select')) { flashActive(); return; }
+      // SELECT-only fields manage their own native dropdown.
+      if (control.tagName === 'SELECT') { flashActive(); return; }
       if (event.target === control) { flashActive(); return; }
       const selection = window.getSelection?.();
       if (selection && selection.toString()) return;
       control.focus({ preventScroll: true });
       flashActive();
-      if (control.tagName === 'SELECT' || control.type === 'range' ||
-          control.type === 'checkbox' || control.type === 'radio') {
+      if (control.type === 'checkbox' || control.type === 'radio') {
         control.click();
       }
     });
@@ -220,12 +284,30 @@ export function applySystemModeToPartSelects(selectId) {
   });
 }
 
+
+export function syncPartSearchWithSelection(selectId) {
+  const select = el(selectId);
+  const search = el(selectId + '-search');
+  if (!select || !search) return;
+  const selected = select.selectedOptions?.[0];
+  const value = select.value;
+  const label = selected?.textContent?.trim() || '';
+  search.value = value ? label : '';
+  applySystemModeToPartSelects(selectId);
+  updateQuickChips();
+  updatePartTierBadge(selectId);
+}
+
 export function filterSelectOptions(selectId, query) {
   const select = el(selectId);
   if (!select) return;
-  applySystemModeToPartSelects(selectId);
+
+  // Native dropdown açıkken DOM'a dokunma — dropdown kapanır
+  if (select._dropdownOpen) return;
+
   const q  = query.trim().toLowerCase();
   const nq = q.replace(/[^a-z0-9]/g, '');
+  if (q) applySystemModeToPartSelects(selectId);
   let firstMatch = null;
 
   select.querySelectorAll('option').forEach(option => {
@@ -237,7 +319,10 @@ export function filterSelectOptions(selectId, query) {
     const isSearchMatch = !q || label.includes(q) || normalized.includes(nq);
     const isMatch       = modeMatch && isSearchMatch;
     option.hidden   = !modeMatch;
-    option.disabled = !isMatch;
+    // Only set disabled when there's an active query — avoid touching DOM
+    // while native dropdown is open (causes dropdown to close)
+    if (q) option.disabled = !isMatch;
+    else   option.disabled = false;
     if (isMatch && !firstMatch) firstMatch = option;
   });
 
@@ -247,13 +332,15 @@ export function filterSelectOptions(selectId, query) {
     const modeMatch = groupMode === mode;
     const hasMatch  = [...group.querySelectorAll('option')].some(o => !o.disabled);
     group.hidden   = !modeMatch;
-    group.disabled = !modeMatch || (!!q && !hasMatch);
+    if (q) group.disabled = !modeMatch || !hasMatch;
+    else   group.disabled = !modeMatch;
   });
 
   if (q && firstMatch) {
     select.value = firstMatch.value;
     if (selectId === 'cpu') memoryCompatibilityUpdater?.();
     updateQuickChips();
+    updatePartTierBadge(selectId);
   }
 }
 
@@ -263,8 +350,8 @@ export function quickPick(selectId, value) {
   if (node) node.value = value;
   setVirtualPcPart(selectId === 'gpu' ? 'gpu' : 'cpu',
                    selectId === 'gpu' ? 'GPU focus' : 'CPU focus');
-  const search = el(selectId + '-search');
-  if (search) { search.value = ''; filterSelectOptions(selectId, ''); }
+  syncPartSearchWithSelection(selectId);
   if (selectId === 'cpu') memoryCompatibilityUpdater?.();
   updateQuickChips();
+  updatePartTierBadge(selectId);
 }

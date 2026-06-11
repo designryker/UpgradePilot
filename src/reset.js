@@ -29,6 +29,13 @@ export function resetInputsToDefaults() {
   document.querySelectorAll('.quick-chip.active,.money-chip.active').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.ci.done').forEach(n => n.classList.remove('done'));
   document.querySelectorAll('.cbox.on').forEach(n => { n.classList.remove('on'); n.textContent = ''; });
+  // Clear all toggle buttons on reset
+  document.querySelectorAll('.tg-btn').forEach(btn => btn.classList.remove('tg-active'));
+  const psuCheck = document.getElementById('psu-unknown-check');
+  if (psuCheck && psuCheck.checked) {
+    psuCheck.checked = false;
+    psuCheck.dispatchEvent(new Event('change'));
+  }
 
   clearAnalysisSequence();
   el('loading-card')?.classList.remove('show', 'is-analyzing');
