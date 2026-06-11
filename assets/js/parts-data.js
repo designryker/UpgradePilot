@@ -1,5 +1,5 @@
 /* ==============================================================
-   RIGPILOT v0.3.2 — Rule-Based Performance & Upgrade Decision Engine
+   UpgradePilot v0.3.2 — Rule-Based Performance & Upgrade Decision Engine
    Goal: Stop users wasting money. Free fixes first, then upgrades.
    ============================================================== */
 

@@ -1050,7 +1050,7 @@ function analyze(skipLoading) {
       '<div class="metric"><div class="mlabel">' + inTr('Estimated Performance Gain','Tahmini Performans Artisi') + '</div><div class="mval ' + gain.cls + '">' + gain.label + '</div><div class="msub">' + gain.note + '</div></div>' +
     '</div>';
   if (currency === 'try') {
-    budHTML += '<div class="info-note">' + inTr('Turkish lira pricing is highly volatile. RigPilot cannot estimate TRY costs reliably. Check current prices on local retailers before budgeting.','Türk lirası fiyatları çok değişken. RigPilot TRY maliyetlerini güvenilir şekilde tahmin edemez. Bütçe belirlemeden önce yerel satıcılarda güncel fiyatları kontrol et.') + '</div>';
+    budHTML += '<div class="info-note">' + inTr('Turkish lira pricing is highly volatile. UpgradePilot cannot estimate TRY costs reliably. Check current prices on local retailers before budgeting.','Türk lirası fiyatları çok değişken. UpgradePilot TRY maliyetlerini güvenilir şekilde tahmin edemez. Bütçe belirlemeden önce yerel satıcılarda güncel fiyatları kontrol et.') + '</div>';
   }
   el('budget-content').innerHTML = budHTML;
 

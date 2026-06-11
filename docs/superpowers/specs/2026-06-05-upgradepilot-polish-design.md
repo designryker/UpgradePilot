@@ -1,8 +1,8 @@
-# RigPilot Polish Design
+# UpgradePilot Polish Design
 
 ## Goal
 
-Make the current RigPilot result flow cleaner, easier to scan, and more confident without redesigning the app or adding major new product areas.
+Make the current UpgradePilot result flow cleaner, easier to scan, and more confident without redesigning the app or adding major new product areas.
 
 ## Scope
 

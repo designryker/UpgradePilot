@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RigPilot — PC Performance &amp; Upgrade Advisor</title>
+<title>UpgradePilot — PC Performance &amp; Upgrade Advisor</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -156,7 +156,7 @@
   <div class="eyebrow">// v0.3.1 — PC Performance &amp; Upgrade Advisor</div>
   <h1>Rig<span class="accent">Pilot</span><span class="dim">.</span></h1>
   <div class="tagline">Optimize first. Upgrade smart.</div>
-  <p class="subtitle">Fill in your current specs. RigPilot will tell you what is likely limiting you, what free fixes to try first, and <strong>only then</strong> whether a hardware upgrade is actually worth the money.</p>
+  <p class="subtitle">Fill in your current specs. UpgradePilot will tell you what is likely limiting you, what free fixes to try first, and <strong>only then</strong> whether a hardware upgrade is actually worth the money.</p>
 </header>
 
 <!-- CPU & GPU -->
@@ -352,7 +352,7 @@
 <div id="result">
   <div class="r-card">
     <div class="r-topbar">
-      <span class="r-product">RigPilot &middot; Analysis</span>
+      <span class="r-product">UpgradePilot &middot; Analysis</span>
       <span class="vbadge" id="vbadge"></span>
     </div>
     <div class="r-body">
@@ -425,7 +425,7 @@
 
 <script>
 /* ==============================================================
-   RIGPILOT v0.3.1 — Rule-Based Performance & Upgrade Decision Engine
+   UpgradePilot v0.3.1 — Rule-Based Performance & Upgrade Decision Engine
    Goal: Stop users wasting money. Free fixes first, then upgrades.
    ============================================================== */
 
@@ -1148,7 +1148,7 @@ function analyze() {
       '<div class="metric"><div class="mlabel">Upgrade Value Score</div><div class="mval ' + scCls + '">' + sc + '/10</div><div class="msub">' + (sc>=7?'Strong estimated value':sc>=4?'Moderate estimated value':'Low — optimize first') + '</div><div class="sbar-wrap"><div class="sbar" style="width:' + (sc*10) + '%;background:' + barClr + '"></div></div></div>' +
     '</div>';
   if (currency === 'try') {
-    budHTML += '<div class="info-note">Turkish lira pricing is highly volatile. RigPilot cannot estimate TRY costs reliably. Check current prices on local retailers before budgeting.</div>';
+    budHTML += '<div class="info-note">Turkish lira pricing is highly volatile. UpgradePilot cannot estimate TRY costs reliably. Check current prices on local retailers before budgeting.</div>';
   }
   el('budget-content').innerHTML = budHTML;
 

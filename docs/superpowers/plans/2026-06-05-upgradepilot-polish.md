@@ -1,8 +1,8 @@
-# RigPilot Polish Implementation Plan
+# UpgradePilot Polish Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Polish RigPilot's existing UI and recommendation flow for clarity, readability, and confidence.
+**Goal:** Polish UpgradePilot's existing UI and recommendation flow for clarity, readability, and confidence.
 
 **Architecture:** Keep the current Vite app and large-file structure. Extract only small pure helpers into `src/recommendation-helpers.js` so search matching and BIOS gating can be smoke-tested without a browser.
 

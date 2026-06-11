@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node tools/smoke-polish.mjs",
-    "check": "npm run build && npm run smoke",
-    "check-parts": "node tools/check-parts.mjs"
+    "check": "npm run check-brand && npm run build && npm run smoke",
+    "check-parts": "node tools/check-parts.mjs",
+    "check-brand": "node tools/check-brand.mjs"
   },
   "devDependencies": {
     "vite": "^7.2.7"
