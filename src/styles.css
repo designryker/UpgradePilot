@@ -108,6 +108,8 @@
 
   .field{background:linear-gradient(180deg,rgba(255,255,255,.025),transparent),var(--surface);border:1px solid var(--border);border-radius:10px;padding:.82rem 1.1rem;transition:border-color .2s,background .2s,box-shadow .2s}
   .field:focus-within{border-color:var(--accent2);background:var(--surface2);box-shadow:0 0 0 1px rgba(255,176,32,.12)}
+  .field.has-validation-error{border-color:rgba(248,113,113,.72);background:rgba(248,113,113,.07);box-shadow:0 0 0 1px rgba(248,113,113,.14)}
+  .field-validation-message{margin-top:.55rem;color:#fca5a5;font-size:.78rem;line-height:1.45;text-transform:none;letter-spacing:0}
   .field label{display:flex;align-items:center;font-family:var(--font-tech);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;gap:.25rem;min-width:0;}
   .field label>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
   .field-help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:.35rem;border:1px solid var(--accent2-border);border-radius:50%;background:var(--accent2-soft);color:var(--accent2);font-family:var(--font-tech);font-size:10px;letter-spacing:0;text-transform:none;position:relative;cursor:help;vertical-align:middle;box-shadow:0 0 0 1px rgba(255,176,32,.06)}
@@ -132,6 +134,7 @@
   .psu-readout{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:.35rem 0 .45rem}
   .psu-value{font-family:var(--font-tech);font-size:1rem;color:var(--accent);font-weight:700}
   .is-hidden{display:none!important}
+  .memory-fields:has(#memory-type-field.is-hidden) > .field{grid-column:1/-1}
   .money-tools{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-top:.7rem}
   .money-chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:8px;padding:.52rem .35rem;font-family:var(--font-tech);font-size:10px;cursor:pointer;transition:.15s}
   .money-chip:hover{border-color:var(--accent2);color:var(--text);background:var(--surface2)}
@@ -4921,4 +4924,76 @@ h1,
   color: #dbeaff;
   font-weight: 500;
   box-shadow: 0 0 0 1px rgba(105,167,255,.1);
+}
+
+/* === Calm field interaction hierarchy === */
+.current-problem-layout{
+  grid-template-columns:minmax(0,48rem);
+  justify-content:start;
+}
+.current-problem-layout .field{
+  min-height:88px;
+}
+.field.has-value:not(.is-field-active):not(:focus-within),
+.field.is-active:not(.is-field-active):not(:focus-within),
+.field[data-pc-part].is-active:not(.is-field-active):not(:focus-within){
+  border-color:rgba(105,167,255,.24)!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.014)),
+    rgba(25,28,35,.84)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 8px 20px rgba(0,0,0,.10)!important;
+}
+.field.has-value:not(.is-field-active):not(:focus-within)::after,
+.field.is-active:not(.is-field-active):not(:focus-within)::after,
+.field[data-pc-part].is-active:not(.is-field-active):not(:focus-within)::after{
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.field:hover:not(.is-field-active):not(:focus-within),
+.field.is-field-hover:not(.is-field-active):not(:focus-within),
+.field[data-pc-part]:hover:not(.is-field-active):not(:focus-within),
+.field[data-pc-part].is-field-hover:not(.is-field-active):not(:focus-within){
+  border-color:rgba(255,255,255,.24)!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.022)),
+    rgba(29,31,38,.86)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 24px rgba(0,0,0,.12)!important;
+  transform:translateY(-1px);
+}
+.field.is-field-active,
+.field:focus-within,
+.field[data-pc-part].is-field-active,
+.field[data-pc-part]:focus-within{
+  border-color:rgba(105,167,255,.46)!important;
+  background:
+    linear-gradient(180deg,rgba(105,167,255,.055),rgba(255,255,255,.018)),
+    rgba(27,31,39,.88)!important;
+  box-shadow:0 0 0 1px rgba(105,167,255,.07),0 12px 28px rgba(0,0,0,.15)!important;
+  transform:none;
+}
+.field.is-field-active::after,
+.field:focus-within::after,
+.field[data-pc-part].is-field-active::after,
+.field[data-pc-part]:focus-within::after{
+  border-color:rgba(105,167,255,.18)!important;
+  box-shadow:none!important;
+}
+.field.has-value:not(.is-field-active):not(:focus-within) label::before,
+.field.is-active:not(.is-field-active):not(:focus-within) label::before{
+  box-shadow:none!important;
+  opacity:.72;
+}
+.tg-btn:hover{
+  border-color:rgba(255,255,255,.24);
+  color:#e8e6f4;
+  background:rgba(255,255,255,.075);
+}
+.tg-btn.tg-active{
+  border-color:rgba(105,167,255,.42);
+  background:rgba(105,167,255,.10);
+  color:#dbeaff;
+  box-shadow:none;
+}
+@media(max-width:760px){
+  .current-problem-layout{grid-template-columns:1fr}
 }

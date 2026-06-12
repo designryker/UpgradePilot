@@ -27,20 +27,36 @@ export function analyze(skipLoading) {
   }
 }
 
-function _analyze(skipLoading) {
-  if (!skipLoading) {
-    const loader = el('loading-card');
-    const result = el('result');
-    if (result) result.classList.remove('show');
-    if (loader) loader.classList.remove('show');
-    goToWizardStep(WIZARD_STEPS.length - 2, false);
-    startAnalysisSequence(() => analyze(true));
-    return;
-  }
-  clearAnalysisSequence();
-  const loader = el('loading-card');
-  if (loader) loader.classList.remove('show', 'is-analyzing');
+function clearInputValidation() {
+  document.querySelectorAll('.field.has-validation-error').forEach(field => {
+    field.classList.remove('has-validation-error');
+    field.querySelector('.field-validation-message')?.remove();
+  });
+  document.querySelectorAll('[aria-invalid="true"]').forEach(control => control.removeAttribute('aria-invalid'));
+}
 
+function showInputValidation(control, message) {
+  clearAnalysisSequence();
+  el('loading-card')?.classList.remove('show', 'is-analyzing');
+  el('result')?.classList.remove('show');
+  goToWizardStep(1);
+  clearInputValidation();
+
+  const field = control.closest('.field');
+  if (field) {
+    field.classList.add('has-validation-error');
+    const validationMessage = document.createElement('div');
+    validationMessage.className = 'field-validation-message';
+    validationMessage.textContent = message;
+    field.appendChild(validationMessage);
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  control.setAttribute('aria-invalid', 'true');
+  control.focus({ preventScroll: true });
+  control.addEventListener('change', clearInputValidation, { once: true });
+}
+
+function _analyze(skipLoading) {
   // ── Read inputs — guard all element accesses ──
   const cpuEl = safeEl('cpu');
   const gpuEl = safeEl('gpu');
@@ -54,18 +70,32 @@ function _analyze(skipLoading) {
   }
 
   // ── Placeholder / empty selection guard ──
+  clearInputValidation();
   if (!cpuEl.value) {
-    showAnalysisError('Please select your CPU before running the analysis.');
+    showInputValidation(cpuEl, 'Please select your CPU before running the analysis.');
     return;
   }
   if (!gpuEl.value) {
-    showAnalysisError('Please select your GPU before running the analysis.');
+    showInputValidation(gpuEl, 'Please select your GPU before running the analysis.');
     return;
   }
   if (!ramEl.value) {
-    showAnalysisError('Please select your RAM capacity before running the analysis.');
+    showInputValidation(ramEl, 'Please select your RAM capacity before running the analysis.');
     return;
   }
+
+  if (!skipLoading) {
+    const loader = el('loading-card');
+    const result = el('result');
+    if (result) result.classList.remove('show');
+    if (loader) loader.classList.remove('show');
+    goToWizardStep(WIZARD_STEPS.length - 2, false);
+    startAnalysisSequence(() => analyze(true));
+    return;
+  }
+  clearAnalysisSequence();
+  const loader = el('loading-card');
+  if (loader) loader.classList.remove('show', 'is-analyzing');
 
   const cpuKey   = cpuEl.value;
   const gpuKey   = gpuEl.value;

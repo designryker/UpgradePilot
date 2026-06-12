@@ -154,7 +154,7 @@
 </div>
 
 <div class="sec-label" data-i18n="secondaryGoal">Current Problem</div>
-<div class="g1">
+<div class="g1 current-problem-layout">
   <div class="field" data-pc-part="system" data-pc-label="Performance goal">
     <label data-i18n="secondaryGoal">Current Problem</label>
     <select id="goal" autocomplete="off">
@@ -501,8 +501,8 @@
 
     <!-- Memory -->
 <div class="sec-label" data-i18n="secMemory">Memory</div>
-<div class="g2">
-  <div class="field" id="memory-type-field" data-pc-part="ram">
+<div class="g2 memory-fields">
+  <div class="field" data-pc-part="ram">
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="ramCapacity">RAM Capacity</span><span class="field-help" tabindex="0">?<span class="field-popover">16 GB is the practical baseline. 32 GB helps heavier games and multitasking.</span></span></label>
     <select id="ram" autocomplete="off">
@@ -513,7 +513,7 @@
       <option value="64">64 GB+</option>
     </select>
   </div>
-  <div class="field" data-pc-part="ram">
+  <div class="field" id="memory-type-field" data-pc-part="ram">
     <span class="field-click-cue" data-i18n="clickToChange">Click to edit</span>
     <label><span data-i18n="memoryType">Memory Type</span><span class="field-help" tabindex="0">?<span class="field-popover">DDR4 and DDR5 are not interchangeable. Pick what your motherboard uses.</span></span></label>
     <div class="tg-group" data-tg-id="ram-type">

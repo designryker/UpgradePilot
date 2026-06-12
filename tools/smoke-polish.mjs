@@ -174,6 +174,18 @@ assert.ok(
   'display detection should synchronize the visible resolution toggle'
 );
 assert.ok(indexSource.includes('id="memory-type-field"'), 'memory type field should have a stable conditional-visibility hook');
+assert.ok(
+  /<div class="field" data-pc-part="ram">[\s\S]*?<span data-i18n="ramCapacity">[\s\S]*?<select id="ram"/.test(indexSource),
+  'RAM capacity should remain an independent always-visible field'
+);
+assert.ok(
+  /<div class="field" id="memory-type-field" data-pc-part="ram">[\s\S]*?<span data-i18n="memoryType">/.test(indexSource),
+  'the conditional memory type hook should be attached to the Memory Type field'
+);
+assert.ok(
+  styleSource.includes('.memory-fields:has(#memory-type-field.is-hidden)'),
+  'RAM capacity should expand when the memory type choice is hidden'
+);
 assert.equal(indexSource.includes('src="/src/main.js"'), false, 'index should not load the old monolithic main.js');
 assert.ok(appSource.includes('function restoreFromPageCache()'), 'page-cache restore should have a dedicated state-only path');
 assert.equal(/if \(event\.persisted\) boot\(/.test(appSource), false, 'page-cache restore should not bind all event listeners again');
@@ -264,6 +276,27 @@ assert.ok(
 assert.ok(
   analyzeSource.indexOf('const fmtTry = value =>') < analyzeSource.indexOf("priceEl.textContent = formatRangeForCurrency"),
   'TRY price rounding should be initialized before the first TRY result price render'
+);
+assert.ok(
+  analyzeSource.indexOf('const cpuEl = safeEl') < analyzeSource.indexOf('if (!skipLoading)'),
+  'required input validation should run before the loading sequence starts'
+);
+assert.equal(
+  analyzeSource.includes("showAnalysisError('Please select your RAM capacity before running the analysis.')"),
+  false,
+  'missing RAM capacity should be handled as form validation, not an analysis failure'
+);
+assert.ok(analyzeSource.includes("showInputValidation(ramEl, 'Please select your RAM capacity before running the analysis.')"));
+assert.ok(styleSource.includes('.field.has-validation-error'), 'missing required inputs should have a visible field validation state');
+assert.ok(indexSource.includes('class="g1 current-problem-layout"'), 'current problem should use a compact desktop layout hook');
+assert.ok(styleSource.includes('/* === Calm field interaction hierarchy === */'), 'field interaction states should have a final calm override');
+assert.ok(
+  styleSource.includes('.field.has-value:not(.is-field-active):not(:focus-within)'),
+  'selected fields should have a restrained persistent state'
+);
+assert.ok(
+  styleSource.includes('.field:hover:not(.is-field-active):not(:focus-within)'),
+  'inactive hover should use a dedicated restrained state'
 );
 assert.equal(
   analyzeSource.includes("name:'RTX 3060 / RTX 4060'"),

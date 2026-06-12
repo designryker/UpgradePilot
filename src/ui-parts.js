@@ -186,8 +186,8 @@ export function initClickableFields() {
       setActive(true);
       window.clearTimeout(field._activeTimer);
       field._activeTimer = window.setTimeout(() => {
-        if (!field.contains(document.activeElement) && !field.matches(':hover')) setActive(false);
-      }, 520);
+        if (!field.contains(document.activeElement)) setActive(false);
+      }, 180);
     };
 
     // Do not turn on the neon state on hover; only focus/click/input should do it.
