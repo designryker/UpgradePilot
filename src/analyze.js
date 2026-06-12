@@ -4,7 +4,7 @@
 
 import { CPU_SCORE, GPU_SCORE, GPU_ENC, PRICE_TR, PRICE_USD, psuMaxGpu, ramSpeedTier } from './parts-data.js';
 import { I18N } from './i18n.js';
-import { getBiosRecommendation } from './recommendation-helpers.js';
+import { getBiosRecommendation, getCurrentGpuRecommendations } from './recommendation-helpers.js';
 import { el, inTr, clamp, groupLabel, safeEl, showAnalysisError } from './utils.js';
 import { currentLang, setLatestResultSummary } from './state.js';
 import { WIZARD_STEPS, goToWizardStep } from './wizard.js';
@@ -108,6 +108,7 @@ function _analyze(skipLoading) {
   const TRY_RETAIL_BUFFER = 1.28;
   const TRY_VALUE_BUFFER = 0.92;
   const TRY_USED_FACTOR = 0.72;
+  const fmtTry = value => Math.round(value / 100) * 100;
 
   const enc       = GPU_ENC[gpuKey];
   const ramSpd    = ramSpeedTier(ramSpVal);  // 0 to 3
@@ -586,82 +587,64 @@ function _analyze(skipLoading) {
                       game === 'aaa'    || game === 'mixed' || hddGameDrive;
 
   // ── Windows ──────────────────────────────────────────────────
-  // Always show core Windows fixes.
-  // Expand startup/background advice when CPU, RAM, or balance is the issue.
-  checks.push({g:'Windows', t:inTr('Check Windows Power Plan (Settings → Power). Avoid Power Saver mode — it actively throttles CPU and GPU clocks.','Windows Güç Planını kontrol et (Ayarlar → Güç). Güç Tasarrufu modundan kaçın — CPU ve GPU hızlarını aktif şekilde kısar.')});
-  checks.push({g:'Windows', t:inTr('Enable Game Mode in Windows Settings → Gaming → Game Mode. This may reduce background interruptions during gameplay.','Windows Ayarları → Oyun → Oyun Modu kısmından Oyun Modu’nu aç. Bu, oyun sırasında arka plan kesintilerini azaltabilir.')});
-  checks.push({g:'Windows', t:inTr('Confirm your monitor refresh rate is set correctly in Windows Display Settings — it can default to 60 Hz even on high-refresh monitors.','Windows ekran ayarlarında monitör yenileme hızının doğru seçildiğini doğrula — yüksek Hz monitörlerde bile bazen 60 Hz’e düşebilir.')});
-
-  if (showCPU || diagKey === 'opt' || diagKey === 'bal') {
-    checks.push({g:'Windows', t:inTr('Disable unnecessary startup apps in Task Manager → Startup Apps. Fewer background processes means more CPU and RAM available for your game.','Görev Yöneticisi → Başlangıç Uygulamaları kısmından gereksiz başlangıç programlarını kapat. Daha az arka plan işlemi, oyuna daha fazla CPU ve RAM kalması demek.')});
-    checks.push({g:'Windows', t:inTr('Close heavy background apps before launching — browsers, cloud sync, Discord video, recording tools, and game launchers all consume CPU and RAM headroom.','Oyuna girmeden önce ağır arka plan uygulamalarını kapat — tarayıcılar, bulut senkronizasyonu, Discord video, kayıt araçları ve launcher’lar CPU/RAM payını tüketir.')});
-  }
-
-  if (diagKey === 'opt' || diagKey === 'bal') {
-    // Temp files: maintenance framing only — no FPS overclaim
-    checks.push({g:'Windows', t:inTr('Clearing temporary files is useful for storage maintenance, but is not usually a direct FPS fix — unless your system drive is nearly full.','Geçici dosyaları temizlemek depolama bakımı için iyidir; ama sistem diskin neredeyse dolu değilse genelde doğrudan FPS çözümü değildir.')});
-  }
+  // Core actions: short, broadly useful, and worth doing before buying hardware.
+  checks.push({g:'Windows', t:inTr('Disable unnecessary startup apps in Task Manager.','Görev Yöneticisi’nden gereksiz başlangıç uygulamalarını kapat.')});
+  checks.push({g:'Windows', t:isLaptop
+    ? inTr('Plug in the charger and enable Windows or OEM performance mode.','Adaptörü tak ve Windows veya üretici performans modunu aç.')
+    : inTr('Use Balanced power mode and make sure Power Saver is off.','Dengeli güç modunu kullan ve Güç Tasarrufu’nun kapalı olduğundan emin ol.')});
+  checks.push({g:'Windows', t:inTr('Set your monitor to its maximum refresh rate in Windows.','Windows’ta monitörünü maksimum yenileme hızına ayarla.')});
+  checks.push({g:'Windows', t:inTr('Close unused browsers, launchers, recording tools, and overlays before gaming.','Oyuna başlamadan önce kullanmadığın tarayıcıları, launcher’ları, kayıt araçlarını ve overlay’leri kapat.')});
+  checks.push({g:'Windows', t:inTr('Enable Windows Game Mode.','Windows Oyun Modu’nu aç.')});
 
 
   // ── System / Cooling / Display ──────────────────────────────
   if (osVersion === 'win10' && isModernIntelHybrid) {
-    checks.push({g:'Windows Version', t:inTr('You selected Windows 10 with a modern Intel hybrid CPU. Consider testing Windows 11 later; its scheduler is generally safer for P-core / E-core behaviour. Do not reinstall just for this before measuring temperatures and usage first.','Modern Intel hibrit işlemciyle Windows 10 seçtin. İleride Windows 11 denemek mantıklı olabilir; P-core / E-core zamanlaması tarafında genelde daha güvenli seçimdir. Ama sıcaklık ve kullanım değerlerini ölçmeden sırf bunun için format atma.')});
+    checks.push({g:'Windows Version', t:inTr('Test Windows 11 scheduling with this hybrid Intel CPU before upgrading hardware.','Donanım yükseltmeden önce bu hibrit Intel CPU ile Windows 11 zamanlamasını test et.')});
   }
   if (hz === 60 && (game === 'compfps' || goal === 'latency' || goal === 'fps')) {
-    checks.push({g:'Display / Monitor', t:inTr('Your monitor is set to 60 Hz. For competitive FPS or low-latency goals, a 144 Hz+ monitor can be more noticeable than a small CPU/GPU upgrade. First confirm Windows is not accidentally limiting a high-refresh monitor to 60 Hz.','Monitör 60 Hz seçili. Rekabetçi FPS veya düşük gecikme hedefinde 144 Hz+ monitör, küçük bir CPU/GPU yükseltmesinden daha hissedilir olabilir. Önce Windows’un yüksek Hz monitörü yanlışlıkla 60 Hz’e sabitlemediğini doğrula.')});
+    checks.push({g:'Display / Monitor', t:inTr('Confirm Windows is not limiting a high-refresh monitor to 60 Hz.','Windows’un yüksek yenileme hızlı monitörü 60 Hz’e sınırlamadığını doğrula.')});
   }
   if (isLaptop) {
-    checks.push({g:'Laptop Cooling', t:inTr('Clean fans and vents, then test CPU/GPU temperatures under load. Thermal throttling can look like a hardware bottleneck.','Fan ve ızgaraları temizle, sonra yük altında CPU/GPU sıcaklığını test et. Thermal throttling donanım darboğazı gibi görünebilir.')});
-    checks.push({g:'Laptop Cooling', t:inTr('Laptop cooling pad / stand: raise the rear of the laptop and keep intake vents open before buying hardware.','Laptop cooling pad / stand: donanım almadan önce laptopun arkasını yükselt ve hava girişlerini açık tut.')});
-    checks.push({g:'Laptop Power', t:inTr('Use plugged-in mode and confirm Windows/OEM performance mode is active before judging FPS.','FPS yorumlamadan önce laptopu adaptöre tak ve Windows/OEM performans modunun açık olduğunu doğrula.')});
+    checks.push({g:'Laptop Cooling', t:inTr('Check CPU and GPU temperatures while gaming.','Oyun sırasında CPU ve GPU sıcaklıklarını kontrol et.')});
+    checks.push({g:'Laptop Cooling', t:inTr('Use a laptop cooling pad / stand and keep the intake vents open.','Laptop cooling pad / stand kullan ve hava girişlerini açık tut.')});
   } else if (strongCpu && (weakCooler || unknownCooler)) {
-    checks.push({g:'Cooling / Thermals', t:inTr('You selected a strong CPU with weak or unknown cooling. Check CPU temperatures first. If the CPU cannot hold boost clocks, a better tower air cooler or 240mm+ liquid cooler may be more sensible than changing the CPU.','Güçlü bir işlemciyle zayıf/bilinmeyen soğutma seçtin. Önce CPU sıcaklıklarını kontrol et. İşlemci boost hızlarını koruyamıyorsa CPU değiştirmek yerine iyi bir kule tipi hava soğutucu veya 240mm+ sıvı soğutma daha mantıklı olabilir.')});
+    checks.push({g:'Cooling / Thermals', t:inTr('Check CPU temperatures and boost clocks while gaming.','Oyun sırasında CPU sıcaklıklarını ve boost frekanslarını kontrol et.')});
   }
   if (hddGameDrive) {
-    checks.push({g:'Storage Upgrade', t:inTr('Your game drive is HDD. For modern open-world, MMORPG, battle royale, and modded games, moving the game to a SATA SSD or NVMe SSD is often a better first upgrade than chasing average FPS. It mainly improves loading, asset streaming, stutter, and 1% lows.','Oyunun HDD’de kurulu. Modern açık dünya, MMORPG, battle royale ve modlu oyunlarda oyunu SATA SSD veya NVMe SSD’ye taşımak çoğu zaman ortalama FPS kovalamaktan daha mantıklı ilk yükseltmedir. Asıl etkisi yükleme, asset streaming, takılma ve 1% low tarafında olur.')});
+    checks.push({g:'Storage Upgrade', t:inTr('Move the game from HDD to SSD or NVMe.','Oyunu HDD’den SSD veya NVMe’ye taşı.')});
   }
 
   // ── GPU ──────────────────────────────────────────────────────
   // Show when GPU is the diagnosed or recommended bottleneck.
   if (showGPU) {
-    checks.push({g:'GPU', t:inTr('Update GPU drivers using NVIDIA App / GeForce Experience or AMD Adrenalin. Outdated drivers can cause performance regressions and stability issues.','NVIDIA App / GeForce Experience veya AMD Adrenalin ile ekran kartı sürücülerini güncelle. Eski sürücüler performans düşüşü ve stabilite sorunları yaratabilir.')});
-    checks.push({g:'GPU', t:inTr('Check GPU temperature under load using MSI Afterburner or HWiNFO64. Sustained temperatures above 85°C may indicate thermal throttling or an airflow issue.','MSI Afterburner veya HWiNFO64 ile yük altında GPU sıcaklığını kontrol et. Uzun süre 85°C üstü sıcaklıklar thermal throttling veya kasa hava akışı sorununa işaret edebilir.')});
-    checks.push({g:'GPU', t:inTr('Disable overlays you do not use — Discord, Steam, Xbox Game Bar, and NVIDIA/AMD overlay each add frametime overhead. Keep only what you actively need.','Kullanmadığın overlay’leri kapat — Discord, Steam, Xbox Game Bar ve NVIDIA/AMD overlay frametime yükü ekleyebilir. Sadece gerçekten kullandıklarını açık bırak.')});
-    checks.push({g:'GPU', t:inTr('Before deciding to upgrade, lower GPU-heavy settings first: shadows, reflections, ambient occlusion, anti-aliasing, and volumetrics often recover significant FPS.','Yükseltmeye karar vermeden önce GPU’ya yüklenen ayarları düşür: gölgeler, yansımalar, ambient occlusion, kenar yumuşatma ve volumetric ayarlar genelde anlamlı FPS geri kazandırabilir.')});
-    checks.push({g:'GPU', t:inTr('Try DLSS (NVIDIA) / FSR (AMD) / XeSS (Intel) if the game supports it — this can meaningfully improve frame rate with minimal visible quality loss.','Oyun destekliyorsa DLSS (NVIDIA) / FSR (AMD) / XeSS (Intel) dene — çoğu durumda görsel kaybı düşükken FPS’i anlamlı artırabilir.')});
-    checks.push({g:'GPU', t:inTr('Monitor GPU usage during gameplay with MSI Afterburner. If it stays near 95–99%, the GPU is your confirmed bottleneck. If it is lower, the limit may be elsewhere.','MSI Afterburner ile oyun sırasında GPU kullanımını izle. Kullanım sürekli %95–99 civarındaysa darboğaz büyük ihtimalle GPU’dur. Daha düşükse limit başka yerde olabilir.')});
+    checks.push({g:'GPU', t:inTr('Update the GPU driver from NVIDIA, AMD, or Intel.','GPU sürücüsünü NVIDIA, AMD veya Intel’den güncelle.')});
+    checks.push({g:'GPU', t:inTr('Check GPU usage and temperature while gaming.','Oyun sırasında GPU kullanımını ve sıcaklığını kontrol et.')});
+    checks.push({g:'GPU', t:inTr('Try DLSS, FSR, or XeSS if the game supports it.','Oyun destekliyorsa DLSS, FSR veya XeSS’i dene.')});
   }
 
   // ── CPU ──────────────────────────────────────────────────────
   // Show when CPU is the bottleneck or game type is CPU-sensitive.
   if (showCPU) {
-    checks.push({g:'CPU', t:inTr('Update chipset drivers from AMD.com or Intel.com — not from Windows Update. These affect memory controller, PCIe, and CPU scheduling behaviour.','Chipset sürücülerini Windows Update yerine AMD.com veya Intel.com üzerinden güncelle. Bunlar bellek kontrolcüsü, PCIe ve CPU zamanlamasını etkiler.')});
-    checks.push({g:'CPU', t:inTr('Check CPU temperature and throttling with HWiNFO64. Look for sustained core temperatures above 90°C (Intel) or 95°C (AMD Ryzen) during gaming load.','HWiNFO64 ile CPU sıcaklığı ve throttling durumunu kontrol et. Oyun yükünde Intel için 90°C, AMD Ryzen için 95°C üstü sürekli sıcaklıklara dikkat et.')});
-    checks.push({g:'CPU', t:inTr('If boost clocks look wrong, load BIOS defaults and confirm chipset drivers before replacing the CPU.','Boost frekanslari hatali gorunuyorsa CPU degistirmeden once BIOS varsayilanlarini yukle ve chipset surucusunu dogrula.')});
+    checks.push({g:'CPU', t:inTr('Update the chipset driver from AMD or Intel.','Chipset sürücüsünü AMD veya Intel’den güncelle.')});
+    checks.push({g:'CPU', t:inTr('Check CPU temperature and boost clocks while gaming.','Oyun sırasında CPU sıcaklığını ve boost frekanslarını kontrol et.')});
   }
 
   // ── Memory ───────────────────────────────────────────────────
   // Show when RAM capacity, speed, or channel mode is a factor.
   if (showMemory) {
     if (isSingleCh) {
-      checks.push({g:'Memory', t:inTr('Your RAM is in Single Channel mode. Moving both sticks to the correct dual-channel slots — typically the 2nd and 4th slots from the CPU socket (A2+B2) — may restore up to 50% of memory bandwidth. This costs nothing.','RAM Tek Kanal modunda. İki RAM’i doğru çift kanal slotlarına — genelde CPU soketinden itibaren 2. ve 4. slot (A2+B2) — takmak bellek bant genişliğini %50’ye kadar geri kazandırabilir. Bu ücretsiz.')});
+      checks.push({g:'Memory', t:inTr('Move the RAM sticks to the correct dual-channel slots.','RAM modüllerini doğru çift kanal slotlarına taşı.')});
     }
-    checks.push({g:'Memory', t:inTr('Verify your actual RAM speed and channel mode using CPU-Z (free). Open the Memory tab and confirm the speed matches what you selected above, and that dual-channel is active.','CPU-Z ile gerçek RAM hızını ve kanal modunu kontrol et. Memory sekmesinde hızın yukarıda seçtiğin değere yakın olduğunu ve çift kanalın aktif olduğunu doğrula.')});
+    checks.push({g:'Memory', t:inTr('Verify RAM speed and dual-channel mode in CPU-Z.','CPU-Z’de RAM hızını ve çift kanal modunu doğrula.')});
     if (ramSpd === 0) {
-      // Slow speed: mention XMP/EXPO as a free fix but don't force it
-      checks.push({g:'Memory', t:inTr('Before buying RAM, check whether XMP or EXPO is enabled in BIOS and verify the result in CPU-Z.','RAM almadan once BIOS icinde XMP veya EXPO acik mi kontrol et ve sonucu CPU-Z ile dogrula.')});
-    } else {
-      // Normal/good speed: soft XMP reminder without pressure
-      checks.push({g:'Memory', t:inTr('Confirm the RAM speed looks correct in CPU-Z before buying new sticks.','Yeni RAM almadan once CPU-Z icinde RAM hizinin dogru gorundugunu kontrol et.')});
+      checks.push({g:'Memory', t:inTr('Enable XMP or EXPO in BIOS, then verify the RAM speed in CPU-Z.','BIOS’ta XMP veya EXPO’yu aç, ardından RAM hızını CPU-Z’de doğrula.')});
     }
   }
 
   // ── Storage / Stutter ────────────────────────────────────────
   // Show when stutter, open-world streaming, or large/modded games are relevant.
   if (showStutter) {
-    checks.push({g:'Storage / Stutter', t:inTr('Install your game on an SSD or NVMe drive if possible. HDD installations cause longer load times, open-world streaming hitches, and elevated 1% lows — especially in large, open-world, or heavily modded games.','Mümkünse oyunu SSD veya NVMe diske kur. HDD kurulumları özellikle büyük, açık dünya veya modlu oyunlarda uzun yükleme, asset streaming takılması ve kötü 1% low değerleri yaratabilir.')});
-    checks.push({g:'Storage / Stutter', t:inTr('Keep your game drive below 85–90% capacity. Near-full drives may show reduced read speeds, which can affect asset streaming in open-world titles.','Oyun diskinin doluluğunu %85–90 altında tut. Neredeyse dolu disklerde okuma hızı düşebilir; bu açık dünya oyunlarında asset streaming’i etkileyebilir.')});
-    checks.push({g:'Storage / Stutter', t:inTr('Use RTSS (RivaTuner) or CapFrameX to measure frametime — not just average FPS. Stutter usually appears as frametime spikes and poor 1% lows, even when average FPS looks acceptable.','Sadece ortalama FPS’e bakma; RTSS (RivaTuner) veya CapFrameX ile frametime ölç. Stutter genelde ortalama FPS iyi görünse bile frametime spike ve zayıf 1% low olarak ortaya çıkar.')});
+    checks.push({g:'Storage / Stutter', t:inTr('Measure frametime and 1% lows with CapFrameX or RTSS.','CapFrameX veya RTSS ile frametime ve 1% low değerlerini ölç.')});
   }
 
   // TODO: BIOS Optimization module (future revision)
@@ -733,22 +716,25 @@ function _analyze(skipLoading) {
 
 
   function recommendedGpuTier() {
-    let target = res === '4k' ? 9 : res === '1440' ? 8 : hz >= 165 ? 7 : 6;
-    if (budgetUSD >= 680) target = Math.max(target, 9);
-    else if (budgetUSD >= 420) target = Math.max(target, 8);
-    else if (budgetUSD >= 200) target = Math.max(target, 6);
-    if (goal === 'visuals' || goal === 'future') target = Math.min(10, target + 1);
-    return clamp(Math.max(target, Math.min(10, gpuSc + 1)), 6, 10);
+    return getCurrentGpuRecommendations({
+      budgetUSD,
+      resolution: res,
+      hz,
+      goal,
+      currentGpuScore: gpuSc,
+      cpuScore: cpuSc,
+      psuMaxScore: psuMaxNow,
+    }).targetScore;
   }
 
   function gpuTargetTierText() {
     const target = recommendedGpuTier();
     const tiers = {
-      6: 'RX 6600 / RTX 3060 class',
-      7: 'RX 6700 XT / RTX 3060 Ti / RX 7700 XT class',
-      8: 'RTX 4070 / RX 7800 XT class',
-      9: 'RTX 4070 Super / RTX 5070 / RX 7900 GRE class',
-      10:'RTX 4080 Super / RX 7900 XTX+ class'
+      6: 'RTX 5060 / RX 9060 XT class',
+      7: 'RTX 5060 Ti / RX 9060 XT 16GB class',
+      8: 'RTX 5070 / RX 9070 class',
+      9: 'RTX 5070 Ti / RX 9070 XT class',
+      10:'RTX 5080 / current flagship class'
     };
     return tiers[target] || tiers[8];
   }
@@ -1365,25 +1351,9 @@ function _analyze(skipLoading) {
 
   function buildPolishedFreeChecks() {
     const items = [];
-    const add = (g, t) => {
-      if (items.length < 6 && !items.some(item => item.t === t)) items.push({g, t});
-    };
-
-    add('Memory', inTr('Enable XMP/EXPO, then confirm RAM speed in CPU-Z.', 'XMP/EXPO ac, sonra CPU-Z ile RAM hizini dogrula.'));
-    add('Drivers', inTr('Update GPU and chipset drivers.', 'GPU ve chipset suruculerini guncelle.'));
-    add('Thermals', inTr('Check CPU/GPU temperatures while gaming.', 'Oyun sirasinda CPU/GPU sicakliklarini kontrol et.'));
-    if (isLaptop) {
-      add('Laptop Cooling', inTr('Clean vents and test with a laptop cooling pad / stand.', 'Izgaralari temizle ve laptop cooling pad / stand ile test et.'));
-      add('Laptop Power', inTr('Use plugged-in performance mode.', 'Adaptore takili performans modunu kullan.'));
-    }
-    if (hddGameDrive || showStutter) {
-      add('Storage', hddGameDrive
-        ? inTr('Move the game to SSD/NVMe.', 'Oyunu SSD/NVMe diske tasi.')
-        : inTr('Move the game to SSD/NVMe if storage stutter appears.', 'Depolama stutteri varsa oyunu SSD/NVMe diske tasi.'));
-    }
-    add('Windows', inTr('Close heavy background apps and overlays.', 'Agir arka plan uygulamalarini ve overlayleri kapat.'));
-    add('Retest', inTr('Retest before upgrading.', 'Yukseltmeden once tekrar test et.'));
-
+    checks.forEach(item => {
+      if (!items.some(existing => existing.t === item.t)) items.push(item);
+    });
     return items;
   }
 
@@ -1624,7 +1594,6 @@ function _analyze(skipLoading) {
   }
 
   // 06 Budget & Price
-  const fmtTry = value => Math.round(value / 100) * 100;
   const tryValueMin = bandDesc ? fmtTry(bandDesc[0] * USD_TRY_ROUGH_RATE * TRY_VALUE_BUFFER * TRY_USED_FACTOR) : 0;
   const tryValueMax = bandDesc ? fmtTry(bandDesc[1] * USD_TRY_ROUGH_RATE * TRY_VALUE_BUFFER) : 0;
   const tryRetailMin = bandDesc ? fmtTry(bandDesc[0] * USD_TRY_ROUGH_RATE * TRY_RETAIL_BUFFER) : 0;
@@ -1700,28 +1669,24 @@ function _analyze(skipLoading) {
 
     // ── GPU: tek primary + AMD/NVIDIA muadili ────────────────────────
     if (best.key === 'gpu') {
-      const gpuLow  = res === '1080' || gpuSc <= 3;
-      const gpuMid  = res === '1440' && gpuSc >= 4 && gpuSc <= 6;
-
-      // Primary pick ve AMD muadili
-      let primary, amdAlt, nvidiaAlt, priceNote, whyNote;
-
-      if (gpuLow) {
-        primary    = { brand:'NVIDIA', name:'RTX 3060 / RTX 4060', q:'RTX 3060 RTX 4060 ekran kart' };
-        amdAlt     = { brand:'AMD',    name:'RX 6600 XT / RX 7600', q:'RX 6600 XT RX 7600 ekran kart' };
-        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
-        whyNote    = inTr('Good 1080p cards with solid driver support and wide availability.', '1080p için iyi tercih, geniş sürücü desteği ve kolay bulunabilirlik.');
-      } else if (gpuMid) {
-        primary    = { brand:'NVIDIA', name:'RTX 4070 / RTX 4070 Super', q:'RTX 4070 Super ekran kart' };
-        amdAlt     = { brand:'AMD',    name:'RX 7800 XT / RX 7900 GRE', q:'RX 7800 XT RX 7900 GRE ekran kart' };
-        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
-        whyNote    = inTr('Strong 1440p performance. AMD alternative offers more VRAM at a similar price.', 'Güçlü 1440p performansı. AMD alternatifi benzer fiyata daha fazla VRAM sunar.');
-      } else {
-        primary    = { brand:'NVIDIA', name:'RTX 4070 Ti Super / RTX 4080 Super', q:'RTX 4070 Ti Super ekran kart' };
-        amdAlt     = { brand:'AMD',    name:'RX 7900 XT / RX 7900 XTX', q:'RX 7900 XT RX 7900 XTX ekran kart' };
-        priceNote  = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
-        whyNote    = inTr('High-end 1440p/4K. Verify PSU and CPU headroom before committing.', 'Üst segment 1440p/4K. Almadan önce PSU ve CPU kapasiteni doğrula.');
-      }
+      const picks = getCurrentGpuRecommendations({
+        budgetUSD,
+        resolution: res,
+        hz,
+        goal,
+        currentGpuScore: gpuSc,
+        cpuScore: cpuSc,
+        psuMaxScore: psuMaxNow,
+      });
+      const primary = { brand: 'NVIDIA', name: picks.nvidia.name, q: picks.nvidia.query };
+      const amdAlt = { brand: 'AMD', name: picks.amd.name, q: picks.amd.query };
+      const nvidiaPrice = formatRangeForCurrency(picks.nvidia.price[0], picks.nvidia.price[1], 'retail');
+      const amdPrice = formatRangeForCurrency(picks.amd.price[0], picks.amd.price[1], 'retail');
+      const whyNote = picks.balanceReason === 'cpu'
+        ? inTr('Current-generation target capped to preserve CPU balance and leave room for the platform.', 'Güncel nesil hedef, CPU dengesini korumak ve platforma bütçe bırakmak için sınırlandı.')
+        : picks.balanceReason === 'psu'
+          ? inTr('Current-generation target capped by the entered PSU wattage.', 'Güncel nesil hedef, girilen PSU watt değerine göre sınırlandı.')
+          : inTr('Current-generation target selected from your total budget, resolution, and system balance.', 'Güncel nesil hedef toplam bütçene, çözünürlüğe ve sistem dengesine göre seçildi.');
 
       return (
         '<div class="epc-wrap">' +
@@ -1731,7 +1696,7 @@ function _analyze(skipLoading) {
             '<div class="epc-card epc-primary">' +
               '<div class="epc-brand epc-nvidia">' + primary.brand + '</div>' +
               '<div class="epc-name">' + primary.name + '</div>' +
-              '<div class="epc-price">' + priceNote + '</div>' +
+              '<div class="epc-price">' + nvidiaPrice + '</div>' +
               '<div class="epc-why">' + whyNote + '</div>' +
               '<a class="epc-cta" href="' + marketplaceUrl(primary.q) + '" target="_blank" rel="noopener noreferrer">' +
                 inTr('View listings', 'Listelemelere bak') +
@@ -1741,8 +1706,9 @@ function _analyze(skipLoading) {
             '<div class="epc-card epc-alt">' +
               '<div class="epc-brand epc-amd">' + amdAlt.brand + ' ' + inTr('alternative', 'alternatif') + '</div>' +
               '<div class="epc-name">' + amdAlt.name + '</div>' +
+              '<div class="epc-price">' + amdPrice + '</div>' +
               '<div class="epc-why">' +
-                inTr('More VRAM, competitive rasterization. No DLSS but has FSR.', 'Daha fazla VRAM, rekabetçi rasterizasyon. DLSS yok ama FSR var.') +
+                inTr('Current-generation AMD alternative with competitive raster performance and FSR.', 'Rekabetçi raster performansı ve FSR sunan güncel nesil AMD alternatifi.') +
               '</div>' +
               '<a class="epc-cta epc-cta-alt" href="' + marketplaceUrl(amdAlt.q) + '" target="_blank" rel="noopener noreferrer">' +
                 inTr('View listings', 'Listelemelere bak') +
@@ -1780,8 +1746,8 @@ function _analyze(skipLoading) {
 
       // Platform bundle (yüksek bütçede göster)
       const platform = isAm4
-        ? { name: 'Ryzen 7 7800X3D + B650 + DDR5', items: ['Ryzen 7 7800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('AM5 with DDR5 — long upgrade runway. Reuse your current GPU temporarily if it scores 5+.', 'AM5 ve DDR5 — uzun vadeli platform. GPU puanı 5+ ise geçici olarak mevcut GPU\'nu kullan.'), q: 'Ryzen 7800X3D B650 DDR5 kit', price: formatRangeForCurrency(550, 900, 'retail') }
-        : { name: 'Ryzen 7 7800X3D + B650 + DDR5', items: ['Ryzen 7 7800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('Best gaming CPU on AM5. New platform means new motherboard + DDR5 RAM. Budget for all three.', 'AM5\'te en iyi oyun CPU\'su. Yeni platform = yeni anakart + DDR5 RAM. Üçü için bütçe ayır.'), q: 'Ryzen 7800X3D B650 DDR5', price: formatRangeForCurrency(550, 900, 'retail') };
+        ? { name: 'Ryzen 7 9800X3D + B650 + DDR5', items: ['Ryzen 7 9800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('Current AM5 X3D platform with a long upgrade runway. Reuse your current GPU temporarily if it scores 5+.', 'Uzun yükseltme ömrü sunan güncel AM5 X3D platformu. GPU puanı 5+ ise mevcut GPU\'nu geçici olarak kullan.'), q: 'Ryzen 9800X3D B650 DDR5 kit', price: formatRangeForCurrency(700, 1050, 'retail') }
+        : { name: 'Ryzen 7 9800X3D + B650 + DDR5', items: ['Ryzen 7 9800X3D', 'B650 motherboard', '2×16 GB DDR5-6000'], note: inTr('Current-generation gaming-focused AM5 platform. Budget for the CPU, motherboard, and DDR5 together.', 'Güncel nesil oyun odaklı AM5 platformu. CPU, anakart ve DDR5 için birlikte bütçe ayır.'), q: 'Ryzen 9800X3D B650 DDR5', price: formatRangeForCurrency(700, 1050, 'retail') };
 
       if (canAffordPlatform) {
         // İki kart: drop-in (sol) + platform upgrade (sağ)
@@ -2009,28 +1975,28 @@ function _analyze(skipLoading) {
       {
         tier: inTr('Balanced Build', 'Dengeli Kasa'),
         tierCls: 'build-tier-balanced',
-        cpu: 'Ryzen 5 7600 / Ryzen 7 7700X',
-        gpu: 'RX 7800 XT / RTX 4070',
+        cpu: 'Ryzen 5 9600X / Ryzen 7 9700X',
+        gpu: 'RTX 5060 Ti / RX 9060 XT',
         ram: '2×16 GB DDR5-6000',
         perfTier: inTr('1440p High', '1440p Yüksek'),
         note: inTr(
-          'AM5 platform with DDR5. Reuse your GPU temporarily if it scores 5+. Long upgrade runway.',
-          'AM5 ve DDR5 platformu. GPU puanınız 5 veya üstüyse geçici olarak mevcut GPU\'yu kullanabilirsiniz. Uzun vadeli yükseltme payı var.'
+          'Current-generation AM5 platform with DDR5 and a balanced current GPU tier.',
+          'DDR5 ve dengeli güncel GPU seviyesi sunan güncel nesil AM5 platformu.'
         ),
-        query: 'Ryzen 5 7600 B650 DDR5 gaming pc'
+        query: 'Ryzen 5 9600X RTX 5060 Ti gaming pc'
       },
       {
         tier: inTr('Performance Build', 'Performans Kasası'),
         tierCls: 'build-tier-perf',
-        cpu: 'Ryzen 7 7800X3D / i7-13700KF',
-        gpu: 'RTX 4070 Ti / RX 7900 XT',
+        cpu: 'Ryzen 7 9800X3D / Ryzen 7 9700X',
+        gpu: 'RTX 5070 Ti / RX 9070 XT',
         ram: '2×16 GB DDR5-6000',
         perfTier: inTr('1440p / 4K Ultra', '1440p / 4K Ultra'),
         note: inTr(
           'Only makes sense if budget allows and current system scores below 4 on both components. Otherwise upgrade GPU alone first.',
           'Yalnızca bütçe yeterliyse ve mevcut sistem her iki bileşende 4\'ün altındaysa mantıklı. Aksi hâlde önce sadece GPU yükseltin.'
         ),
-        query: 'Ryzen 7 7800X3D RTX 4070 Ti gaming pc build'
+        query: 'Ryzen 7 9800X3D RTX 5070 Ti gaming pc build'
       }
     ];
 

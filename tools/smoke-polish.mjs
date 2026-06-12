@@ -5,8 +5,64 @@ import {
   buildPartSearchText,
   getAnalysisMessages,
   getBiosRecommendation,
+  getCurrentGpuRecommendations,
   normalizePartSearch,
 } from '../src/recommendation-helpers.js';
+import { classifyDisplayResolution, estimatePhysicalDisplay } from '../src/budget-display.js';
+import { cpuMemoryMode, shouldShowMemoryTypeChoice } from '../src/memory-compat.js';
+
+assert.deepEqual(
+  estimatePhysicalDisplay({ width: 2048, height: 1152, devicePixelRatio: 1.25 }),
+  { width: 2560, height: 1440 },
+  'display detection should account for operating-system scaling'
+);
+assert.equal(classifyDisplayResolution(2560, 1440), '1440');
+assert.equal(classifyDisplayResolution(3840, 2160), '4k');
+assert.equal(classifyDisplayResolution(1920, 1080), '1080');
+assert.equal(cpuMemoryMode('r5_5600'), 'ddr4');
+assert.equal(cpuMemoryMode('r5_7600'), 'ddr5');
+assert.equal(cpuMemoryMode('i5_13600kf'), 'both');
+assert.equal(shouldShowMemoryTypeChoice(''), false);
+assert.equal(shouldShowMemoryTypeChoice('r5_7600'), false);
+assert.equal(shouldShowMemoryTypeChoice('i5_13600kf'), true);
+
+const balanced1500Gpu = getCurrentGpuRecommendations({
+  budgetUSD: 1500,
+  resolution: '1080',
+  hz: 144,
+  goal: 'fps',
+  currentGpuScore: 4,
+  cpuScore: 7,
+  psuMaxScore: 9,
+});
+assert.equal(balanced1500Gpu.nvidia.name, 'RTX 5070');
+assert.equal(balanced1500Gpu.amd.name, 'RX 9070');
+assert.equal(balanced1500Gpu.targetScore, 8);
+
+const highEnd4kGpu = getCurrentGpuRecommendations({
+  budgetUSD: 2000,
+  resolution: '4k',
+  hz: 144,
+  goal: 'visuals',
+  currentGpuScore: 7,
+  cpuScore: 9,
+  psuMaxScore: 10,
+});
+assert.equal(highEnd4kGpu.nvidia.name, 'RTX 5080');
+assert.equal(highEnd4kGpu.amd.name, 'RX 9070 XT');
+
+const cpuLimitedGpu = getCurrentGpuRecommendations({
+  budgetUSD: 1500,
+  resolution: '1440',
+  hz: 165,
+  goal: 'fps',
+  currentGpuScore: 3,
+  cpuScore: 3,
+  psuMaxScore: 10,
+});
+assert.equal(cpuLimitedGpu.targetScore, 7);
+assert.equal(cpuLimitedGpu.nvidia.name, 'RTX 5060 Ti');
+assert.equal(cpuLimitedGpu.balanceReason, 'cpu');
 
 assert.equal(normalizePartSearch('GTX 1070 Ti'), 'gtx1070ti');
 
@@ -74,6 +130,7 @@ const wizardSource = readFileSync(new URL('../src/wizard.js', import.meta.url), 
 const systemTypeSource = readFileSync(new URL('../src/system-type.js', import.meta.url), 'utf8');
 const uiPartsSource = readFileSync(new URL('../src/ui-parts.js', import.meta.url), 'utf8');
 const resultPageSource = readFileSync(new URL('../src/result-page.js', import.meta.url), 'utf8');
+const budgetDisplaySource = readFileSync(new URL('../src/budget-display.js', import.meta.url), 'utf8');
 const mainSource = [appSource, analyzeSource, wizardSource, systemTypeSource, uiPartsSource, resultPageSource].join('\n');
 const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const styleSource = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
@@ -111,6 +168,12 @@ assert.ok(
   'JS wizard step order should match the HTML order so Analyze is reachable predictably'
 );
 assert.ok(indexSource.includes('src="/src/app.js"'), 'index should use the modular app entry');
+assert.ok(indexSource.includes('id="display-detect-feedback"'), 'display detection should expose visible feedback');
+assert.ok(
+  budgetDisplaySource.includes("document.querySelectorAll('[data-tg-target=\"res\"]')"),
+  'display detection should synchronize the visible resolution toggle'
+);
+assert.ok(indexSource.includes('id="memory-type-field"'), 'memory type field should have a stable conditional-visibility hook');
 assert.equal(indexSource.includes('src="/src/main.js"'), false, 'index should not load the old monolithic main.js');
 assert.ok(appSource.includes('function restoreFromPageCache()'), 'page-cache restore should have a dedicated state-only path');
 assert.equal(/if \(event\.persisted\) boot\(/.test(appSource), false, 'page-cache restore should not bind all event listeners again');
@@ -198,6 +261,18 @@ assert.ok(
   analyzeSource.includes('setLatestResultSummary(['),
   'modular analyze should save the result summary through the state setter'
 );
+assert.ok(
+  analyzeSource.indexOf('const fmtTry = value =>') < analyzeSource.indexOf("priceEl.textContent = formatRangeForCurrency"),
+  'TRY price rounding should be initialized before the first TRY result price render'
+);
+assert.equal(
+  analyzeSource.includes("name:'RTX 3060 / RTX 4060'"),
+  false,
+  'current-generation recommendation cards should not hard-code RTX 3060 / RTX 4060'
+);
+assert.ok(analyzeSource.includes("8: 'RTX 5070 / RX 9070 class'"), 'GPU target labels should use current-generation parts');
+assert.ok(analyzeSource.includes("cpu: 'Ryzen 7 9800X3D / Ryzen 7 9700X'"), 'performance build should use current-generation CPUs');
+assert.ok(analyzeSource.includes("gpu: 'RTX 5070 Ti / RX 9070 XT'"), 'performance build should use current-generation GPUs');
 assert.ok(styleSource.includes('Analysis sequence stability for longer diagnostic messages'), 'longer analysis messages should have stable layout styling');
 assert.ok(
   /if \(!skipLoading\) \{[\s\S]*goToWizardStep\(WIZARD_STEPS\.length - 2, false\);[\s\S]*startAnalysisSequence\(\(\) => analyze\(true\)\);/.test(mainSource),
@@ -208,14 +283,26 @@ assert.ok(
   'result reveal should add the show class before switching to the result step'
 );
 [
-  'Enable XMP/EXPO',
-  'Update GPU and chipset drivers',
-  'Check CPU/GPU temperatures',
-  'Move the game to SSD/NVMe',
-  'Close heavy background apps and overlays',
-  'Retest before upgrading',
+  'Disable unnecessary startup apps in Task Manager.',
+  'Use Balanced power mode and make sure Power Saver is off.',
+  'Plug in the charger and enable Windows or OEM performance mode.',
+  'Set your monitor to its maximum refresh rate in Windows.',
+  'Close unused browsers, launchers, recording tools, and overlays before gaming.',
+  'Enable XMP or EXPO in BIOS, then verify the RAM speed in CPU-Z.',
 ].forEach(requiredAction => {
   assert.ok(mainSource.includes(requiredAction), 'free fixes should include: ' + requiredAction);
 });
+[
+  'Clearing temporary files is useful for storage maintenance',
+  'Close heavy background apps before launching',
+  'Switch your plan to High performance',
+].forEach(rejectedAction => {
+  assert.equal(mainSource.includes(rejectedAction), false, 'free fixes should reject low-value wording: ' + rejectedAction);
+});
+assert.equal(mainSource.includes('items.length < 6'), false, 'free fixes should not have an arbitrary six-item cap');
+assert.ok(
+  /function buildPolishedFreeChecks\(\) \{[\s\S]*checks\.forEach\(item =>/.test(mainSource),
+  'the visible free fixes panel should use the conditional checklist'
+);
 
 console.log('polish smoke checks passed');

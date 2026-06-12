@@ -3462,6 +3462,16 @@ h1,
 .gpu-detect-ok   { background: var(--success-soft); border: 1px solid var(--success-border); color: var(--success); }
 .gpu-detect-warn { background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.2); color: #fde68a; }
 .gpu-detect-err  { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2); color: #fca5a5; }
+.detect-feedback {
+  margin-top:.5rem;
+  padding:.5rem .6rem;
+  border:1px solid var(--accent-border);
+  border-radius:7px;
+  background:var(--accent-soft);
+  color:var(--muted);
+  font-size:.72rem;
+  line-height:1.45;
+}
 
 /* ── Hover uniform blue ── */
 

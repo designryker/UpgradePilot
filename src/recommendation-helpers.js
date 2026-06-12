@@ -6,6 +6,76 @@ export function normalizePartSearch(value) {
 
 export const ANALYSIS_SEQUENCE_MS = 2900;
 
+const CURRENT_GPU_OPTIONS = {
+  6: {
+    nvidia: { name: 'RTX 5060', query: 'RTX 5060 graphics card', price: [300, 380] },
+    amd: { name: 'RX 9060 XT', query: 'RX 9060 XT graphics card', price: [330, 430] },
+  },
+  7: {
+    nvidia: { name: 'RTX 5060 Ti', query: 'RTX 5060 Ti graphics card', price: [400, 520] },
+    amd: { name: 'RX 9060 XT', query: 'RX 9060 XT 16GB graphics card', price: [380, 500] },
+  },
+  8: {
+    nvidia: { name: 'RTX 5070', query: 'RTX 5070 graphics card', price: [550, 700] },
+    amd: { name: 'RX 9070', query: 'RX 9070 graphics card', price: [580, 730] },
+  },
+  9: {
+    nvidia: { name: 'RTX 5070 Ti', query: 'RTX 5070 Ti graphics card', price: [750, 950] },
+    amd: { name: 'RX 9070 XT', query: 'RX 9070 XT graphics card', price: [680, 850] },
+  },
+  10: {
+    nvidia: { name: 'RTX 5080', query: 'RTX 5080 graphics card', price: [1000, 1300] },
+    amd: { name: 'RX 9070 XT', query: 'RX 9070 XT graphics card', price: [680, 850] },
+  },
+};
+
+export function getCurrentGpuRecommendations({
+  budgetUSD = 0,
+  resolution = '1080',
+  hz = 60,
+  goal = 'fps',
+  currentGpuScore = 0,
+  cpuScore = 0,
+  psuMaxScore = 0,
+} = {}) {
+  const resolutionTarget = resolution === '4k' ? 9 : resolution === '1440' ? 8 : hz >= 144 ? 7 : 6;
+  const resolutionCeiling = resolution === '4k' ? 10 : resolution === '1440' ? 9 : 8;
+  const goalBoost = goal === 'visuals' || goal === 'future' ? 1 : 0;
+  const usableGpuBudget = budgetUSD > 0 ? budgetUSD * 0.8 : 0;
+  const budgetCeiling = usableGpuBudget === 0 ? resolutionTarget
+    : usableGpuBudget < 350 ? 6
+    : usableGpuBudget < 500 ? 7
+    : usableGpuBudget < 800 ? 8
+    : usableGpuBudget < 1200 ? 9
+    : 10;
+  const cpuCeiling = cpuScore <= 3 ? 7 : cpuScore <= 5 ? 8 : cpuScore <= 7 ? 9 : 10;
+
+  let targetScore = Math.max(
+    6,
+    resolutionTarget,
+    Math.min(10, currentGpuScore + 1),
+    Math.min(resolutionCeiling, budgetCeiling)
+  );
+  targetScore = Math.min(targetScore + goalBoost, resolutionCeiling, budgetCeiling, cpuCeiling);
+
+  let balanceReason = '';
+  if (targetScore === cpuCeiling && cpuCeiling < Math.min(resolutionCeiling, budgetCeiling)) {
+    balanceReason = 'cpu';
+  }
+  if (psuMaxScore >= 6 && targetScore > psuMaxScore) {
+    targetScore = psuMaxScore;
+    balanceReason = 'psu';
+  }
+
+  targetScore = Math.max(6, Math.min(10, targetScore));
+  return {
+    targetScore,
+    usableGpuBudget: Math.round(usableGpuBudget),
+    balanceReason,
+    ...CURRENT_GPU_OPTIONS[targetScore],
+  };
+}
+
 const ANALYSIS_MESSAGES = {
   en: [
     'Reading your system profile and performance goals...',

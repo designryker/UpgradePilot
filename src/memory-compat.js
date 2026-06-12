@@ -1,24 +1,14 @@
 // ── RAM compatibility & speed dropdowns ──────────────────────────────
 import { el, inTr } from './utils.js';
 import { updateQuickChips } from './ui-parts.js';
+import { CPU_MEMORY_MODE } from './parts-data.js';
 
 export function cpuMemoryMode(cpuKey) {
-  if (cpuKey.startsWith('r5_7') || cpuKey.startsWith('r7_7') || cpuKey.startsWith('r9_7') ||
-      cpuKey.startsWith('r5_9') || cpuKey.startsWith('r7_9') || cpuKey.startsWith('r9_9')) return 'ddr5';
-  if (cpuKey.startsWith('r3_3') || cpuKey.startsWith('r5_1') || cpuKey.startsWith('r5_2') ||
-      cpuKey.startsWith('r5_3') || cpuKey.startsWith('r5_5') || cpuKey.startsWith('r7_2') ||
-      cpuKey.startsWith('r7_5') || cpuKey.startsWith('r9_5')) return 'ddr4';
-  if (cpuKey.startsWith('i5_6') || cpuKey.startsWith('i7_6') ||
-      cpuKey.startsWith('i5_7') || cpuKey.startsWith('i7_7') ||
-      cpuKey.startsWith('i5_8') || cpuKey.startsWith('i7_8') ||
-      cpuKey.startsWith('i5_9') || cpuKey.startsWith('i7_9') || cpuKey.startsWith('i9_9')) return 'ddr4';
-  if (cpuKey.startsWith('i5_10') || cpuKey.startsWith('i7_10') || cpuKey.startsWith('i9_10') ||
-      cpuKey.startsWith('i5_11') || cpuKey.startsWith('i7_11')) return 'ddr4';
-  if (cpuKey.startsWith('i3_12') || cpuKey.startsWith('i5_12') || cpuKey.startsWith('i7_12') || cpuKey.startsWith('i9_12') ||
-      cpuKey.startsWith('i5_13') || cpuKey.startsWith('i7_13') || cpuKey.startsWith('i9_13') ||
-      cpuKey.startsWith('i5_14') || cpuKey.startsWith('i7_14') || cpuKey.startsWith('i9_14')) return 'both';
-  if (cpuKey.startsWith('ultra')) return 'ddr5';
-  return 'both';
+  return CPU_MEMORY_MODE[cpuKey] || null;
+}
+
+export function shouldShowMemoryTypeChoice(cpuKey) {
+  return cpuMemoryMode(cpuKey) === 'both';
 }
 
 export function updateRamSpeeds() {
@@ -39,6 +29,15 @@ export function updateRamSpeeds() {
     ],
   };
   const DEFAULT = { ddr4: 'ddr4_3200', ddr5: 'ddr5_4800' };
+  if (!type) {
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = inTr('Select memory type first', 'Once bellek turunu sec');
+    placeholder.selected = true;
+    placeholder.disabled = true;
+    spd.appendChild(placeholder);
+    return;
+  }
   const def = DEFAULT[type] || 'ddr4_3200';
 
   (OPTS[type] || OPTS.ddr4).forEach(([v, t]) => {
@@ -55,17 +54,26 @@ export function updateMemoryCompatibility() {
   const ramType = el('ram-type');
   const ddr4 = ramType.querySelector('option[value="ddr4"]');
   const ddr5 = ramType.querySelector('option[value="ddr5"]');
+  const memoryTypeField = el('memory-type-field');
 
   ddr4.disabled = mode === 'ddr5';
   ddr5.disabled = mode === 'ddr4';
+  if (!mode) ramType.value = '';
   if (mode === 'ddr4' && ramType.value !== 'ddr4') ramType.value = 'ddr4';
   if (mode === 'ddr5' && ramType.value !== 'ddr5') ramType.value = 'ddr5';
+  if (memoryTypeField) memoryTypeField.classList.toggle('is-hidden', !shouldShowMemoryTypeChoice(cpuKey));
+
+  document.querySelectorAll('[data-tg-target="ram-type"]').forEach(button => {
+    button.classList.toggle('tg-active', button.dataset.tgVal === ramType.value);
+  });
 
   updateRamSpeeds();
 
   const note = el('memory-compat-note');
   if (note) {
-    note.textContent = mode === 'both'
+    note.textContent = !mode
+      ? inTr('Select a CPU to determine compatible memory.', 'Uyumlu bellegi belirlemek icin bir islemci sec.')
+      : mode === 'both'
       ? inTr('This CPU generation can commonly be found with DDR4 or DDR5 motherboards. Pick the RAM type your motherboard actually uses.',
              'Bu işlemci nesli DDR4 veya DDR5 anakartlarla kullanılabiliyor. Anakartında hangi RAM varsa onu seç.')
       : mode === 'ddr5'

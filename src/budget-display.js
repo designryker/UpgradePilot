@@ -1,5 +1,5 @@
 // ── Budget presets & display detection ───────────────────────────────
-import { el } from './utils.js';
+import { el, inTr } from './utils.js';
 
 export function formatBudgetPresetLabel(amount, currency) {
   if (currency === 'try') return amount >= 1000 ? (amount / 1000) + 'K TL' : amount + ' TL';
@@ -27,14 +27,45 @@ export function setBudgetPreset(amount) {
   if (budget) budget.value = amount;
 }
 
-export function detectDisplay() {
-  const width    = window.screen?.width  || window.innerWidth;
-  const height   = window.screen?.height || window.innerHeight;
-  const longEdge = Math.max(width, height);
+export function estimatePhysicalDisplay({ width, height, devicePixelRatio = 1 }) {
+  const scale = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1;
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
+}
+
+export function classifyDisplayResolution(width, height) {
   const shortEdge = Math.min(width, height);
+  if (shortEdge >= 1800) return '4k';
+  if (shortEdge >= 1250) return '1440';
+  return '1080';
+}
+
+export function detectDisplay() {
+  const cssWidth  = window.screen?.width  || window.innerWidth;
+  const cssHeight = window.screen?.height || window.innerHeight;
+  const { width, height } = estimatePhysicalDisplay({
+    width: cssWidth,
+    height: cssHeight,
+    devicePixelRatio: window.devicePixelRatio,
+  });
+  const detected = classifyDisplayResolution(width, height);
   const res = el('res');
   if (!res) return;
-  if (longEdge >= 3500 || shortEdge >= 1900) res.value = '4k';
-  else if (longEdge >= 2300 || shortEdge >= 1300) res.value = '1440';
-  else res.value = '1080';
+  res.value = detected;
+  document.querySelectorAll('[data-tg-target="res"]').forEach(button => {
+    button.classList.toggle('tg-active', button.dataset.tgVal === detected);
+  });
+  res.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const feedback = el('display-detect-feedback');
+  if (feedback) {
+    const label = detected === '4k' ? '4K' : detected + 'p';
+    feedback.hidden = false;
+    feedback.textContent = inTr(
+      `Estimated ${width} x ${height} display: ${label}. Confirm this matches your gaming resolution.`,
+      `Tahmini ekran ${width} x ${height}: ${label}. Oyun cozunurlugunle eslestigini dogrula.`
+    );
+  }
 }

@@ -49,6 +49,39 @@ export const CPU_SCORE = {
   r7_7735hs:6, r7_7840hs:7, r9_7940hs:7,
 };
 
+// Memory generations supported by each selectable CPU.
+// "both" means the motherboard determines whether the system uses DDR4 or DDR5.
+export const CPU_MEMORY_MODE = {
+  r5_1600:'ddr4', r5_2600:'ddr4', r7_2700x:'ddr4',
+  r3_3100:'ddr4', r3_3300x:'ddr4', r5_3400g:'ddr4', r5_3500x:'ddr4',
+  r5_3600:'ddr4', r5_3600x:'ddr4', r7_3700x:'ddr4', r5_5500:'ddr4',
+  r5_5600:'ddr4', r5_5600x:'ddr4', r7_5700x:'ddr4', r7_5700x3d:'ddr4',
+  r7_5800x:'ddr4', r7_5800x3d:'ddr4', r9_5900x:'ddr4', r9_5950x:'ddr4',
+  r5_7500f:'ddr5', r5_7600:'ddr5', r5_7600x:'ddr5', r5_7600x3d:'ddr5',
+  r7_7700:'ddr5', r7_7700x:'ddr5', r7_7800x3d:'ddr5', r9_7900x:'ddr5',
+  r9_7950x:'ddr5', r9_7950x3d:'ddr5', r5_9600x:'ddr5', r7_9700x:'ddr5',
+  r7_9800x3d:'ddr5', r9_9900x:'ddr5', r9_9950x:'ddr5', r9_9900x3d:'ddr5',
+  r9_9950x3d:'ddr5',
+  i5_6500:'ddr4', i5_6600k:'ddr4', i7_6700:'ddr4', i7_6700k:'ddr4',
+  i5_7400:'ddr4', i5_7600k:'ddr4', i7_7700:'ddr4', i7_7700k:'ddr4',
+  i5_8400:'ddr4', i5_8600k:'ddr4', i7_8700:'ddr4', i7_8700k:'ddr4',
+  i5_9400f:'ddr4', i5_9600k:'ddr4', i7_9700k:'ddr4', i9_9900k:'ddr4',
+  i5_10400:'ddr4', i5_10400f:'ddr4', i5_10600k:'ddr4', i5_11400:'ddr4',
+  i5_11400f:'ddr4', i5_11600k:'ddr4',
+  i3_12100f:'both', i5_12400:'both', i5_12400f:'both', i5_12600k:'both',
+  i5_13400:'both', i5_13400f:'both', i5_13500:'both', i5_13600k:'both',
+  i5_13600kf:'both', i5_14400f:'both', i5_14600k:'both',
+  i7_10700:'ddr4', i7_10700k:'ddr4', i7_11700k:'ddr4',
+  i7_12700k:'both', i7_13700k:'both', i7_14700k:'both',
+  i9_10900k:'ddr4', i9_12900k:'both', i9_13900k:'both', i9_14900k:'both',
+  i9_14900ks:'both',
+  ultra5_245k:'ddr5', ultra7_265k:'ddr5', ultra9_285k:'ddr5',
+  i5_10300h:'ddr4', i5_11400h:'ddr4', i5_12500h:'both', i5_13500h:'both',
+  i7_10750h:'ddr4', i7_11800h:'ddr4', i7_12700h:'both', i7_13700h:'both',
+  r5_4600h:'ddr4', r5_5600h:'ddr4', r7_5800h:'ddr4', r7_6800h:'ddr5',
+  r7_7735hs:'ddr5', r7_7840hs:'ddr5', r9_7940hs:'ddr5',
+};
+
 // ── GPU Performance Scores (rasterization gaming, approximate) ──
 // 3 = budget 1080p, 10 = current flagship
 // TODO: Add more GPU models here as the list grows
