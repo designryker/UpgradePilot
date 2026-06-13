@@ -71,7 +71,10 @@ const scenarios = [
     name: 'single-channel memory blocks paid upgrades',
     input: { ram: '16', channel: 'single', gpu: 'rtx4070' },
     diagnosis: 'RAM Config Issue',
-    upgrade: 'No Hardware Upgrade Yet',
+    upgrade: 'Fix RAM Configuration First',
+    product: 'Fix RAM Configuration First',
+    tierSectionHidden: true,
+    priceRowHidden: true,
   },
   {
     name: 'dangerously weak PSU is first priority',
@@ -181,6 +184,8 @@ function runScenario(scenario) {
     confidence: text('confidence-value'),
     error: document.querySelector('.analysis-error-msg')?.textContent?.trim() || '',
     artwork: document.getElementById('result-part-artwork')?.dataset.artwork || '',
+    tierSectionHidden: document.querySelector('.res-tier-section')?.classList.contains('is-hidden') || false,
+    priceRowHidden: document.querySelector('.res-price-row')?.classList.contains('is-hidden') || false,
     verifyCount: document.querySelectorAll('#result-analysis-verify li').length,
     nextCount: document.querySelectorAll('#result-analysis-next li').length,
   };
@@ -190,6 +195,8 @@ function runScenario(scenario) {
   if (scenario.product) assert.equal(result.product, scenario.product, scenario.name);
   if (scenario.confidence) assert.equal(result.confidence, scenario.confidence, scenario.name);
   if (scenario.artwork !== undefined) assert.equal(result.artwork, scenario.artwork, scenario.name);
+  if (scenario.tierSectionHidden !== undefined) assert.equal(result.tierSectionHidden, scenario.tierSectionHidden, scenario.name);
+  if (scenario.priceRowHidden !== undefined) assert.equal(result.priceRowHidden, scenario.priceRowHidden, scenario.name);
   assert.ok(result.verifyCount > 0 && result.verifyCount <= 3, `${scenario.name}: verification list should stay concise`);
   assert.ok(result.nextCount > 0 && result.nextCount <= 3, `${scenario.name}: next-step list should stay concise`);
   if (scenario.notDiagnosis) assert.notEqual(result.diagnosis, scenario.notDiagnosis, scenario.name);

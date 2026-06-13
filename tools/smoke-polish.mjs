@@ -170,6 +170,7 @@ assert.ok(
   'JS wizard step order should match the HTML order so Analyze is reachable predictably'
 );
 assert.ok(indexSource.includes('src="/src/app.js"'), 'index should use the modular app entry');
+assert.ok(indexSource.includes('rel="icon" href="/favicon.svg"'), 'index should declare the UpgradePilot favicon');
 assert.ok(indexSource.includes('id="display-detect-feedback"'), 'display detection should expose visible feedback');
 assert.ok(indexSource.includes('id="result-part-artwork"'), 'result page should expose a conditional part artwork slot');
 assert.ok(indexSource.includes('result-analysis-section'), 'detailed analysis should use concise decision sections');

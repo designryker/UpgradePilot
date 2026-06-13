@@ -786,6 +786,7 @@ function _analyze(skipLoading) {
     ramcap: {name:inTr('RAM Capacity','RAM Kapasitesi'), sub:inTr('More memory reduces stutters and hitching','Daha fazla bellek takılmaları azaltabilir'), icon:'&#9644;', icls:'ui-ram'},
     ramspd: {name:inTr('RAM Speed','RAM Hızı'), sub:inTr('Faster timings feed the CPU better','Daha hızlı RAM işlemciyi daha iyi besler'), icon:'&#9654;', icls:'ui-ram'},
     psu:    {name:inTr('Power Supply (PSU)','Güç Kaynağı (PSU)'), sub:inTr('Required before any GPU upgrade','GPU yükseltmesinden önce gerekebilir'), icon:'&#9889;', icls:'ui-psu'},
+    ramconfig:{name:inTr('Fix RAM Configuration First','Önce RAM Yapılandırmasını Düzelt'), sub:inTr('Restore dual-channel mode before buying hardware','Donanım almadan önce çift kanal modunu etkinleştir'), icon:'&#10003;',icls:'ui-ram'},
     none:   {name:inTr('No Hardware Upgrade Yet','Şimdilik Donanım Yükseltme Yok'), sub:inTr('Optimize and verify first','Önce optimize et ve doğrula'), icon:'&#10003;',icls:'ui-none'},
   };
   const PART_LABEL = {gpu:'GPU',cpu:'CPU',ramcap:inTr('RAM Capacity','RAM Kapasitesi'),ramspd:inTr('RAM Speed','RAM Hızı'),psu:'PSU'};
@@ -1461,7 +1462,9 @@ function _analyze(skipLoading) {
   _h('bench-list', bHTML);
 
   // 04 Best upgrade
-  const meta = (best.score <= 1) ? PART_META.none : PART_META[best.key];
+  const meta = singleChannelPreBuyBlocker
+    ? PART_META.ramconfig
+    : ((best.score <= 1) ? PART_META.none : PART_META[best.key]);
   const visualPart = best.key === 'ramcap' || best.key === 'ramspd' ? 'ram' : (best.key || 'system');
   setVirtualPcPart(best.score <= 1 ? 'system' : visualPart, best.score <= 1 ? inTr('Current rig','Mevcut sistem') : meta.name);
   _h('uicon',   meta.icon);
@@ -1490,7 +1493,10 @@ function _analyze(skipLoading) {
   ).join('');
   // Render specific part/GPU recommendations at top of results (Section 02)
   const upgradePicksEl = el('upgrade-picks');
-  if (upgradePicksEl) upgradePicksEl.innerHTML = buildExamplePartCards();
+  const upgradePicksHTML = buildExamplePartCards();
+  if (upgradePicksEl) upgradePicksEl.innerHTML = upgradePicksHTML;
+  const tierSectionEl = document.querySelector('.res-tier-section');
+  if (tierSectionEl) tierSectionEl.classList.toggle('is-hidden', !upgradePicksHTML.trim());
   const upgradeOptionsLabel = isLaptop
     ? inTr('Laptop Options', 'Laptop Seçenekleri')
     : inTr('Validated upgrade paths', 'Doğrulanmış yükseltme yolları');
@@ -1511,6 +1517,9 @@ function _analyze(skipLoading) {
 
   // Price from bandDesc
   const priceEl = el('res-price');
+  const priceRowEl = document.querySelector('.res-price-row');
+  const showPrice = isLaptop ? budgetN > 0 : (best.score > 1 && !singleChannelPreBuyBlocker);
+  if (priceRowEl) priceRowEl.classList.toggle('is-hidden', !showPrice);
   if (priceEl) {
     if (isLaptop && budgetN > 0) {
       priceEl.textContent = formatRangeForCurrency(Math.max(350, budgetUSD * .82), budgetUSD * 1.08, 'retail');
