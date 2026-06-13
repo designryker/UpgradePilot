@@ -1272,7 +1272,7 @@ function _analyze(skipLoading) {
     finalIco = '&#8594;';
   }
 
-  const bandDesc = priceKey ? PRICE_USD[priceKey] : null;
+  const bandDesc = isLaptop ? null : priceKey ? PRICE_USD[priceKey] : null;
 
   function marketplaceUrl(query) {
     const host = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
@@ -1294,13 +1294,15 @@ function _analyze(skipLoading) {
 
   function buildBuyingAction() {
     const isNoBuy = best.score <= 1 || best.key === 'ramspd';
-    const isBuyLaptop = isLaptop && budgetN > 0;
+    const isBuyLaptop = isLaptop;
     const kind = isBuyLaptop ? 'laptop' : isNoBuy ? 'none' : best.key;
-    const title = isNoBuy
+    const title = isBuyLaptop
+      ? inTr('Recommended system options', 'Önerilen sistem seçenekleri')
+      : isNoBuy
       ? inTr('Best move: verify before buying', 'En iyi adim: almadan once dogrula')
       : inTr('Recommended next action', 'Onerilen sonraki adim');
     const focus = isBuyLaptop
-      ? inTr('Laptop class for your budget', 'Butcene uygun laptop sinifi')
+      ? inTr('Laptop Options', 'Laptop Seçenekleri')
       : best.key === 'gpu'
         ? meta.name + ' — ' + gpuTargetTierText()
         : best.key === 'cpu'
@@ -1314,16 +1316,18 @@ function _analyze(skipLoading) {
     const queryByKind = {
       gpu: gpuTargetTierText().replace(/ \/ /g, ' ').replace('class', 'graphics card'),
       cpu: cpuKey.startsWith('r') ? 'Ryzen 5 5600 Ryzen 7 5700X3D processor' : 'i5 12400F Ryzen 5 5600 CPU motherboard',
-      ramcap: '2x16GB DDR4 DDR5 RAM kit',
+      ramcap: '2x16GB ' + ramType.toUpperCase() + ' dual channel kit',
       psu: psuRecWatts + ' 80+ Gold power supply',
       laptop: 'gaming laptop RTX 4060 16GB SSD',
       build: 'Ryzen 5 5600 RX 6600 gaming pc build'
     };
     const query = queryByKind[kind] || queryByKind[best.key] || '';
-    const price = bandDesc
+    const price = isBuyLaptop && budgetN > 0
+      ? formatRangeForCurrency(Math.max(350, budgetUSD * .82), budgetUSD * 1.08, 'retail')
+      : bandDesc
       ? (currency === 'try' ? inTr('TRY range below', 'TL araligi asagida') : formatRangeForCurrency(bandDesc[0], bandDesc[1], 'value'))
       : inTr('Price varies', 'Fiyat degisir');
-    const link = !isNoBuy && query
+    const link = ((!isNoBuy && query) || (isBuyLaptop && budgetN > 0))
       ? '<a class="buying-action-btn" href="' + marketplaceUrl(query) + '" target="_blank" rel="noopener noreferrer">' + actionLabelFor(kind) + '</a>'
       : '<button type="button" class="buying-action-btn buying-action-btn-muted" disabled>' + actionLabelFor('none') + '</button>';
 
@@ -1473,21 +1477,30 @@ function _analyze(skipLoading) {
   // Render specific part/GPU recommendations at top of results (Section 02)
   const upgradePicksEl = el('upgrade-picks');
   if (upgradePicksEl) upgradePicksEl.innerHTML = buildExamplePartCards();
+  const upgradeOptionsLabel = isLaptop
+    ? inTr('Laptop Options', 'Laptop Seçenekleri')
+    : inTr('Validated upgrade paths', 'Doğrulanmış yükseltme yolları');
+  const upgradeOptionsLabelEl = document.querySelector('.res-tier-label');
+  if (upgradeOptionsLabelEl) upgradeOptionsLabelEl.textContent = upgradeOptionsLabel;
 
   // ── New result page renders ───────────────────────────────────────────
 
   // Product name — big hero title
   const productNameEl = el('res-product-name');
-  if (productNameEl) productNameEl.textContent = meta.name || '—';
+  if (productNameEl) productNameEl.textContent = isLaptop ? inTr('Laptop Options', 'Laptop Seçenekleri') : (meta.name || '—');
 
   // Product description
   const productDescEl = el('res-product-desc');
-  if (productDescEl) productDescEl.textContent = diagnosticWhyText || '';
+  if (productDescEl) productDescEl.textContent = isLaptop
+    ? inTr('Diagnosis: ', 'Teşhis: ') + meta.name + '. ' + diagnosticWhyText
+    : (diagnosticWhyText || '');
 
   // Price from bandDesc
   const priceEl = el('res-price');
   if (priceEl) {
-    if (!bandDesc) {
+    if (isLaptop && budgetN > 0) {
+      priceEl.textContent = formatRangeForCurrency(Math.max(350, budgetUSD * .82), budgetUSD * 1.08, 'retail');
+    } else if (!bandDesc) {
       priceEl.textContent = inTr('Price varies', 'Fiyat değişir');
     } else if (currency === 'try') {
       priceEl.textContent = formatRangeForCurrency(bandDesc[0], bandDesc[1], 'retail');
@@ -1499,10 +1512,16 @@ function _analyze(skipLoading) {
   // Rec badge visibility
   const recBadge = el('res-rec-badge');
   if (recBadge) recBadge.style.display = best.score <= 1 ? 'none' : '';
+  const recBadgeLabel = recBadge?.querySelector('span:last-child');
+  if (recBadgeLabel) recBadgeLabel.textContent = isLaptop
+    ? inTr('Laptop Options', 'Laptop Seçenekleri')
+    : inTr('Recommended upgrade', 'Önerilen yükseltme');
 
   // Performance delta bars
   const perfDeltaEl = el('res-perf-delta');
-  if (perfDeltaEl && best.score > 1) {
+  const showFpsDelta = best.score > 1 && (best.key === 'gpu' || best.key === 'cpu');
+  if (perfDeltaEl) perfDeltaEl.classList.toggle('is-hidden', !showFpsDelta);
+  if (perfDeltaEl && showFpsDelta) {
     const gainLow  = parseInt((gain.label || '0').replace(/[^0-9]/,'')) || 0;
     const gainHigh = parseInt((gain.label || '0').split('–').pop()) || gainLow;
     const gainMid  = Math.round((gainLow + gainHigh) / 2);
@@ -1692,6 +1711,7 @@ function _analyze(skipLoading) {
     '</div>';
   }
   function buildExamplePartCards() {
+    if (isLaptop) return buildLaptopOptionCards();
     if (!bandDesc || best.score <= 1) return '';
 
     const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
@@ -1829,7 +1849,7 @@ function _analyze(skipLoading) {
 
     // ── RAM / PSU: tek hedef ─────────────────────────────────────────
     const simpleMap = {
-      ramcap: { name: '2×16 GB DDR4/DDR5 dual-channel kit', note: inTr('Matched kit, not mixed sticks. Dual-channel matters.', 'Eşleştirilmiş kit, karışık değil. Dual-channel önemli.'), q: '2x16GB DDR4 DDR5 dual channel kit' },
+      ramcap: { name: '2×16 GB ' + ramType.toUpperCase() + ' dual-channel kit', note: inTr('Matched kit, not mixed sticks. Dual-channel matters.', 'Eşleştirilmiş kit, karışık değil. Dual-channel önemli.'), q: '2x16GB ' + ramType.toUpperCase() + ' dual channel kit' },
       ramspd: { name: 'XMP/EXPO enable first', note: inTr('Check CPU-Z. If running below rated speed, enable XMP in BIOS — free fix.', 'CPU-Z\'yi kontrol et. Eğer nominal hızın altındaysa BIOS\'ta XMP\'yi aç — ücretsiz.'), q: '' },
       psu:    { name: psuRecWatts + ' 80+ Gold', note: inTr('Choose a reputable brand. Do this before GPU if PSU is the blocker.', 'Güvenilir marka seç. PSU blokajsa GPU\'dan önce bunu yap.'), q: psuRecWatts + ' 80+ Gold power supply' }
     };
@@ -1846,13 +1866,19 @@ function _analyze(skipLoading) {
       '</div>'
     );
   }
+  function buildLaptopOptionCards() {
+    return buildLaptopSuggestionCards();
+  }
   function buildLaptopSuggestionCards() {
     if (!isLaptop) return '';
     const marketplaceHost = currentLang === 'tr' ? 'https://www.amazon.com.tr/s?k=' : 'https://www.amazon.com/s?k=';
     const marketplaceUrl = query => marketplaceHost + encodeURIComponent(query);
+    const laptopMemorySpec = best.key === 'ramcap'
+      ? inTr('32 GB RAM preferred', '32 GB RAM tercih et')
+      : inTr('16 GB+ RAM', '16 GB+ RAM');
     const intro = budgetN > 0
-      ? inTr('Laptop budget examples','Laptop butce ornekleri')
-      : inTr('Laptop examples need a budget','Laptop ornegi icin butce gerekli');
+      ? inTr('Laptop Options','Laptop Seçenekleri')
+      : inTr('Laptop Options need a budget','Laptop seçenekleri için bütçe gerekli');
     if (budgetN <= 0) {
       return '<div class="example-block laptop-block">' +
         '<div class="discovery-head">' + intro + '</div>' +
@@ -1865,40 +1891,40 @@ function _analyze(skipLoading) {
 
     const tiers = [
       {
-        min: 0, max: 650,
-        k: inTr('Entry budget laptop','Giris butce laptop'),
-        t: 'GTX 1650 / RTX 2050 / RTX 3050 class',
-        specs: ['16 GB RAM', '512 GB SSD', '1080p'],
-        q: 'gaming laptop RTX 3050 16GB SSD',
-        c: inTr('Only makes sense if the price is low. Good for esports and lighter games; avoid 8 GB RAM models unless upgradeable.',
-                'Fiyati dusukse mantikli. Espor ve hafif oyunlar icin iyi; yukseltilebilir degilse 8 GB RAM modellerden uzak dur.')
+        min: 0, max: 850,
+        k: inTr('Value laptop option','Fiyat odakli laptop seçeneği'),
+        t: 'RTX 4050 / RTX 5050 class',
+        specs: [laptopMemorySpec, '512 GB SSD', '1080p'],
+        q: 'laptop RTX 5050 32GB SSD',
+        c: inTr('Prioritize memory capacity, cooling, and upgradeability over the thinnest chassis.',
+                'En ince kasa yerine bellek kapasitesi, soğutma ve yükseltilebilirliği önceliklendir.')
       },
       {
-        min: 650, max: 950,
+        min: 850, max: 1250,
         k: inTr('Best value laptop lane','En mantikli laptop araligi'),
-        t: 'RTX 4050 / RTX 4060 class',
-        specs: ['16 GB RAM', '512 GB-1 TB SSD', 'MUX if possible'],
-        q: 'gaming laptop RTX 4060 16GB SSD',
-        c: inTr('This is the first range I would compare seriously for a new laptop. Cooling quality and GPU wattage matter a lot here.',
-                'Yeni laptop icin ciddi bakilacak ilk aralik burasi. Sogutma kalitesi ve GPU watt degeri burada cok onemli.')
+        t: 'RTX 5060 class',
+        specs: [laptopMemorySpec, '1 TB SSD', 'strong cooling'],
+        q: 'laptop RTX 5060 32GB 1TB',
+        c: inTr('A balanced current-generation target. Compare GPU wattage, cooling, screen quality, and memory configuration.',
+                'Dengeli güncel nesil hedef. GPU watt, soğutma, ekran kalitesi ve bellek yapılandırmasını karşılaştır.')
       },
       {
-        min: 950, max: 1400,
-        k: inTr('Stronger 1080p / 1440p laptop','Daha guclu 1080p / 1440p laptop'),
-        t: 'RTX 4060 high-watt / RTX 4070 class',
-        specs: ['32 GB ideal', '1 TB SSD', 'better cooling'],
-        q: 'gaming laptop RTX 4070 32GB 1TB',
-        c: inTr('Worth it if you want longer use and better 1% lows. Compare screen quality, thermals, and warranty before paying extra.',
-                'Daha uzun kullanim ve daha iyi 1% low icin mantikli. Ekstra para vermeden once ekran, sicaklik ve garantiyi karsilastir.')
+        min: 1250, max: 1800,
+        k: inTr('Performance laptop option','Performans laptop seçeneği'),
+        t: 'RTX 5070 / RTX 5070 Ti class',
+        specs: ['32 GB RAM', '1 TB SSD', 'high-watt GPU'],
+        q: 'laptop RTX 5070 Ti 32GB 1TB',
+        c: inTr('Choose this tier for stronger sustained performance. Cooling and GPU power limits matter more than the badge alone.',
+                'Daha güçlü sürekli performans için bu sınıfa bak. Soğutma ve GPU güç limiti tek başına model adından daha önemlidir.')
       },
       {
-        min: 1400, max: Infinity,
-        k: inTr('High-end laptop shortlist','Ust seviye laptop kisa liste'),
-        t: 'RTX 4070 / RTX 4080 class',
+        min: 1800, max: Infinity,
+        k: inTr('High-end laptop option','Üst seviye laptop seçeneği'),
+        t: 'RTX 5080 class',
         specs: ['32 GB RAM', '1 TB+ SSD', 'premium cooling'],
-        q: 'gaming laptop RTX 4080 32GB 1TB',
-        c: inTr('Do not buy purely by GPU name. A high-watt RTX 4070 laptop can beat a poorly cooled higher-tier machine in real use.',
-                'Sadece GPU adina gore alma. Yuksek wattli RTX 4070 laptop, kotu sogutulan daha ust seviye bir modeli gercek kullanimda gecebilir.')
+        q: 'laptop RTX 5080 32GB 1TB',
+        c: inTr('Only worth considering when the budget supports premium cooling, display, and warranty quality.',
+                'Yalnızca bütçe kaliteli soğutma, ekran ve garantiyi de karşılıyorsa değerlendir.')
       }
     ];
     const nearby = tiers.filter(tier => budgetUSD >= tier.min * .85 && budgetUSD <= tier.max * 1.18).slice(0, 3);
@@ -2039,7 +2065,7 @@ function _analyze(skipLoading) {
     return (
       '<div class="example-block build-block">' +
         '<div class="discovery-head">' +
-          inTr('Complete System Alternatives', 'Komple Sistem Alternatifleri') +
+          inTr('Desktop PC Options', 'Masaüstü PC Seçenekleri') +
         '</div>' +
         '<div class="build-trust-note">' +
           inTr(
@@ -2158,7 +2184,6 @@ function _analyze(skipLoading) {
   budHTML += buildBudgetDiscoveryCards();
   // buildExamplePartCards() now renders in Section 02 (top) — see upgrade-picks above
   budHTML += buildCompleteBuildCards();
-  budHTML += buildLaptopSuggestionCards();
   budHTML +=
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">' +
       '<div class="metric"><div class="mlabel">' + inTr('Budget Match','Bütçe Eşleşmesi') + '</div><div class="mval ' + budgetFitCls + '">' + budgetFitLabel + '</div><div class="msub">' + budgetFitNote + '</div></div>' +

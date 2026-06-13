@@ -4548,6 +4548,7 @@ h1,
   grid-template-columns: repeat(3, 1fr);
   gap: .65rem;
 }
+.res-tier-grid > .laptop-block{grid-column:1/-1}
 
 /* Tier card overrides */
 .res-tier-grid .example-card {

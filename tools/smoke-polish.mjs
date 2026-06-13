@@ -298,6 +298,40 @@ assert.ok(
   styleSource.includes('.field:hover:not(.is-field-active):not(:focus-within)'),
   'inactive hover should use a dedicated restrained state'
 );
+assert.ok(
+  analyzeSource.includes('const isBuyLaptop = isLaptop;'),
+  'laptop mode should always route purchasing toward laptop options'
+);
+assert.ok(
+  analyzeSource.includes("const showFpsDelta = best.score > 1 && (best.key === 'gpu' || best.key === 'cpu');"),
+  'FPS delta should only render for CPU and GPU recommendations'
+);
+assert.ok(
+  analyzeSource.includes("perfDeltaEl.classList.toggle('is-hidden', !showFpsDelta);"),
+  'non-FPS upgrades should hide the performance delta container completely'
+);
+assert.ok(
+  analyzeSource.includes("ramcap: '2x16GB ' + ramType.toUpperCase() + ' dual channel kit'"),
+  'RAM listing searches should use the selected memory generation'
+);
+assert.ok(
+  analyzeSource.includes("name: '2×16 GB ' + ramType.toUpperCase() + ' dual-channel kit'"),
+  'RAM recommendation cards should use the selected memory generation'
+);
+assert.ok(analyzeSource.includes("inTr('Laptop Options', 'Laptop Seçenekleri')"), 'laptop result sections should use the neutral Laptop Options label');
+assert.ok(analyzeSource.includes("inTr('Desktop PC Options', 'Masaüstü PC Seçenekleri')"), 'desktop system alternatives should use the Desktop PC Options label');
+assert.ok(
+  analyzeSource.includes("if (isLaptop) return buildLaptopOptionCards();"),
+  'laptop mode should replace internal part cards with laptop option cards'
+);
+assert.ok(
+  analyzeSource.includes("const upgradeOptionsLabel = isLaptop"),
+  'the validated paths heading should adapt to laptop and desktop modes'
+);
+assert.ok(analyzeSource.includes("const bandDesc = isLaptop ? null"), 'laptop mode should not show internal part price bands');
+assert.ok(analyzeSource.includes("const laptopMemorySpec = best.key === 'ramcap'"), 'laptop options should respond to a RAM diagnosis');
+assert.ok(styleSource.includes('.res-tier-grid > .laptop-block'), 'laptop options should span the result options grid');
+assert.ok(analyzeSource.includes("recBadgeLabel.textContent = isLaptop"), 'the result badge should adapt to laptop options');
 assert.equal(
   analyzeSource.includes("name:'RTX 3060 / RTX 4060'"),
   false,
