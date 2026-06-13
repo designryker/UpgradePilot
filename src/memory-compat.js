@@ -32,7 +32,7 @@ export function updateRamSpeeds() {
   if (!type) {
     const placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = inTr('Select memory type first', 'Once bellek turunu sec');
+    placeholder.textContent = inTr('Select memory type first', 'Önce bellek türünü seç');
     placeholder.selected = true;
     placeholder.disabled = true;
     spd.appendChild(placeholder);

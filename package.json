@@ -8,11 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node tools/smoke-polish.mjs",
-    "check": "npm run check-brand && npm run build && npm run smoke",
+    "test:recommendations": "node tools/recommendation-scenarios.mjs",
+    "check": "npm run check-brand && npm run build && npm run smoke && npm run test:recommendations",
     "check-parts": "node tools/check-parts.mjs",
     "check-brand": "node tools/check-brand.mjs"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "vite": "^7.2.7"
   }
 }

@@ -4998,3 +4998,90 @@ h1,
 @media(max-width:760px){
   .current-problem-layout{grid-template-columns:1fr}
 }
+
+/* === Result clarity pass === */
+.result-part-artwork{
+  position:relative;
+  display:grid;
+  place-items:center;
+  min-height:190px;
+  margin:1.2rem 0 1.35rem;
+  padding:1.2rem 1.5rem;
+  overflow:hidden;
+  border:1px solid rgba(105,167,255,.22);
+  border-radius:14px;
+  color:rgba(184,215,255,.72);
+  background:
+    radial-gradient(circle at 50% 45%,rgba(105,167,255,.12),transparent 48%),
+    linear-gradient(180deg,rgba(31,39,52,.78),rgba(13,17,24,.94));
+}
+.result-part-artwork[hidden]{display:none}
+.result-part-artwork::before{
+  content:"";
+  position:absolute;
+  inset:12px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:10px;
+  pointer-events:none;
+}
+.result-part-artwork::after{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:16px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(105,167,255,.7),transparent);
+  box-shadow:0 0 18px rgba(105,167,255,.35);
+}
+.result-component-svg{
+  position:relative;
+  z-index:1;
+  width:min(100%,650px);
+  max-height:220px;
+  filter:drop-shadow(0 12px 22px rgba(0,0,0,.35));
+}
+.result-cpu-artwork{width:min(72%,410px)}
+.result-analysis-grid{display:grid;gap:.7rem}
+.result-analysis-section{
+  padding:1rem 1.05rem;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  background:rgba(255,255,255,.025);
+}
+.result-analysis-kicker{
+  margin-bottom:.55rem;
+  color:var(--accent);
+  font-family:var(--font-tech);
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.result-analysis-section p,
+.result-analysis-section ul,
+.result-analysis-section ol{
+  margin:0;
+  color:rgba(232,230,244,.82);
+  font-size:.94rem;
+  line-height:1.6;
+}
+.result-analysis-section ul,
+.result-analysis-section ol{
+  display:grid;
+  gap:.45rem;
+  padding-left:1.15rem;
+}
+.result-analysis-legacy{display:none!important}
+.pc-summary strong{
+  min-width:0;
+  overflow-wrap:anywhere;
+  white-space:normal;
+  text-align:right;
+}
+@media(max-width:600px){
+  .result-part-artwork{min-height:150px;padding:1rem;margin:1rem 0}
+  .result-component-svg{max-height:170px}
+  .pc-summary>div{align-items:flex-start}
+  .pc-summary strong{max-width:62%;font-size:.68rem;line-height:1.4}
+}

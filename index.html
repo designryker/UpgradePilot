@@ -650,6 +650,9 @@
       <!-- Description -->
       <p class="res-product-desc" id="res-product-desc"></p>
 
+      <!-- Conditional CPU / GPU line-art -->
+      <div class="result-part-artwork" id="result-part-artwork" data-artwork="" hidden></div>
+
       <!-- Price -->
       <div class="res-price-row">
         <span class="res-price-label" data-i18n="resStartingAt">STARTING AT</span>
@@ -676,6 +679,21 @@
           <span class="rc-chevron">&#8964;</span>
         </div>
         <div class="rc-body">
+          <div class="result-analysis-grid">
+            <section class="result-analysis-section">
+              <div class="result-analysis-kicker" data-i18n="whyRecommendation">Why this recommendation?</div>
+              <p id="result-analysis-why"></p>
+            </section>
+            <section class="result-analysis-section">
+              <div class="result-analysis-kicker" data-i18n="verifyBeforeBuying">Verify before buying</div>
+              <ul id="result-analysis-verify"></ul>
+            </section>
+            <section class="result-analysis-section">
+              <div class="result-analysis-kicker" data-i18n="nextStep">Next step</div>
+              <ol id="result-analysis-next"></ol>
+            </section>
+          </div>
+          <div class="result-analysis-legacy" aria-hidden="true">
           <div class="diagnostic-summary" id="diagnostic-summary">
             <div class="summary-card score-card">
               <div class="summary-label" data-i18n="systemHealth">System Health</div>
@@ -713,6 +731,7 @@
           <div id="psu-result-section"><div id="psu-rec-content"></div></div>
           <div id="budget-content"></div>
           <div class="diag-block"><div class="diag-pill" id="diag-pill"></div><div class="diag-text" id="diag-text"></div></div>
+          </div>
         </div>
       </div>
 

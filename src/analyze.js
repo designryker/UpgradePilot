@@ -14,6 +14,7 @@ import { updateFreeBoostProgress } from './free-boost.js';
 import { resetAccordionState } from './accordion.js';
 import { setCopyButtonState } from './copy-result.js';
 import { showResultPage } from './result-page.js';
+import { renderResultArtwork } from './result-artwork.js';
 
 export function analyze(skipLoading) {
   try {
@@ -103,7 +104,7 @@ function _analyze(skipLoading) {
   const ramType  = el('ram-type')?.value  || 'ddr4';
   const ramSpVal = el('ram-speed')?.value || 'unknown';
   const channel  = el('channel')?.value   || 'dual';
-  const psuW     = parseInt(el('psu-watts')?.value) || 0;
+  const psuW     = el('psu-unknown-check')?.checked ? 0 : (parseInt(el('psu-watts')?.value) || 0);
   const psuEff   = el('psu-eff')?.value   || 'unknown';
   const systemType = el('system-type')?.value  || 'desktop';
   const cpuCooler  = el('cpu-cooler')?.value   || 'unknown';
@@ -167,7 +168,7 @@ function _analyze(skipLoading) {
   const psuMaxNow    = psuMaxGpu(psuW);
   const psuDanger    = !isLaptop && psuW > 0 && gpuSc > psuMaxNow;
   const nextGpuSc    = Math.min(10, gpuSc + 2);
-  const psuBlockUpgr = !isLaptop && nextGpuSc > psuMaxNow;
+  const psuBlockUpgr = !isLaptop && psuW > 0 && nextGpuSc > psuMaxNow;
 
   // ── RAM configuration flags ──
   // channel is always 'dual' or 'single' — no unknown option
@@ -194,21 +195,21 @@ function _analyze(skipLoading) {
       return {
         label: formatGainRange(0, 5),
         cls: 'c-mid',
-        note: inTr('Do not count GPU gains yet. Resolve PSU readiness first, then rerun the estimate.', 'GPU kazancini henuz hesaba katma. Once PSU hazirligini coz, sonra tahmini tekrar calistir.')
+        note: inTr('Do not count GPU gains yet. Resolve PSU readiness first, then rerun the estimate.', 'GPU kazancını henüz hesaba katma. Önce PSU hazırlığını çöz, sonra tahmini tekrar çalıştır.')
       };
     }
     if (psuW === 0 && (best.key === 'gpu' || best.key === 'psu' || psuBlockUpgr)) {
       return {
         label: formatGainRange(0, 8),
         cls: 'c-mid',
-        note: inTr('Confidence-limited estimate: enter PSU wattage before trusting a GPU upgrade range.', 'Guven sinirli tahmin: GPU yukseltme araligina guvenmeden once PSU watt degerini gir.')
+        note: inTr('Confidence-limited estimate: enter PSU wattage before trusting a GPU upgrade range.', 'Güveni sınırlı tahmin: GPU yükseltme aralığına güvenmeden önce PSU watt değerini gir.')
       };
     }
     if (unknownCooler && (best.key === 'cpu' || best.key === 'gpu')) {
       return {
         label: formatGainRange(0, 8),
         cls: 'c-mid',
-        note: inTr('Confidence-limited estimate: check temperatures first because throttling can hide the real gain.', 'Guven sinirli tahmin: once sicakliklari kontrol et; throttling gercek kazanci saklayabilir.')
+        note: inTr('Confidence-limited estimate: check temperatures first because throttling can hide the real gain.', 'Güveni sınırlı tahmin: önce sıcaklıkları kontrol et; hız düşürme gerçek kazancı saklayabilir.')
       };
     }
     if (best.key === 'gpu') {
@@ -290,7 +291,7 @@ function _analyze(skipLoading) {
     return {
       label: formatGainRange(0, 5),
       cls: 'c-mid',
-      note: inTr('Optimize first, then rerun the analysis for a cleaner estimate.', 'Once optimize et, sonra daha temiz tahmin icin analizi tekrar calistir.')
+      note: inTr('Optimize first, then rerun the analysis for a cleaner estimate.', 'Önce optimize et, sonra daha temiz tahmin için analizi tekrar çalıştır.')
     };
   }
 
@@ -399,7 +400,7 @@ function _analyze(skipLoading) {
   // ═══ RAM CAPACITY ══════════════════════════════════════════════
   // Rule: 8 GB = critically low, top priority
   if (ramGB === 8) {
-    ramCapP = 8;
+    ramCapP = 10;
   } else if (ramGB === 16) {
     // Rule: 16 GB = medium for heavy workloads
     if (game === 'stream')            ramCapP += 4;
@@ -512,7 +513,7 @@ function _analyze(skipLoading) {
   );
   const psuDependencyAction = psuW > 0
     ? inTr('Resolve PSU readiness before buying a stronger GPU.', 'Daha guclu GPU almadan once PSU hazirligini coz.')
-    : inTr('Enter PSU wattage and verify PSU quality before choosing a stronger GPU.', 'Daha guclu GPU secmeden once PSU watt degerini gir ve PSU kalitesini dogrula.');
+    : inTr('Enter PSU wattage and verify PSU quality before choosing a stronger GPU.', 'Daha güçlü GPU seçmeden önce PSU watt değerini gir ve PSU kalitesini doğrula.');
 
   // ── Do Not Upgrade list ──
   const dnuSet = new Set();
@@ -1016,15 +1017,15 @@ function _analyze(skipLoading) {
       ram: 'RAM',
       psu: 'PSU',
       storage: inTr('Storage', 'Depolama'),
-      cooling: inTr('Cooling', 'Sogutma'),
+      cooling: inTr('Cooling', 'Soğutma'),
       none: inTr('None', 'Yok')
     };
 
     const priorityKey = (psuDanger || ramGB === 8 || isSingleCh || best.score >= 6) ? 'high' : best.score >= 3 ? 'medium' : 'low';
     const priorityLabels = {
-      low: inTr('Low', 'Dusuk'),
+      low: inTr('Low', 'Düşük'),
       medium: inTr('Medium', 'Orta'),
-      high: inTr('High', 'Yuksek')
+      high: inTr('High', 'Yüksek')
     };
 
     let confidenceRank = 3;
@@ -1032,7 +1033,7 @@ function _analyze(skipLoading) {
 
     if (diagKey === 'bal' || diagKey === 'opt' || best.score <= 2) {
       confidenceRank = Math.min(confidenceRank, 2);
-      confidenceReasons.push(inTr('no single paid upgrade clearly dominates', 'net sekilde one cikan tek ucretli yukseltme yok'));
+      confidenceReasons.push(inTr('no single paid upgrade clearly dominates', 'net şekilde öne çıkan tek ücretli yükseltme yok'));
     }
     if (budgetN === 0 && best.score > 2) {
       confidenceRank = Math.min(confidenceRank, 2);
@@ -1052,7 +1053,7 @@ function _analyze(skipLoading) {
     }
     if (isLaptop && best.key !== 'ramcap' && best.key !== 'ramspd') {
       confidenceRank = Math.min(confidenceRank, 2);
-      confidenceReasons.push(inTr('laptop thermal and upgrade limits vary', 'laptop termal ve yukseltme sinirlari degisken'));
+      confidenceReasons.push(inTr('laptop thermal and upgrade limits vary', 'laptop sıcaklık ve yükseltme sınırları değişken'));
     }
     if (singleChannelPreBuyBlocker || psuDependencyActive) {
       confidenceRank = Math.min(confidenceRank, 2);
@@ -1061,9 +1062,9 @@ function _analyze(skipLoading) {
     confidenceRank = clamp(confidenceRank, 1, 3);
     const confidenceKey = confidenceRank === 3 ? 'high' : confidenceRank === 2 ? 'medium' : 'low';
     const confidenceLabels = {
-      low: inTr('Low', 'Dusuk'),
+      low: inTr('Low', 'Düşük'),
       medium: inTr('Medium', 'Orta'),
-      high: inTr('High', 'Yuksek')
+      high: inTr('High', 'Yüksek')
     };
 
     const limitedInfo = confidenceRank < 3;
@@ -1078,26 +1079,26 @@ function _analyze(skipLoading) {
         : inTr('Inputs are specific enough for a strong first diagnosis.', 'Girdiler ilk tanı için yeterince net.');
 
     const issueNote = {
-      cpu: inTr(cpuName + ' may limit frame consistency at ' + resLabel + ' / ' + hz + 'Hz.', cpuName + ', ' + resLabel + ' / ' + hz + 'Hz seviyesinde kare tutarliligini sinirlayabilir.'),
-      gpu: inTr(gpuName + ' is the likely graphics limiter for this target.', gpuName + ' bu hedefte muhtemel grafik siniri.'),
-      ram: inTr('Memory capacity, speed, or channel mode is affecting the result.', 'Bellek kapasitesi, hizi veya kanal modu sonucu etkiliyor.'),
-      psu: inTr('Power readiness may block a safe GPU upgrade path.', 'Guc hazirligi guvenli GPU yukseltme rotasini sinirlayabilir.'),
-      storage: inTr('Storage can show up as stutter or slow asset streaming.', 'Depolama sorunu takilma veya yavas asset yukleme gibi gorunebilir.'),
-      cooling: inTr('Thermals can hide as a CPU or GPU bottleneck.', 'Sicaklik sorunu CPU veya GPU darboğazi gibi gorunebilir.'),
-      none: inTr('No single paid upgrade clearly dominates yet.', 'Henuz tek bir ucretli yukseltme net sekilde one cikmiyor.')
+      cpu: inTr(cpuName + ' may limit frame consistency at ' + resLabel + ' / ' + hz + 'Hz.', cpuName + ', ' + resLabel + ' / ' + hz + 'Hz seviyesinde kare tutarlılığını sınırlayabilir.'),
+      gpu: inTr(gpuName + ' is the likely graphics limiter for this target.', gpuName + ' bu hedefte muhtemel grafik sınırı.'),
+      ram: inTr('Memory capacity, speed, or channel mode is affecting the result.', 'Bellek kapasitesi, hızı veya kanal modu sonucu etkiliyor.'),
+      psu: inTr('Power readiness may block a safe GPU upgrade path.', 'Güç hazırlığı güvenli GPU yükseltme rotasını sınırlayabilir.'),
+      storage: inTr('Storage can show up as stutter or slow asset streaming.', 'Depolama sorunu takılma veya yavaş içerik yükleme gibi görünebilir.'),
+      cooling: inTr('Thermals can hide as a CPU or GPU bottleneck.', 'Sıcaklık sorunu CPU veya GPU darboğazı gibi görünebilir.'),
+      none: inTr('No single paid upgrade clearly dominates yet.', 'Henüz tek bir ücretli yükseltme net şekilde öne çıkmıyor.')
     }[bottleneckKey];
 
     const priorityNote = priorityKey === 'high'
-      ? inTr('Fix the blocker or validate the upgrade soon.', 'Blokaji coz veya yukseltmeyi yakinda dogrula.')
+      ? inTr('Fix the blocker or validate the upgrade soon.', 'Engeli çöz veya yükseltmeyi yakında doğrula.')
       : priorityKey === 'medium'
-        ? inTr('Worth investigating after free fixes.', 'Ucretsiz duzeltmelerden sonra arastirmaya deger.')
-        : inTr('Optimize first. Buying can wait.', 'Once optimize et. Satin alma bekleyebilir.');
+        ? inTr('Worth investigating after free fixes.', 'Ücretsiz düzeltmelerden sonra araştırmaya değer.')
+        : inTr('Optimize first. Buying can wait.', 'Önce optimize et. Satın alma bekleyebilir.');
 
     const scoreNote = systemScore >= 85
-      ? inTr('Healthy baseline', 'Saglikli temel')
+      ? inTr('Healthy baseline', 'Sağlıklı temel')
       : systemScore >= 70
-        ? inTr('Some targeted work needed', 'Hedefli iyilestirme gerekli')
-        : inTr('Clear limiter detected', 'Net sinirlayici tespit edildi');
+        ? inTr('Some targeted work needed', 'Hedefli iyileştirme gerekli')
+        : inTr('Clear limiter detected', 'Net sınırlayıcı tespit edildi');
 
     return {
       systemScore,
@@ -1119,48 +1120,48 @@ function _analyze(skipLoading) {
     if (diagnostics.limitedInfo) {
       return inTr(
         'This diagnosis uses the parts you selected, but one or more details are uncertain. Treat it as a direction: apply the free checks first, then validate the bottleneck before buying.',
-        'Bu tani sectigin parcalara gore olusturuldu, fakat bir veya daha fazla bilgi belirsiz. Bunu rota olarak kullan: once ucretsiz kontrolleri uygula, sonra satin almadan once darboğazi dogrula.'
+        'Bu tanı seçtiğin parçalara göre oluşturuldu, fakat bir veya daha fazla bilgi belirsiz. Bunu rota olarak kullan: önce ücretsiz kontrolleri uygula, sonra satın almadan önce darboğazı doğrula.'
       );
     }
     if (diagnostics.bottleneckKey === 'gpu') {
       return inTr(
         gpuName + ' is the likely limiter at ' + resLabel + ' / ' + hz + 'Hz for ' + gameLabel + '. Your CPU looks less urgent, so a GPU path makes more sense after driver and temperature checks.',
-        gpuName + ', ' + resLabel + ' / ' + hz + 'Hz seviyesinde ' + gameLabel + ' icin muhtemel sinirlayici. CPU daha az acil gorunuyor; surucu ve sicaklik kontrolunden sonra GPU rotasi daha mantikli.'
+        gpuName + ', ' + resLabel + ' / ' + hz + 'Hz seviyesinde ' + gameLabel + ' için muhtemel sınırlayıcı. CPU daha az acil görünüyor; sürücü ve sıcaklık kontrolünden sonra GPU rotası daha mantıklı.'
       );
     }
     if (diagnostics.bottleneckKey === 'cpu') {
       return inTr(
         cpuName + ' may be holding back frame consistency while ' + gpuName + ' still has usable headroom. That makes a CPU-focused path more sensible than buying a stronger GPU first.',
-        cpuName + ' kare tutarliligini sinirliyor olabilir; ' + gpuName + ' tarafinda hala kullanilabilir pay var. Bu yuzden once daha guclu GPU almak yerine CPU odakli rota daha mantikli.'
+        cpuName + ' kare tutarlılığını sınırlıyor olabilir; ' + gpuName + ' tarafında hâlâ kullanılabilir pay var. Bu yüzden önce daha güçlü GPU almak yerine CPU odaklı rota daha mantıklı.'
       );
     }
     if (diagnostics.bottleneckKey === 'ram') {
       return inTr(
         'Your RAM setup can affect stutter and 1% lows more than average FPS. Fix capacity, speed, or channel mode before judging the CPU and GPU.',
-        'RAM kurulumu ortalama FPS yerine daha cok takilma ve 1% low tarafini etkileyebilir. CPU ve GPU karari vermeden once kapasite, hiz veya kanal modunu duzelt.'
+        'RAM kurulumu ortalama FPS yerine daha çok takılma ve %1 düşük değerlerini etkileyebilir. CPU ve GPU kararı vermeden önce kapasite, hız veya kanal modunu düzelt.'
       );
     }
     if (diagnostics.bottleneckKey === 'psu') {
       return inTr(
         'The PSU does not add FPS directly, but it can decide whether a GPU upgrade is safe. That is why power readiness comes before buying a stronger graphics card.',
-        'PSU dogrudan FPS eklemez, fakat GPU yukseltmesinin guvenli olup olmadigini belirler. Bu yuzden daha guclu ekran kartindan once guc hazirligi gelir.'
+        'PSU doğrudan FPS eklemez, fakat GPU yükseltmesinin güvenli olup olmadığını belirler. Bu yüzden daha güçlü ekran kartından önce güç hazırlığı gelir.'
       );
     }
     if (diagnostics.bottleneckKey === 'storage') {
       return inTr(
         'Your symptoms and game profile can be affected by storage speed. Moving games away from an HDD may reduce loading hitches before any CPU or GPU purchase.',
-        'Belirtilerin ve oyun profilin depolama hizindan etkilenebilir. Oyunlari HDD yerine SSD/NVMe diske almak, CPU veya GPU almadan once takilmalari azaltabilir.'
+        'Belirtilerin ve oyun profilin depolama hızından etkilenebilir. Oyunları HDD yerine SSD/NVMe diske almak, CPU veya GPU almadan önce takılmaları azaltabilir.'
       );
     }
     if (diagnostics.bottleneckKey === 'cooling') {
       return inTr(
         'Cooling can make good hardware behave like weak hardware. Check temperatures under load before replacing a CPU or GPU.',
-        'Sogutma sorunu iyi donanimi zayif donanim gibi gosterebilir. CPU veya GPU degistirmeden once yuk altinda sicakliklari kontrol et.'
+        'Soğutma sorunu iyi donanımı zayıf donanım gibi gösterebilir. CPU veya GPU değiştirmeden önce yük altında sıcaklıkları kontrol et.'
       );
     }
     return inTr(
       'Your selected CPU, GPU, memory and display target look reasonably balanced. The safest move is to optimize, measure, then rerun the result with better evidence.',
-      'Sectigin CPU, GPU, bellek ve ekran hedefi makul dengede gorunuyor. En guvenli rota optimize etmek, olcmek ve daha net veriyle sonucu tekrar calistirmak.'
+      'Seçtiğin CPU, GPU, bellek ve ekran hedefi makul dengede görünüyor. En güvenli rota optimize etmek, ölçmek ve daha net veriyle sonucu tekrar çalıştırmak.'
     );
   }
 
@@ -1173,33 +1174,33 @@ function _analyze(skipLoading) {
     if (psuDependencyActive) {
       add(psuDependencyAction);
     }
-    add(inTr('Set Windows power mode correctly and confirm the monitor refresh rate.', 'Windows guc modunu dogru ayarla ve monitor yenileme hizini dogrula.'));
+    add(inTr('Set Windows power mode correctly and confirm the monitor refresh rate.', 'Windows güç modunu doğru ayarla ve monitör yenileme hızını doğrula.'));
 
     if (diagnostics.bottleneckKey === 'ram' || showMemory) {
-      add(inTr('Verify RAM speed and channel mode with CPU-Z; enable XMP/EXPO or fix dual-channel if needed.', 'CPU-Z ile RAM hizi ve kanal modunu dogrula; gerekiyorsa XMP/EXPO ac veya cift kanali duzelt.'));
+      add(inTr('Verify RAM speed and channel mode with CPU-Z; enable XMP/EXPO or fix dual-channel if needed.', 'CPU-Z ile RAM hızı ve kanal modunu doğrula; gerekiyorsa XMP/EXPO aç veya çift kanalı düzelt.'));
     }
     if (diagnostics.bottleneckKey === 'gpu' || showGPU) {
-      add(inTr('Update GPU drivers, then check GPU usage and temperature during a real game.', 'GPU suruculerini guncelle, sonra gercek oyunda GPU kullanimi ve sicakligini kontrol et.'));
+      add(inTr('Update GPU drivers, then check GPU usage and temperature during a real game.', 'GPU sürücülerini güncelle, sonra gerçek oyunda GPU kullanımı ve sıcaklığını kontrol et.'));
     }
     if (diagnostics.bottleneckKey === 'cpu' || showCPU) {
-      add(inTr('Update chipset drivers and check CPU temperature, clocks, and usage under load.', 'Chipset suruculerini guncelle; yuk altinda CPU sicakligi, frekansi ve kullanimini kontrol et.'));
+      add(inTr('Update chipset drivers and check CPU temperature, clocks, and usage under load.', 'Yonga seti sürücülerini güncelle; yük altında CPU sıcaklığı, frekansı ve kullanımını kontrol et.'));
     }
     if (diagnostics.bottleneckKey === 'storage' || hddGameDrive) {
-      add(inTr('Move the target game to an SSD or NVMe drive if it is currently on an HDD.', 'Oyun HDD uzerindeyse SSD veya NVMe diske tasi.'));
+      add(inTr('Move the target game to an SSD or NVMe drive if it is currently on an HDD.', 'Oyun HDD üzerindeyse SSD veya NVMe diske taşı.'));
     }
     if (diagnostics.bottleneckKey === 'cooling' || throttleLoss.show || isLaptop) {
-      add(inTr('Check temperatures under load and clean airflow before buying hardware.', 'Donanim almadan once yuk altinda sicakliklari ve kasa hava akisini kontrol et.'));
+      add(inTr('Check temperatures under load and clean airflow before buying hardware.', 'Donanım almadan önce yük altında sıcaklıkları ve kasa hava akışını kontrol et.'));
     }
     if (diagnostics.bottleneckKey === 'psu') {
-      add(inTr('Confirm PSU wattage and quality before any GPU upgrade.', 'Her GPU yukseltmesinden once PSU watt degerini ve kalitesini dogrula.'));
+      add(inTr('Confirm PSU wattage and quality before any GPU upgrade.', 'Her GPU yükseltmesinden önce PSU watt değerini ve kalitesini doğrula.'));
     }
 
     if (!singleChannelPreBuyBlocker && best.score > 2 && !(isLaptop && (best.key === 'gpu' || best.key === 'cpu' || best.key === 'psu'))) {
       const targetName = (PART_META[best.key] || PART_META.none).name;
-      add(inTr('Upgrade ' + targetName + ' only after the free checks still point there.', targetName + ' yukseltmesini sadece ucretsiz kontroller hala orayi isaret ediyorsa yap.'));
+      add(inTr('Upgrade ' + targetName + ' only after the free checks still point there.', targetName + ' yükseltmesini yalnızca ücretsiz kontroller hâlâ orayı işaret ediyorsa yap.'));
     }
 
-    add(inTr('Re-test performance and rerun UpgradePilot with the new observations.', 'Performansi tekrar test et ve yeni gozlemlerle UpgradePilot sonucunu tekrar calistir.'));
+    add(inTr('Re-test performance and rerun UpgradePilot with the new observations.', 'Performansı tekrar test et ve yeni gözlemlerle UpgradePilot sonucunu yeniden çalıştır.'));
     return steps.slice(0, 5);
   }
 
@@ -1282,14 +1283,14 @@ function _analyze(skipLoading) {
   function actionLabelFor(kind) {
     return {
       gpu: inTr('Compare best-value GPUs', 'En mantikli GPUlari karsilastir'),
-      cpu: inTr('Check CPU upgrade options', 'CPU yukseltme seceneklerine bak'),
+      cpu: inTr('Check CPU upgrade options', 'CPU yükseltme seçeneklerine bak'),
       ram: inTr('Find matched RAM kits', 'Uyumlu RAM kitleri bul'),
       ramcap: inTr('Find matched RAM kits', 'Uyumlu RAM kitleri bul'),
       psu: inTr('Check safe PSU options', 'Guvenli PSU seceneklerine bak'),
       laptop: inTr('Compare laptop options', 'Laptop seceneklerini karsilastir'),
       build: inTr('View Example System', 'Örnek Sistemi Gör'),
-      none: inTr('Do the free checks first', 'Once ucretsiz kontrolleri yap')
-    }[kind] || inTr('Compare recommended options', 'Onerilen secenekleri karsilastir');
+      none: inTr('Do the free checks first', 'Önce ücretsiz kontrolleri yap')
+    }[kind] || inTr('Compare recommended options', 'Önerilen seçenekleri karşılaştır');
   }
 
   function buildBuyingAction() {
@@ -1299,8 +1300,8 @@ function _analyze(skipLoading) {
     const title = isBuyLaptop
       ? inTr('Recommended system options', 'Önerilen sistem seçenekleri')
       : isNoBuy
-      ? inTr('Best move: verify before buying', 'En iyi adim: almadan once dogrula')
-      : inTr('Recommended next action', 'Onerilen sonraki adim');
+      ? inTr('Best move: verify before buying', 'En iyi adım: almadan önce doğrula')
+      : inTr('Recommended next action', 'Önerilen sonraki adım');
     const focus = isBuyLaptop
       ? inTr('Laptop Options', 'Laptop Seçenekleri')
       : best.key === 'gpu'
@@ -1337,9 +1338,9 @@ function _analyze(skipLoading) {
         '<div class="buying-title">' + focus + '</div>' +
         '<div class="buying-copy">' + copy + '</div>' +
         '<div class="buying-trust-row">' +
-          '<span>' + inTr('Free fixes first', 'Once ucretsiz cozumler') + '</span>' +
+          '<span>' + inTr('Free fixes first', 'Önce ücretsiz çözümler') + '</span>' +
           '<span>' + (isLaptop
-            ? inTr('Power mode checked', 'Guc modu kontrol edildi')
+            ? inTr('Power mode checked', 'Güç modu kontrol edildi')
             : psuDependencyActive
               ? inTr('PSU blocks GPU path', 'PSU GPU rotasini sinirliyor')
             : inTr('PSU considered', 'PSU hesaba katildi')) + '</span>' +
@@ -1360,26 +1361,26 @@ function _analyze(skipLoading) {
     cpu: inTr('Frame consistency risk.', 'Kare tutarliligi riski.'),
     gpu: inTr('Graphics limit likely.', 'Grafik siniri olasi.'),
     ram: inTr('Capacity, speed, or channel issue.', 'Kapasite, hiz veya kanal sorunu.'),
-    psu: inTr('Power may block GPU upgrades.', 'Guc GPU yukseltmesini sinirlayabilir.'),
+    psu: inTr('Power may block GPU upgrades.', 'Güç, GPU yükseltmesini sınırlayabilir.'),
     storage: inTr('Stutter or streaming risk.', 'Stutter veya asset akisi riski.'),
     cooling: inTr('Thermals may hide the real limit.', 'Sicaklik gercek siniri saklayabilir.'),
-    none: inTr('No clear paid upgrade yet.', 'Henuz net ucretli yukseltme yok.'),
+    none: inTr('No clear paid upgrade yet.', 'Henüz net ücretli yükseltme yok.'),
   }[diagnostics.bottleneckKey];
   diagnostics.priorityNote = diagnostics.priorityKey === 'high'
     ? inTr('Act before buying.', 'Almadan once aksiyon al.')
     : diagnostics.priorityKey === 'medium'
       ? inTr('Check after free fixes.', 'Ucretsiz duzeltmelerden sonra kontrol et.')
-      : inTr('Buying can wait.', 'Satin alma bekleyebilir.');
+      : inTr('Buying can wait.', 'Satın alma bekleyebilir.');
   // confidenceNote is already set correctly during analysis above
   let diagnosticWhyText = buildDiagnosticWhy(diagnostics);
   diagnosticWhyText = {
-    gpu: inTr('Your target leans GPU-heavy. Update drivers and check temperatures first, then compare the ' + gpuTargetTierText() + ' instead of random GPU listings.', 'Hedefin GPU agirlikli. Once surucuyu guncelle ve sicakligi kontrol et; sonra rastgele GPU listeleri yerine ' + gpuTargetTierText() + ' araligini karsilastir.'),
-    cpu: inTr('Your CPU may be limiting frame consistency. Check chipset drivers, clocks, and temperatures first.', 'CPU kare tutarliligini sinirlayabilir. Once chipset surucusu, frekans ve sicakliklari kontrol et.'),
-    ram: inTr('RAM can cause stutter before average FPS looks bad. Verify speed, capacity, and channel mode first.', 'RAM, ortalama FPS dusmeden stutter yaratabilir. Once hiz, kapasite ve kanal modunu dogrula.'),
-    psu: inTr('Power readiness comes before a stronger GPU. Confirm PSU wattage and quality before buying.', 'Daha guclu GPUdan once guc hazirligi gelir. Almadan once PSU watt ve kalitesini dogrula.'),
+    gpu: inTr('Your target leans GPU-heavy. Update drivers and check temperatures first, then compare the ' + gpuTargetTierText() + ' instead of random GPU listings.', 'Hedefin GPU ağırlıklı. Önce sürücüyü güncelle ve sıcaklığı kontrol et; sonra rastgele GPU listeleri yerine ' + gpuTargetTierText() + ' aralığını karşılaştır.'),
+    cpu: inTr('Your CPU may be limiting frame consistency. Check chipset drivers, clocks, and temperatures first.', 'CPU kare tutarlılığını sınırlayabilir. Önce yonga seti sürücüsünü, frekansları ve sıcaklıkları kontrol et.'),
+    ram: inTr('RAM can cause stutter before average FPS looks bad. Verify speed, capacity, and channel mode first.', 'RAM, ortalama FPS düşmeden takılma yaratabilir. Önce hız, kapasite ve kanal modunu doğrula.'),
+    psu: inTr('Power readiness comes before a stronger GPU. Confirm PSU wattage and quality before buying.', 'Daha güçlü GPU’dan önce güç hazırlığı gelir. Almadan önce PSU watt değerini ve kalitesini doğrula.'),
     storage: inTr('Storage can cause loading hitches and stutter. Move the game to SSD/NVMe before replacing CPU or GPU.', 'Depolama yukleme takilmasi ve stutter yaratabilir. CPU/GPU degistirmeden once oyunu SSD/NVMe diske tasi.'),
-    cooling: inTr('Thermals can make good parts behave weak. Check load temperatures before replacing hardware.', 'Sicaklik iyi parcalari zayif gibi gosterebilir. Donanim degistirmeden once yuk sicakliklarini kontrol et.'),
-    none: inTr('No paid upgrade clearly wins yet. Optimize, measure, then rerun with better evidence.', 'Henuz net kazanan ucretli yukseltme yok. Optimize et, olc, daha iyi veriyle tekrar calistir.'),
+    cooling: inTr('Thermals can make good parts behave weak. Check load temperatures before replacing hardware.', 'Sıcaklık iyi parçaları zayıf gibi gösterebilir. Donanım değiştirmeden önce yük sıcaklıklarını kontrol et.'),
+    none: inTr('No paid upgrade clearly wins yet. Optimize, measure, then rerun with better evidence.', 'Henüz net kazanan ücretli yükseltme yok. Optimize et, ölç, daha iyi veriyle tekrar çalıştır.'),
   }[diagnostics.bottleneckKey] || diagnosticWhyText;
   const actionPlan = buildActionPlan(diagnostics);
 
@@ -1413,6 +1414,17 @@ function _analyze(skipLoading) {
   _s('confidence-note',         diagnostics.confidenceNote);
   el('diagnostic-summary')?.setAttribute('data-priority', diagnostics.priorityKey);
   el('diagnostic-summary')?.setAttribute('data-confidence', diagnostics.confidenceKey);
+  renderResultArtwork(el('result-part-artwork'), !isLaptop && (best.key === 'cpu' || best.key === 'gpu') ? best.key : '');
+  _s('result-analysis-why', diagnosticWhyText);
+  _h('result-analysis-verify', benches
+    .flatMap(bench => bench.items || [])
+    .slice(0, 3)
+    .map(item => '<li>' + item + '</li>')
+    .join(''));
+  _h('result-analysis-next', actionPlan
+    .slice(0, 3)
+    .map(item => '<li>' + item + '</li>')
+    .join(''));
 
   // 01 Diagnosis
   _s('diag-pill', diagLabel);
@@ -1454,8 +1466,10 @@ function _analyze(skipLoading) {
   setVirtualPcPart(best.score <= 1 ? 'system' : visualPart, best.score <= 1 ? inTr('Current rig','Mevcut sistem') : meta.name);
   _h('uicon',   meta.icon);
   _c('uicon',   'uicon ' + meta.icls);
-  _s('uname',   meta.name);
-  _s('usub',    meta.sub);
+  _s('uname',   isLaptop ? inTr('Laptop Options', 'Laptop Seçenekleri') : meta.name);
+  _s('usub',    isLaptop
+    ? inTr('Compare complete laptops instead of internal desktop-style upgrades', 'Masaüstü tipi iç parça yükseltmeleri yerine komple laptopları karşılaştır')
+    : meta.sub);
   _s('why-box', diagnosticWhyText);
   _h('action-plan-list', actionPlan.map((step, index) =>
     '<li><span class="action-step-num">' + (index + 1) + '</span><span>' + step + '</span></li>'

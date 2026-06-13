@@ -80,11 +80,11 @@ export function updateVirtualPcSummary() {
   const isLaptopMode = el('system-type')?.value === 'laptop';
   const powerLabel  = el('pc-summary-power-label');
   const powerStatus = el('pc-status-power');
-  if (powerLabel) powerLabel.textContent = isLaptopMode ? inTr('Power Mode', 'Guc Modu') : 'Power';
+  if (powerLabel) powerLabel.textContent = isLaptopMode ? inTr('Power Mode', 'Güç Modu') : inTr('Power', 'Güç');
   if (powerStatus) powerStatus.textContent = isLaptopMode ? inTr('Mode', 'Mod') : 'PSU';
 
   if (!hasTouchedSpecs) {
-    const empty = inTr('Not selected', 'Secilmedi');
+    const empty = inTr('Not selected', 'Seçilmedi');
     ['pc-summary-cpu', 'pc-summary-gpu', 'pc-summary-ram', 'pc-summary-power'].forEach(id => {
       const n = el(id); if (n) n.textContent = empty;
     });
@@ -97,7 +97,7 @@ export function updateVirtualPcSummary() {
   const speed = selectedOptionText('ram-speed');
   const channel = selectedOptionText('channel');
   const power = isLaptopMode
-    ? inTr('Charger / power mode', 'Adaptor / guc modu')
+    ? inTr('Charger / power mode', 'Adaptör / güç modu')
     : (el('psu-watts')?.value || '650') + 'W PSU';
 
   const cpuNode   = el('pc-summary-cpu');
@@ -176,7 +176,7 @@ export function initClickableFields() {
       const cue = document.createElement('span');
       cue.className   = 'field-click-cue';
       cue.dataset.i18n = 'clickToChange';
-      cue.textContent = I18N[currentLang].clickToChange || inTr('Click to edit', 'Tikla degistir');
+      cue.textContent = I18N[currentLang].clickToChange || inTr('Click to edit', 'Tıkla ve değiştir');
       field.prepend(cue);
     }
 
@@ -261,10 +261,6 @@ function isOptionAvailableForCurrentMode(option) {
   return groupMode === mode && !option.disabled && !option.hidden;
 }
 
-function firstAvailablePartOption(select) {
-  return [...select.options].find(option => isOptionAvailableForCurrentMode(option));
-}
-
 export function applySystemModeToPartSelects(selectId) {
   const mode = el('system-type')?.value === 'laptop' ? 'laptop' : 'desktop';
   const ids  = selectId ? [selectId] : ['cpu', 'gpu'];
@@ -278,8 +274,7 @@ export function applySystemModeToPartSelects(selectId) {
       group.querySelectorAll('option').forEach(o => { o.hidden = hidden; o.disabled = hidden; });
     });
     if (!isOptionAvailableForCurrentMode(select.selectedOptions?.[0])) {
-      const fallback = firstAvailablePartOption(select);
-      if (fallback) select.value = fallback.value;
+      select.value = '';
     }
   });
 }

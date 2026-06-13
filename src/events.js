@@ -1,5 +1,5 @@
 // ── Event binding ─────────────────────────────────────────────────────
-import { el } from './utils.js';
+import { el, inTr } from './utils.js';
 import { setLanguage } from './language.js';
 import { updateMemoryCompatibility, updateRamSpeeds } from './memory-compat.js';
 import { updateSystemTypeFields } from './system-type.js';
@@ -37,21 +37,22 @@ export function bindEvents() {
 
   // Virtual PC map wiring for form fields
   [
-    ['cpu',       'cpu', 'CPU focus'],
-    ['cpu-search','cpu', 'CPU search'],
-    ['gpu',       'gpu', 'GPU focus'],
-    ['gpu-search','gpu', 'GPU search'],
-    ['ram',       'ram', 'Memory focus'],
-    ['ram-type',  'ram', 'Memory type'],
-    ['ram-speed', 'ram', 'Memory speed'],
-    ['channel',   'ram', 'Memory channel'],
-    ['psu-watts', 'psu', 'Power supply'],
-  ].forEach(([id, part, label]) => {
+    ['cpu',       'cpu', 'CPU focus', 'İşlemci odağı'],
+    ['cpu-search','cpu', 'CPU search', 'İşlemci arama'],
+    ['gpu',       'gpu', 'GPU focus', 'Ekran kartı odağı'],
+    ['gpu-search','gpu', 'GPU search', 'Ekran kartı arama'],
+    ['ram',       'ram', 'Memory focus', 'Bellek odağı'],
+    ['ram-type',  'ram', 'Memory type', 'Bellek türü'],
+    ['ram-speed', 'ram', 'Memory speed', 'Bellek hızı'],
+    ['channel',   'ram', 'Memory channel', 'Bellek kanalı'],
+    ['psu-watts', 'psu', 'Power supply', 'Güç kaynağı'],
+  ].forEach(([id, part, labelEn, labelTr]) => {
     const node = el(id);
     if (!node) return;
-    node.addEventListener('focus',  () => setVirtualPcPart(part, label));
-    node.addEventListener('change', () => { setHasTouchedSpecs(true); setVirtualPcPart(part, label); });
-    node.addEventListener('input',  () => { setHasTouchedSpecs(true); setVirtualPcPart(part, label); });
+    const label = () => inTr(labelEn, labelTr);
+    node.addEventListener('focus',  () => setVirtualPcPart(part, label()));
+    node.addEventListener('change', () => { setHasTouchedSpecs(true); setVirtualPcPart(part, label()); });
+    node.addEventListener('input',  () => { setHasTouchedSpecs(true); setVirtualPcPart(part, label()); });
   });
 
   el('budget-content')?.addEventListener('click', event => {

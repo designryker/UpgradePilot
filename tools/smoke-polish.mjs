@@ -130,6 +130,8 @@ const wizardSource = readFileSync(new URL('../src/wizard.js', import.meta.url), 
 const systemTypeSource = readFileSync(new URL('../src/system-type.js', import.meta.url), 'utf8');
 const uiPartsSource = readFileSync(new URL('../src/ui-parts.js', import.meta.url), 'utf8');
 const resultPageSource = readFileSync(new URL('../src/result-page.js', import.meta.url), 'utf8');
+const resultArtworkSource = readFileSync(new URL('../src/result-artwork.js', import.meta.url), 'utf8');
+const eventsSource = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
 const budgetDisplaySource = readFileSync(new URL('../src/budget-display.js', import.meta.url), 'utf8');
 const mainSource = [appSource, analyzeSource, wizardSource, systemTypeSource, uiPartsSource, resultPageSource].join('\n');
 const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -169,6 +171,22 @@ assert.ok(
 );
 assert.ok(indexSource.includes('src="/src/app.js"'), 'index should use the modular app entry');
 assert.ok(indexSource.includes('id="display-detect-feedback"'), 'display detection should expose visible feedback');
+assert.ok(indexSource.includes('id="result-part-artwork"'), 'result page should expose a conditional part artwork slot');
+assert.ok(indexSource.includes('result-analysis-section'), 'detailed analysis should use concise decision sections');
+assert.equal(
+  (indexSource.match(/class="result-analysis-section"/g) || []).length,
+  3,
+  'detailed analysis should contain exactly three visible decision sections'
+);
+assert.ok(indexSource.includes('id="result-analysis-why"'), 'analysis should explain why the recommendation was made');
+assert.ok(indexSource.includes('id="result-analysis-verify"'), 'analysis should show concise verification steps');
+assert.ok(indexSource.includes('id="result-analysis-next"'), 'analysis should show concise next steps');
+assert.ok(resultArtworkSource.includes('result-gpu-artwork'), 'result artwork module should include a GPU line-art illustration');
+assert.ok(resultArtworkSource.includes('result-cpu-artwork'), 'result artwork module should include a CPU line-art illustration');
+assert.ok(eventsSource.includes("label = () => inTr(labelEn, labelTr)"), 'dynamic Virtual PC focus labels should follow the active language');
+assert.ok(styleSource.includes('/* === Result clarity pass === */'), 'result clarity styles should be present');
+assert.ok(styleSource.includes('.result-analysis-legacy{display:none!important}'), 'legacy detailed-analysis clutter should stay hidden');
+assert.ok(styleSource.includes('.pc-summary strong{'), 'mobile Virtual PC summaries should have a wrapping rule');
 assert.ok(
   budgetDisplaySource.includes("document.querySelectorAll('[data-tg-target=\"res\"]')"),
   'display detection should synchronize the visible resolution toggle'
@@ -224,6 +242,15 @@ assert.ok(indexSource.includes('data-system-mode="laptop"'), 'laptop CPU/GPU opt
 assert.ok(indexSource.includes('Intel i7-12700H'), 'common laptop CPUs should be selectable');
 assert.ok(indexSource.includes('RTX 4060 Laptop'), 'common laptop GPUs should be selectable');
 assert.ok(mainSource.includes('applySystemModeToPartSelects'), 'system mode should filter CPU/GPU options');
+assert.equal(
+  uiPartsSource.includes('firstAvailablePartOption'),
+  false,
+  'system mode filtering must not auto-select the first CPU or GPU'
+);
+assert.ok(
+  /if \(!isOptionAvailableForCurrentMode\(select\.selectedOptions\?\.\[0\]\)\) \{\s+select\.value = '';\s+\}/.test(uiPartsSource),
+  'system mode filtering should return incompatible CPU/GPU selections to the empty placeholder'
+);
 assert.ok(mainSource.includes('Laptop cooling pad / stand'), 'laptop mode should recommend practical cooling accessories');
 assert.ok(mainSource.includes('Power mode checked'), 'laptop buying trust row should avoid desktop PSU wording');
 assert.ok(mainSource.includes('Compare complete laptop classes only after checking temperatures'), 'laptop budget copy should give practical next checks');
